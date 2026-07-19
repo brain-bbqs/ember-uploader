@@ -26,6 +26,14 @@ const INSTANCES = {
     api: "https://api.sandbox.dandiarchive.org/api",
     web: "https://sandbox.dandiarchive.org",
   },
+  "ember-dandi": {
+    api: "https://api-dandi.emberarchive.org/api",
+    web: "https://dandi.emberarchive.org",
+  },
+  "ember-dandi-sandbox": {
+    api: "https://api-dandi.sandbox.emberarchive.org/api",
+    web: "https://dandi.sandbox.emberarchive.org",
+  },
 };
 
 const STORAGE_KEY = "dandi-mp4-uploader.settings.v1";

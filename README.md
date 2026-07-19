@@ -26,7 +26,11 @@ sanitizes the destination filename/path before uploading.
    # then open http://localhost:8080
    ```
 
-2. Pick your DANDI instance (production, sandbox, or a custom API URL).
+2. Pick your instance — DANDI (production or sandbox), EMBER-DANDI
+   ([aplbrain/dandi-archive](https://github.com/aplbrain/dandi-archive) fork:
+   `dandi.emberarchive.org` / `dandi.sandbox.emberarchive.org`), or any other
+   dandi-archive deployment via a custom API URL. All of them speak the same
+   REST API, so the identical upload flow applies.
 3. Paste your **API key** (top-right user menu → "API key" on the archive
    website). The key is kept **client-side only** — it lives in your browser's
    `localStorage` (optional, on by default) and is only ever sent as the
@@ -87,6 +91,22 @@ than the DANDI API and its S3 storage bucket.
   parts). Very large files are limited mainly by your patience and connection.
 - Keep the tab open while uploading; the app warns before you close it
   mid-upload.
+
+## Deployment (GitHub Pages)
+
+Two workflows publish the site to the `gh-pages` branch:
+
+- `.github/workflows/deploy.yml` — deploys `main` to the root of the Pages
+  site on every push (and on manual dispatch).
+- `.github/workflows/preview.yml` — deploys every pull request to
+  `https://<owner>.github.io/dandi-uploader/pr-preview/pr-<number>/` via
+  [`rossjrw/pr-preview-action`](https://github.com/rossjrw/pr-preview-action),
+  posts/updates a sticky comment on the PR with the preview link, and tears
+  the preview down when the PR closes.
+
+One-time setup: in the repository settings, enable **Pages → Deploy from a
+branch → `gh-pages` / root** (the branch is created automatically by the
+first workflow run).
 
 ## Security
 
