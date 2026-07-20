@@ -1,5 +1,11 @@
 # Changelog
 
+## Upcoming
+
+#### 🏠 Internal
+
+- Bumped `vitest` from `2.1.9` to `4.1.10` and resolved merge conflicts against `main` ([#11](https://github.com/brain-bbqs/ember-uploader/pull/11))
+
 ## 0.0.2
 
 #### 🏠 Internal
