@@ -1,0 +1,2 @@
+[codespell]
+skip = package-lock.json,*.svg,*.png,*.jpg,*.jpeg,*.gif,*.ico,dist,node_modules

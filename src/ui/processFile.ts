@@ -15,7 +15,7 @@ export async function processFile(
   els: UploaderElements,
   file: File,
   getConfig: () => UploaderConfig,
-  activeUploads: Set<AbortController>
+  activeUploads: Set<AbortController>,
 ): Promise<void> {
   const id = `file-${fileCounter++}`;
   const row = createFileRow(els.fileList, file, id);
@@ -31,10 +31,7 @@ export async function processFile(
   const problems = configProblems(cfg);
   if (problems.length) {
     row.setBadge("Blocked", "err");
-    row.setStatus(
-      `Fix the connection settings first, then re-add this file:\n${problems.join("\n")}`,
-      "err"
-    );
+    row.setStatus(`Fix the connection settings first, then re-add this file:\n${problems.join("\n")}`, "err");
     row.pathInput.disabled = true;
     return;
   }
@@ -59,7 +56,7 @@ export async function processFile(
         [
           { label: "Upload anyway", value: "upload", primary: true },
           { label: "Skip file", value: "skip" },
-        ]
+        ],
       );
       if (answer === "skip") {
         row.setBadge("Skipped", "warn");
@@ -114,14 +111,10 @@ export async function processFile(
     let existingAssetId: string | null = null;
     if (existing) {
       cancelBtn.remove();
-      const answer = await askUser(
-        row,
-        `“${path}” already exists in dandiset ${cfg.dandisetId} — replace it?`,
-        [
-          { label: "Replace", value: "replace", primary: true },
-          { label: "Skip file", value: "skip" },
-        ]
-      );
+      const answer = await askUser(row, `“${path}” already exists in dandiset ${cfg.dandisetId} — replace it?`, [
+        { label: "Replace", value: "replace", primary: true },
+        { label: "Skip file", value: "skip" },
+      ]);
       cancelBtn = row.addAction("Cancel", () => abort.abort());
       if (answer === "skip") {
         row.setBadge("Skipped", "warn");
@@ -135,12 +128,15 @@ export async function processFile(
     // --- 5. Blob upload ------------------------------------------------
     row.setStatus("Uploading to the archive…");
     const { blobId, reused } = await uploadBlob(
-      cfg, file, etag, parts,
+      cfg,
+      file,
+      etag,
+      parts,
       (f) => {
         row.setProgress(f);
         row.setStatus(`Uploading to the archive… ${(f * 100).toFixed(1)}%`);
       },
-      abort.signal
+      abort.signal,
     );
 
     // --- 6. Asset registration -------------------------------------------
@@ -154,9 +150,7 @@ export async function processFile(
     row.setStatus(`${verb} successfully as ${path}`, "ok");
     if (cfg.web) {
       const folder = path.includes("/") ? path.slice(0, path.lastIndexOf("/") + 1) : "";
-      const viewUrl =
-        `${cfg.web}/dandiset/${cfg.dandisetId}/draft/files` +
-        `?location=${encodeURIComponent(folder)}`;
+      const viewUrl = `${cfg.web}/dandiset/${cfg.dandisetId}/draft/files` + `?location=${encodeURIComponent(folder)}`;
       const link = document.createElement("a");
       link.href = viewUrl;
       link.target = "_blank";

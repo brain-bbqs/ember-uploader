@@ -68,7 +68,7 @@ els.instance.addEventListener("change", () => {
   saveSettings();
 });
 [els.customApi, els.apiKey, els.dandisetId, els.pathPrefix].forEach((el) =>
-  el.addEventListener("change", saveSettings)
+  el.addEventListener("change", saveSettings),
 );
 els.remember.addEventListener("change", saveSettings);
 document.getElementById("config-form")!.addEventListener("submit", (e) => {

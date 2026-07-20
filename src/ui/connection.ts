@@ -7,7 +7,7 @@ import { configProblems } from "../lib/settings";
 export async function testConnection(
   els: UploaderElements,
   getConfig: () => UploaderConfig,
-  saveSettings: () => void
+  saveSettings: () => void,
 ): Promise<void> {
   saveSettings();
   const cfg = getConfig();

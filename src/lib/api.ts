@@ -10,7 +10,7 @@ export interface ApiFetchOptions {
 export async function apiFetch<T = unknown>(
   cfg: UploaderConfig,
   path: string,
-  { method = "GET", json, expectJson = true }: ApiFetchOptions = {}
+  { method = "GET", json, expectJson = true }: ApiFetchOptions = {},
 ): Promise<T | null> {
   const headers: Record<string, string> = { Authorization: `token ${cfg.apiKey}` };
   let body: string | undefined;
@@ -26,7 +26,7 @@ export async function apiFetch<T = unknown>(
       `Network error calling ${path} — check your connection (or the server's CORS policy): ${
         e instanceof Error ? e.message : String(e)
       }`,
-      0
+      0,
     );
   }
   if (!resp.ok) {
@@ -39,7 +39,7 @@ export async function apiFetch<T = unknown>(
     throw new ApiError(
       `${method} ${path} failed with HTTP ${resp.status}${detail ? `: ${detail.slice(0, 500)}` : ""}`,
       resp.status,
-      detail
+      detail,
     );
   }
   if (!expectJson || resp.status === 204) return null;

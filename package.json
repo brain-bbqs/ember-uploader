@@ -1,6 +1,6 @@
 {
   "name": "ember-uploader",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A fully static, backend-free web page for uploading files to an existing dandiset on the EMBER Archive.",
   "type": "module",
   "license": "MIT",
@@ -15,6 +15,8 @@
     "test:chromatic": "playwright test --config configs/playwright.chromatic.config.ts",
     "typecheck": "tsc --noEmit",
     "lint": "eslint .",
+    "format": "prettier --config configs/prettier.config.cjs --write .",
+    "format:check": "prettier --config configs/prettier.config.cjs --check .",
     "storybook": "storybook dev -p 6006 --config-dir configs/storybook",
     "build-storybook": "storybook build --config-dir configs/storybook"
   },
@@ -31,6 +33,7 @@
     "chromatic": "^18.0.1",
     "eslint": "^9.13.0",
     "jsdom": "^25.0.0",
+    "prettier": "^3.1.0",
     "storybook": "^10.5.3",
     "typescript": "^5.6.0",
     "typescript-eslint": "^8.10.0",
