@@ -17,13 +17,13 @@ export function initDropzone(els: UploaderElements, addFiles: (files: FileList) 
     dz.addEventListener(evt, (e) => {
       e.preventDefault();
       dz.classList.add("dragover");
-    })
+    }),
   );
   ["dragleave", "drop"].forEach((evt) =>
     dz.addEventListener(evt, (e) => {
       e.preventDefault();
       dz.classList.remove("dragover");
-    })
+    }),
   );
   dz.addEventListener("drop", (e) => {
     if (e.dataTransfer?.files?.length) addFiles(e.dataTransfer.files);

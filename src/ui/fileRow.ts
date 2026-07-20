@@ -73,7 +73,11 @@ export function createFileRow(fileList: HTMLUListElement, file: File, id: string
   return row;
 }
 
-export function askUser<T>(row: FileRow, message: string, choices: { label: string; value: T; primary?: boolean }[]): Promise<T> {
+export function askUser<T>(
+  row: FileRow,
+  message: string,
+  choices: { label: string; value: T; primary?: boolean }[],
+): Promise<T> {
   // Renders buttons on the row and resolves with the value of the clicked one.
   return new Promise((resolve) => {
     row.setStatus(message, "warn");
@@ -85,7 +89,7 @@ export function askUser<T>(row: FileRow, message: string, choices: { label: stri
           row.clearActions();
           resolve(choice.value);
         },
-        Boolean(choice.primary)
+        Boolean(choice.primary),
       );
     }
   });

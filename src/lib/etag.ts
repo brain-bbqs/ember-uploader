@@ -45,7 +45,7 @@ export function planParts(fileSize: number): FilePart[] {
 export async function computeDandiEtag(
   file: Blob,
   parts: FilePart[],
-  onProgress: (fraction: number) => void
+  onProgress: (fraction: number) => void,
 ): Promise<string> {
   const partDigests = new Uint8Array(parts.length * 16);
   let bytesDone = 0;

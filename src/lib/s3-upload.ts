@@ -2,7 +2,7 @@ export function uploadPartToS3(
   url: string,
   blob: Blob,
   onProgress: (loaded: number) => void,
-  signal?: AbortSignal
+  signal?: AbortSignal,
 ): Promise<string> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
@@ -18,8 +18,8 @@ export function uploadPartToS3(
             new Error(
               "S3 accepted the part but the ETag response header is not readable. " +
                 "The storage bucket's CORS configuration must expose the ETag header " +
-                "for browser-based uploads to work."
-            )
+                "for browser-based uploads to work.",
+            ),
           );
           return;
         }
@@ -42,7 +42,7 @@ export async function uploadPartWithRetry(
   blob: Blob,
   onProgress: (loaded: number) => void,
   signal?: AbortSignal,
-  attempts = 3
+  attempts = 3,
 ): Promise<string> {
   let lastErr: unknown;
   for (let i = 0; i < attempts; i++) {

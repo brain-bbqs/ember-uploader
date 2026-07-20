@@ -12,15 +12,12 @@ function mp4Buffer(): Buffer {
 test("full upload pipeline against a mocked DANDI API", async ({ page }) => {
   const createdAssets: unknown[] = [];
 
-  await page.route(`${API}/users/me/`, (route: Route) =>
-    route.fulfill({ json: { username: "test-user" } })
-  );
+  await page.route(`${API}/users/me/`, (route: Route) => route.fulfill({ json: { username: "test-user" } }));
   await page.route(`${API}/dandisets/000123/`, (route: Route) =>
-    route.fulfill({ json: { draft_version: { name: "Test dandiset" } } })
+    route.fulfill({ json: { draft_version: { name: "Test dandiset" } } }),
   );
-  await page.route(
-    `${API}/dandisets/000123/versions/draft/assets/?path=*`,
-    (route: Route) => route.fulfill({ json: { results: [], next: null } })
+  await page.route(`${API}/dandisets/000123/versions/draft/assets/?path=*`, (route: Route) =>
+    route.fulfill({ json: { results: [], next: null } }),
   );
   await page.route(`${API}/uploads/initialize/`, (route: Route) =>
     route.fulfill({
@@ -34,7 +31,7 @@ test("full upload pipeline against a mocked DANDI API", async ({ page }) => {
           },
         ],
       },
-    })
+    }),
   );
   await page.route("https://mock-s3.test/part-1", (route: Route) =>
     route.fulfill({
@@ -45,29 +42,24 @@ test("full upload pipeline against a mocked DANDI API", async ({ page }) => {
         "Access-Control-Allow-Origin": "*",
       },
       body: "",
-    })
+    }),
   );
   await page.route(`${API}/uploads/upload-1/complete/`, (route: Route) =>
     route.fulfill({
       json: { complete_url: "https://mock-s3.test/complete", body: "<complete/>" },
-    })
+    }),
   );
-  await page.route("https://mock-s3.test/complete", (route: Route) =>
-    route.fulfill({ status: 200, body: "<ok/>" })
-  );
+  await page.route("https://mock-s3.test/complete", (route: Route) => route.fulfill({ status: 200, body: "<ok/>" }));
   await page.route(`${API}/uploads/upload-1/validate/`, (route: Route) =>
-    route.fulfill({ json: { blob_id: "blob-1" } })
+    route.fulfill({ json: { blob_id: "blob-1" } }),
   );
-  await page.route(
-    `${API}/dandisets/000123/versions/draft/assets/`,
-    (route: Route) => {
-      if (route.request().method() === "POST") {
-        createdAssets.push(route.request().postDataJSON());
-        return route.fulfill({ json: { asset_id: "asset-1", path: "clip.mp4" } });
-      }
-      return route.continue();
+  await page.route(`${API}/dandisets/000123/versions/draft/assets/`, (route: Route) => {
+    if (route.request().method() === "POST") {
+      createdAssets.push(route.request().postDataJSON());
+      return route.fulfill({ json: { asset_id: "asset-1", path: "clip.mp4" } });
     }
-  );
+    return route.continue();
+  });
 
   await page.goto("/");
   await page.selectOption("#instance", "custom");

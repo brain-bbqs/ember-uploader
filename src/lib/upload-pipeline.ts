@@ -16,7 +16,7 @@ export async function uploadBlob(
   etag: string,
   parts: FilePart[],
   onProgress: (fraction: number) => void,
-  signal?: AbortSignal
+  signal?: AbortSignal,
 ): Promise<UploadBlobResult> {
   // Initialize; a 409 means an identical blob already exists server-side.
   let init: UploadInitResponse;
@@ -44,9 +44,7 @@ export async function uploadBlob(
   const uploadId = init.upload_id;
   const serverParts = init.parts;
   if (serverParts.length !== parts.length) {
-    throw new Error(
-      `Server planned ${serverParts.length} parts but this client computed ${parts.length} — aborting.`
-    );
+    throw new Error(`Server planned ${serverParts.length} parts but this client computed ${parts.length} — aborting.`);
   }
 
   // Upload parts with a small worker pool.
@@ -74,23 +72,20 @@ export async function uploadBlob(
           partBytes[i] = loaded;
           reportProgress();
         },
-        signal
+        signal,
       );
       partBytes[i] = local.size;
       reportProgress();
       results[i] = { part_number: sp.part_number, size: sp.size, etag: serverEtag };
     }
   }
-  await Promise.all(
-    Array.from({ length: Math.min(PARALLEL_PARTS, serverParts.length) }, worker)
-  );
+  await Promise.all(Array.from({ length: Math.min(PARALLEL_PARTS, serverParts.length) }, worker));
 
   // Finish the multipart upload on S3, then let the API validate the etag.
-  const completion = (await apiFetch<{ complete_url: string; body: string }>(
-    cfg,
-    `/uploads/${uploadId}/complete/`,
-    { method: "POST", json: { parts: results } }
-  ))!;
+  const completion = (await apiFetch<{ complete_url: string; body: string }>(cfg, `/uploads/${uploadId}/complete/`, {
+    method: "POST",
+    json: { parts: results },
+  }))!;
   const s3Resp = await fetch(completion.complete_url, {
     method: "POST",
     body: completion.body,
@@ -129,18 +124,17 @@ export async function createOrReplaceAsset(
   cfg: UploaderConfig,
   path: string,
   blobId: string,
-  existingAssetId: string | null
+  existingAssetId: string | null,
 ): Promise<Asset> {
   const payload = {
     blob_id: blobId,
     metadata: { path, encodingFormat: "video/mp4" },
   };
   if (existingAssetId) {
-    return (await apiFetch<Asset>(
-      cfg,
-      `/dandisets/${cfg.dandisetId}/versions/draft/assets/${existingAssetId}/`,
-      { method: "PUT", json: payload }
-    ))!;
+    return (await apiFetch<Asset>(cfg, `/dandisets/${cfg.dandisetId}/versions/draft/assets/${existingAssetId}/`, {
+      method: "PUT",
+      json: payload,
+    }))!;
   }
   return (await apiFetch<Asset>(cfg, `/dandisets/${cfg.dandisetId}/versions/draft/assets/`, {
     method: "POST",
