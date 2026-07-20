@@ -12,18 +12,18 @@ export async function testConnection(
   saveSettings();
   const cfg = getConfig();
   const problems = configProblems(cfg);
-  const barEl = els.connectStatusBar;
+  const dotEl = els.connectStatusDot;
   const textEl = els.connectStatusText;
-  barEl.hidden = false;
+  dotEl.hidden = false;
   if (problems.length) {
     textEl.textContent = problems.join(" ");
-    barEl.title = problems.join(" ");
-    barEl.className = "status-bar err";
+    dotEl.title = problems.join(" ");
+    dotEl.className = "status-dot err";
     return;
   }
   textEl.textContent = "Testing connection…";
-  barEl.title = "Testing connection…";
-  barEl.className = "status-bar busy";
+  dotEl.title = "Testing connection…";
+  dotEl.className = "status-dot busy";
   try {
     let who = "";
     try {
@@ -44,8 +44,8 @@ export async function testConnection(
       `✓ Connected. Dandiset ${cfg.dandisetId}${name ? ` (“${name}”)` : ""} found.${who}` +
       " You can now drop .mp4 files below.";
     textEl.textContent = msg;
-    barEl.title = msg;
-    barEl.className = "status-bar ok";
+    dotEl.title = msg;
+    dotEl.className = "status-dot ok";
   } catch (e) {
     let msg = friendlyError(e);
     if (e instanceof ApiError && e.status === 0) {
@@ -56,7 +56,7 @@ export async function testConnection(
       }
     }
     textEl.textContent = `✗ ${msg}`;
-    barEl.title = msg;
-    barEl.className = "status-bar err";
+    dotEl.title = msg;
+    dotEl.className = "status-dot err";
   }
 }

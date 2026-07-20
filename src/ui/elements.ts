@@ -6,13 +6,9 @@ function required<T extends Element>(id: string): T {
 
 export function getElements() {
   return {
-    instance: required<HTMLSelectElement>("instance"),
-    customApiLabel: required<HTMLLabelElement>("custom-api-label"),
-    customApi: required<HTMLInputElement>("custom-api"),
     apiKey: required<HTMLInputElement>("api-key"),
     dandisetId: required<HTMLInputElement>("dandiset-id"),
-    pathPrefix: required<HTMLInputElement>("path-prefix"),
-    connectStatusBar: required<HTMLDivElement>("connect-status-bar"),
+    connectStatusDot: required<HTMLSpanElement>("connect-status-dot"),
     connectStatusText: required<HTMLSpanElement>("connect-status-text"),
     apiKeyHelp: required<HTMLButtonElement>("api-key-help"),
     apiKeyHelpText: required<HTMLParagraphElement>("api-key-help-text"),

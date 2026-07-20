@@ -22,20 +22,6 @@
         <form id="config-form">
           <div class="grid">
             <label>
-              <span>DANDI instance</span>
-              <select id="instance">
-                <option value="dandi">DANDI (dandiarchive.org)</option>
-                <option value="dandi-sandbox">DANDI Sandbox (sandbox.dandiarchive.org)</option>
-                <option value="ember-dandi">EMBER-DANDI (dandi.emberarchive.org)</option>
-                <option value="ember-dandi-sandbox">EMBER-DANDI Sandbox (dandi.sandbox.emberarchive.org)</option>
-                <option value="custom">Custom…</option>
-              </select>
-            </label>
-            <label id="custom-api-label" hidden>
-              <span>Custom API base URL</span>
-              <input type="url" id="custom-api" placeholder="https://api.example.org/api" spellcheck="false" />
-            </label>
-            <label>
               <span
                 >API key
                 <button type="button" class="hint" id="api-key-help" title="Where do I find this?">?</button>
@@ -49,21 +35,19 @@
               />
             </label>
             <label>
-              <span>Dandiset ID</span>
+              <span
+                >Dandiset ID
+                <span id="connect-status-dot" class="status-dot" role="status" aria-live="polite" hidden>
+                  <span id="connect-status-text" class="sr-only"></span>
+                </span>
+              </span>
               <input type="text" id="dandiset-id" placeholder="e.g. 000123 or DANDI:000123" spellcheck="false" />
-            </label>
-            <label>
-              <span>Destination folder <em>(optional)</em></span>
-              <input type="text" id="path-prefix" placeholder="e.g. videos/session1" spellcheck="false" />
             </label>
           </div>
         </form>
-        <div id="connect-status-bar" class="status-bar" hidden>
-          <span id="connect-status-text" class="sr-only"></span>
-        </div>
         <p id="api-key-help-text" class="help" hidden>
-          Log in at your DANDI instance, click your user initials in the top-right corner, and choose “API key”. The key
-          is kept in this browser only and is sent solely to the API server selected above.
+          Log in at the EMBER-DANDI archive, click your user initials in the top-right corner, and choose “API key”. The
+          key is kept in this browser only and is sent solely to the EMBER-DANDI API server.
         </p>
       </section>
 

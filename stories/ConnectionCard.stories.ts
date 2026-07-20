@@ -9,32 +9,20 @@ function buildConnectionCard(status?: { text: string; kind: "ok" | "err" | "busy
     <form id="config-form">
       <div class="grid">
         <label>
-          <span>DANDI instance</span>
-          <select id="instance">
-            <option value="dandi">DANDI (dandiarchive.org)</option>
-            <option value="dandi-sandbox">DANDI Sandbox (sandbox.dandiarchive.org)</option>
-            <option value="ember-dandi">EMBER-DANDI (dandi.emberarchive.org)</option>
-            <option value="ember-dandi-sandbox">EMBER-DANDI Sandbox (dandi.sandbox.emberarchive.org)</option>
-            <option value="custom">Custom…</option>
-          </select>
-        </label>
-        <label>
           <span>API key</span>
           <input type="password" placeholder="paste your DANDI API key" autocomplete="off" spellcheck="false" />
         </label>
         <label>
-          <span>Dandiset ID</span>
+          <span
+            >Dandiset ID
+            <span class="status-dot${status ? ` ${status.kind}` : ""}"${status ? "" : " hidden"}>
+              <span class="sr-only">${status?.text ?? ""}</span>
+            </span>
+          </span>
           <input type="text" placeholder="e.g. 000123 or DANDI:000123" spellcheck="false" />
-        </label>
-        <label>
-          <span>Destination folder <em>(optional)</em></span>
-          <input type="text" placeholder="e.g. videos/session1" spellcheck="false" />
         </label>
       </div>
     </form>
-    <div class="status-bar${status ? ` ${status.kind}` : ""}"${status ? "" : " hidden"}>
-      <span class="sr-only">${status?.text ?? ""}</span>
-    </div>
   `;
   return withCard(card);
 }

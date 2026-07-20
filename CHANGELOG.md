@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.0.6
+
+#### 🚀 Enhancement
+
+- Replaced the connection status bar with a small status dot next to the Dandiset ID field ([#13](https://github.com/brain-bbqs/ember-uploader/pull/13))
+- Removed the "Destination folder" connection setting and the DANDI instance selector; the uploader now always connects to the EMBER-DANDI archive ([#13](https://github.com/brain-bbqs/ember-uploader/pull/13))
+
 ## 0.0.5
 
 #### 🚀 Enhancement

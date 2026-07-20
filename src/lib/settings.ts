@@ -1,5 +1,5 @@
 import type { StoredSettings, UploaderConfig } from "./types";
-import { INSTANCES } from "./instances";
+import { EMBER_INSTANCE } from "./instances";
 
 export const STORAGE_KEY = "dandi-mp4-uploader.settings.v1";
 
@@ -22,29 +22,14 @@ export function saveStoredSettings(settings: StoredSettings | null): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
 }
 
-export function resolveConfig(input: {
-  instance: string;
-  customApi: string;
-  apiKey: string;
-  dandisetId: string;
-  pathPrefix: string;
-}): UploaderConfig {
-  let api: string;
-  let web: string | null;
-  if (input.instance === "custom") {
-    api = input.customApi.trim().replace(/\/+$/, "");
-    web = null;
-  } else {
-    ({ api, web } = INSTANCES[input.instance]);
-  }
+export function resolveConfig(input: { apiKey: string; dandisetId: string }): UploaderConfig {
   const rawId = input.dandisetId.trim();
   const idMatch = rawId.match(/(\d{6,})/);
   return {
-    api,
-    web,
+    api: EMBER_INSTANCE.api,
+    web: EMBER_INSTANCE.web,
     apiKey: input.apiKey.trim(),
     dandisetId: idMatch ? idMatch[1] : "",
-    pathPrefix: input.pathPrefix.trim(),
   };
 }
 

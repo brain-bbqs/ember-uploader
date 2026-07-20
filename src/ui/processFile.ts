@@ -36,7 +36,7 @@ export async function processFile(
     return;
   }
 
-  row.pathInput.value = sanitizePath(cfg.pathPrefix, sanitizeFilename(file.name));
+  row.pathInput.value = sanitizeFilename(file.name);
 
   // --- 1. Integrity checks -------------------------------------------------
   try {

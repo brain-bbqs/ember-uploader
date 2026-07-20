@@ -148,15 +148,6 @@ button:focus-visible {
   outline-offset: 1px;
 }
 
-.row {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: center;
-  gap: 0.75rem;
-  margin-top: 1rem;
-}
-
 button {
   font: inherit;
   border: 1px solid var(--border);
@@ -206,19 +197,22 @@ button.hint {
   border: 0;
 }
 
-.status-bar {
-  height: 4px;
-  border-radius: 999px;
-  margin-top: 1rem;
+.status-dot {
+  display: inline-block;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
   background: var(--border);
+  margin-left: 0.35rem;
+  vertical-align: middle;
 }
-.status-bar.ok {
+.status-dot.ok {
   background: var(--ok);
 }
-.status-bar.err {
+.status-dot.err {
   background: var(--err);
 }
-.status-bar.busy {
+.status-dot.busy {
   background: var(--accent);
 }
 
