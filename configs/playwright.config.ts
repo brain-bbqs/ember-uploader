@@ -1,7 +1,10 @@
 import { defineConfig, devices } from "@playwright/test";
+import { fileURLToPath } from "node:url";
+
+const rootDir = fileURLToPath(new URL("..", import.meta.url));
 
 export default defineConfig({
-  testDir: "./tests/integration",
+  testDir: "../tests/integration",
   fullyParallel: true,
   reporter: "list",
   use: {
@@ -11,6 +14,7 @@ export default defineConfig({
   webServer: {
     command: "npm run build && npm run preview -- --port 4173",
     url: "http://localhost:4173",
+    cwd: rootDir,
     reuseExistingServer: !process.env.CI,
     timeout: 60_000,
   },

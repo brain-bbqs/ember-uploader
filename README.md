@@ -26,6 +26,8 @@ npm run preview       # preview the production build locally
 
 ```
 index.html            Vite entry point
+configs/               vite/vitest/playwright/tsconfig, kept out of the repo root
+tsconfig.json           thin root file that extends configs/tsconfig.json (so editors auto-detect it)
 src/
   main.ts             App bootstrap / event wiring
   style.css           Styles
