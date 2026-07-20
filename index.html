@@ -3,19 +3,20 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>DANDI .mp4 Uploader</title>
-  <link rel="stylesheet" href="styles.css" />
-  <link rel="icon" href="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'&gt;&lt;text y='.9em' font-size='90'&gt;🎬&lt;/text&gt;&lt;/svg&gt;" />
+  <title>EMBER Uploader</title>
+  <link rel="icon" href="./favicon.ico" />
+  <script type="module" crossorigin src="./assets/index-D17X-175.js"></script>
+  <link rel="stylesheet" crossorigin href="./assets/index-DIQbt17g.css">
 </head>
 <body>
   <main>
-    <header>
-      <h1>🎬 DANDI .mp4 Uploader</h1>
-      <p class="subtitle">
-        Drag &amp; drop <code>.mp4</code> files straight into a dandiset on the
-        <a href="https://dandiarchive.org" target="_blank" rel="noopener">DANDI Archive</a>
-        — no backend, no Python, everything runs in your browser.
-      </p>
+    <header class="site-header">
+      <div class="brand">
+        <img class="brand-logo" src="./assets/ember-logo-BRFrWvat.png" alt="EMBER Archive" />
+        <div>
+          <h1>EMBER Uploader</h1>
+        </div>
+      </div>
     </header>
 
     <section class="card" id="config-card">
@@ -73,25 +74,36 @@
         <div class="dz-inner">
           <div class="dz-icon">⬆️</div>
           <p><strong>Drop .mp4 files here</strong> or click to browse</p>
-          <p class="dz-sub">Files are checked for MP4 integrity, checksummed, and uploaded directly to the archive.</p>
         </div>
         <input type="file" id="file-input" accept=".mp4,video/mp4" multiple hidden />
       </div>
       <ul id="file-list"></ul>
     </section>
 
-    <footer>
-      <p>
-        Uploads use the same API flow as <code>dandi upload --validation skip</code>
-        (NWB validation is not performed; the app only verifies that the file is a readable MP4).
-        The dandiset must already exist and your account must have permission to edit it.
-      </p>
-    </footer>
   </main>
+
+  <div class="page-footer-bar">
+    <a
+      id="version-indicator"
+      class="version-link"
+      href="https://github.com/brain-bbqs/ember-uploader"
+      target="_blank"
+      rel="noopener"
+      title="View source on GitHub"
+    ></a>
+    <a
+      class="con-brand-link"
+      href="https://centerforopenneuroscience.org"
+      target="_blank"
+      rel="noopener"
+      aria-label="Center for Open Neuroscience"
+      title="Center for Open Neuroscience"
+    >
+      <img src="./assets/con-logo-F8_OuRqh.png" alt="Center for Open Neuroscience" />
+    </a>
+  </div>
 
   <video id="probe-video" preload="metadata" muted hidden></video>
 
-  <script src="vendor/spark-md5.min.js"></script>
-  <script src="app.js"></script>
 </body>
 </html>
