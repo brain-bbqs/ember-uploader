@@ -8,15 +8,11 @@ export interface UploaderConfig {
   web: string | null;
   apiKey: string;
   dandisetId: string;
-  pathPrefix: string;
 }
 
 export interface StoredSettings {
-  instance?: string;
-  customApi?: string;
   apiKey?: string;
   dandisetId?: string;
-  pathPrefix?: string;
 }
 
 export interface FilePart {

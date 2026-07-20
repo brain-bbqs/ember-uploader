@@ -9,37 +9,21 @@ function buildConnectionCard(status?: { text: string; kind: "ok" | "err" | "busy
     <form id="config-form">
       <div class="grid">
         <label>
-          <span>DANDI instance</span>
-          <select id="instance">
-            <option value="dandi">DANDI (dandiarchive.org)</option>
-            <option value="dandi-sandbox">DANDI Sandbox (sandbox.dandiarchive.org)</option>
-            <option value="ember-dandi">EMBER-DANDI (dandi.emberarchive.org)</option>
-            <option value="ember-dandi-sandbox">EMBER-DANDI Sandbox (dandi.sandbox.emberarchive.org)</option>
-            <option value="custom">Custom…</option>
-          </select>
-        </label>
-        <label>
           <span>API key</span>
           <input type="password" placeholder="paste your DANDI API key" autocomplete="off" spellcheck="false" />
         </label>
         <label>
-          <span>Dandiset ID</span>
+          <span
+            >Dandiset ID
+            <span class="status-indicator" role="status" aria-live="polite">
+              <span class="status-dot${status ? ` ${status.kind}` : ""}"${status ? "" : " hidden"}></span>
+              <span class="status-text${status?.kind === "err" ? "" : " sr-only"}">${status?.text ?? ""}</span>
+            </span>
+          </span>
           <input type="text" placeholder="e.g. 000123 or DANDI:000123" spellcheck="false" />
         </label>
-        <label>
-          <span>Destination folder <em>(optional)</em></span>
-          <input type="text" placeholder="e.g. videos/session1" spellcheck="false" />
-        </label>
-      </div>
-      <div class="row">
-        <label class="checkbox">
-          <input type="checkbox" checked />
-          Remember settings in this browser (API key is stored in localStorage only)
-        </label>
-        <button type="submit" class="primary">Save &amp; test connection</button>
       </div>
     </form>
-    ${status ? `<p class="status ${status.kind}">${status.text}</p>` : ""}
   `;
   return withCard(card);
 }

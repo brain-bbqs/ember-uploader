@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.0.7
+
+#### 🚀 Enhancement
+
+- Added a short message next to the status dot explaining the problem when the connection check fails, matching what was previously only in the hover tooltip ([#13](https://github.com/brain-bbqs/ember-uploader/pull/13))
+- Dropped the leftover ".mp4 files" mention from the successful connection message, since the dropzone copy no longer mentions a specific file type ([#13](https://github.com/brain-bbqs/ember-uploader/pull/13))
+
+## 0.0.6
+
+#### 🚀 Enhancement
+
+- Replaced the connection status bar with a small status dot next to the Dandiset ID field ([#13](https://github.com/brain-bbqs/ember-uploader/pull/13))
+- Removed the "Destination folder" connection setting and the DANDI instance selector; the uploader now always connects to the EMBER-DANDI archive ([#13](https://github.com/brain-bbqs/ember-uploader/pull/13))
+
+## 0.0.5
+
+#### 🚀 Enhancement
+
+- Updated the drag-and-drop dropzone copy to reference "research files" instead of `.mp4` files, and made the sentence's styling consistent (no partial bolding) ([#13](https://github.com/brain-bbqs/ember-uploader/pull/13))
+- Removed the "Remember settings in this browser" checkbox; connection settings (including the API key) are now always persisted to `localStorage` ([#13](https://github.com/brain-bbqs/ember-uploader/pull/13))
+- Replaced the "Save & test connection" button with an automatic connection check that runs whenever a connection field changes, shown via a colored status bar instead of a button/status paragraph ([#13](https://github.com/brain-bbqs/ember-uploader/pull/13))
+
 ## 0.0.4
 
 #### 🏠 Internal

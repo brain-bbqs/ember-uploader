@@ -12,16 +12,21 @@ export async function testConnection(
   saveSettings();
   const cfg = getConfig();
   const problems = configProblems(cfg);
-  const statusEl = els.connectStatus;
-  statusEl.hidden = false;
+  const dotEl = els.connectStatusDot;
+  const textEl = els.connectStatusText;
+  dotEl.hidden = false;
+  const setMessage = (text: string, visible: boolean) => {
+    textEl.textContent = text;
+    dotEl.title = text;
+    textEl.classList.toggle("sr-only", !visible);
+  };
   if (problems.length) {
-    statusEl.textContent = problems.join(" ");
-    statusEl.className = "status err";
+    setMessage(problems.join(" "), true);
+    dotEl.className = "status-dot err";
     return;
   }
-  statusEl.textContent = "Testing connection…";
-  statusEl.className = "status busy";
-  els.connectBtn.disabled = true;
+  setMessage("Testing connection…", false);
+  dotEl.className = "status-dot busy";
   try {
     let who = "";
     try {
@@ -29,7 +34,7 @@ export async function testConnection(
       who = me?.username ? ` Signed in as ${me.username}.` : "";
     } catch (e) {
       if (e instanceof ApiError && e.status === 401) {
-        throw new ApiError("API key was rejected (HTTP 401) — check that it is correct.", 401);
+        throw new ApiError("API key was rejected (HTTP 401): check that it is correct.", 401);
       }
       // Any other failure here is non-fatal; the dandiset check below still runs.
     }
@@ -38,10 +43,9 @@ export async function testConnection(
       most_recent_published_version?: { name?: string };
     }>(cfg, `/dandisets/${cfg.dandisetId}/`);
     const name = ds?.draft_version?.name || ds?.most_recent_published_version?.name || "";
-    statusEl.textContent =
-      `✓ Connected. Dandiset ${cfg.dandisetId}${name ? ` (“${name}”)` : ""} found.${who}` +
-      " You can now drop .mp4 files below.";
-    statusEl.className = "status ok";
+    const msg = `Connected. Dandiset ${cfg.dandisetId}${name ? ` (“${name}”)` : ""} found.${who}`;
+    setMessage(msg, false);
+    dotEl.className = "status-dot ok";
   } catch (e) {
     let msg = friendlyError(e);
     if (e instanceof ApiError && e.status === 0) {
@@ -51,9 +55,7 @@ export async function testConnection(
         /* diagnosis is best-effort */
       }
     }
-    statusEl.textContent = `✗ ${msg}`;
-    statusEl.className = "status err";
-  } finally {
-    els.connectBtn.disabled = false;
+    setMessage(msg, true);
+    dotEl.className = "status-dot err";
   }
 }

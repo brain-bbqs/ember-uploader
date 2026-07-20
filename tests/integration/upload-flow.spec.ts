@@ -1,6 +1,6 @@
 import { test, expect, type Route } from "@playwright/test";
 
-const API = "https://mock-dandi.test/api";
+const API = "https://api-dandi.emberarchive.org/api";
 
 function mp4Buffer(): Buffer {
   const buf = Buffer.alloc(32);
@@ -62,12 +62,11 @@ test("full upload pipeline against a mocked DANDI API", async ({ page }) => {
   });
 
   await page.goto("/");
-  await page.selectOption("#instance", "custom");
-  await page.fill("#custom-api", API);
   await page.fill("#api-key", "test-key");
   await page.fill("#dandiset-id", "000123");
-  await page.locator("#connect-btn").click();
-  await expect(page.locator("#connect-status")).toContainText("Connected");
+  await page.locator("#dandiset-id").blur();
+  await expect(page.locator("#connect-status-dot")).toHaveClass(/\bok\b/);
+  await expect(page.locator("#connect-status-text")).toContainText("Connected");
 
   const fileChooserPromise = page.waitForEvent("filechooser");
   await page.locator("#dropzone").click();

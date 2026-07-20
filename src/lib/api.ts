@@ -23,7 +23,7 @@ export async function apiFetch<T = unknown>(
     resp = await fetch(`${cfg.api}${path}`, { method, headers, body });
   } catch (e) {
     throw new ApiError(
-      `Network error calling ${path} — check your connection (or the server's CORS policy): ${
+      `Network error calling ${path}. Check your connection (or the server's CORS policy): ${
         e instanceof Error ? e.message : String(e)
       }`,
       0,
@@ -72,7 +72,7 @@ export async function diagnoseCors(cfg: UploaderConfig): Promise<string> {
   if (!preflighted) {
     return (
       `CORS diagnosis: simple requests from ${origin} pass, but preflighted (OPTIONS) ` +
-      "requests are rejected — the API's CORS layer is not answering preflights for this origin."
+      "requests are rejected. The API's CORS layer is not answering preflights for this origin."
     );
   }
   // GETs pass — check whether POSTs fail across the board or only the upload
@@ -105,7 +105,7 @@ export async function diagnoseCors(cfg: UploaderConfig): Promise<string> {
   return (
     `CORS diagnosis: reads work but writes are blocked. dandi-archive servers allow ` +
     "GET/HEAD/OPTIONS from ANY origin (the cors_allow_anyone_read_only hook) but only " +
-    `add CORS headers to write responses for allowlisted origins — and ${origin} is not ` +
+    `add CORS headers to write responses for allowlisted origins, and ${origin} is not ` +
     "in this server's DJANGO_CORS_ALLOWED_ORIGINS. Ask the instance operators to add " +
     "this origin to that allowlist (for DANDI itself: the allowed_external_services " +
     "list in dandi-infrastructure's terraform/main.tf)."
