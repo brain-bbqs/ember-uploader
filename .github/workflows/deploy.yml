@@ -1,0 +1,33 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency: gh-pages-main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # No build step — stage the static site as-is.
+      - name: Stage static site
+        run: |
+          mkdir -p dist
+          cp -r index.html app.js styles.css vendor dist/
+
+      - name: Deploy
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: dist
+          branch: gh-pages
+          # Keep PR previews (managed by preview.yml) intact.
+          clean-exclude: pr-preview/
+          force: false
