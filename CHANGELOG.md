@@ -5,6 +5,7 @@
 #### 🚀 Enhancement
 
 - Added a short message next to the status dot explaining the problem when the connection check fails, matching what was previously only in the hover tooltip ([#13](https://github.com/brain-bbqs/ember-uploader/pull/13))
+- Dropped the leftover ".mp4 files" mention from the successful connection message, since the dropzone copy no longer mentions a specific file type ([#13](https://github.com/brain-bbqs/ember-uploader/pull/13))
 
 ## 0.0.6
 

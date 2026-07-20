@@ -43,9 +43,7 @@ export async function testConnection(
       most_recent_published_version?: { name?: string };
     }>(cfg, `/dandisets/${cfg.dandisetId}/`);
     const name = ds?.draft_version?.name || ds?.most_recent_published_version?.name || "";
-    const msg =
-      `Connected. Dandiset ${cfg.dandisetId}${name ? ` (“${name}”)` : ""} found.${who}` +
-      " You can now drop .mp4 files below.";
+    const msg = `Connected. Dandiset ${cfg.dandisetId}${name ? ` (“${name}”)` : ""} found.${who}`;
     setMessage(msg, false);
     dotEl.className = "status-dot ok";
   } catch (e) {
