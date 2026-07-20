@@ -29,6 +29,8 @@ jobs:
 
       - name: Run Chromatic
         uses: chromaui/action@latest
+        env:
+          CHROMATIC_STATIC_VERSION: "true"
         with:
           projectToken: ${{ secrets.CHROMATIC_STORYBOOK_PROJECT_TOKEN }}
           onlyChanged: true

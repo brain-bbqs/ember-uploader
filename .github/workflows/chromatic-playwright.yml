@@ -32,6 +32,8 @@ jobs:
 
       - name: Run Playwright tests
         run: npm run test:chromatic
+        env:
+          CHROMATIC_STATIC_VERSION: "true"
 
       - name: Run Chromatic
         uses: chromaui/action@latest
