@@ -1,6 +1,6 @@
 # Changelog
 
-## Upcoming
+## 0.0.4
 
 #### 🏠 Internal
 
