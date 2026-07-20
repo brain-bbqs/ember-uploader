@@ -1,11 +1,12 @@
 # Changelog
 
-## Upcoming
+## 0.0.4
 
 #### 🏠 Internal
 
 - Bumped `vitest` from `2.1.9` to `4.1.10` and resolved merge conflicts against `main` ([#11](https://github.com/brain-bbqs/ember-uploader/pull/11))
 - Pinned the footer version indicator to a static placeholder (via a new `CHROMATIC_STATIC_VERSION` env var) when building Storybook and the Chromatic Playwright snapshots, so routine `package.json` version bumps no longer retrigger unrelated Chromatic diffs ([#11](https://github.com/brain-bbqs/ember-uploader/pull/11))
+- Set up Codecov: unit tests now run with coverage in CI and upload results via `codecov/codecov-action`, added an `lcov` reporter to the Vitest coverage config, and ignored the local `coverage/` output directory ([#12](https://github.com/brain-bbqs/ember-uploader/pull/12))
 
 ## 0.0.2
 
