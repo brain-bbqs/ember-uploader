@@ -7,7 +7,12 @@ export function loadStoredSettings(): StoredSettings | null {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
-    return JSON.parse(raw) as StoredSettings;
+    const parsed = JSON.parse(raw) as StoredSettings;
+    return {
+      ...parsed,
+      // Never restore sensitive credentials from persistent browser storage.
+      apiKey: "",
+    };
   } catch (e) {
     console.warn("Could not restore settings:", e);
     return null;
@@ -19,7 +24,11 @@ export function saveStoredSettings(settings: StoredSettings | null): void {
     localStorage.removeItem(STORAGE_KEY);
     return;
   }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+  const persisted: StoredSettings = {
+    apiKey: "",
+    dandisetId: settings.dandisetId,
+  };
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(persisted));
 }
 
 export function resolveConfig(input: { apiKey: string; dandisetId: string }): UploaderConfig {
