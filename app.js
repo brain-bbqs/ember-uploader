@@ -832,10 +832,12 @@ async function diagnoseCors(cfg) {
     );
   }
   return (
-    `CORS diagnosis: GET requests from ${origin} pass CORS, but every POST response ` +
-    "comes back without an Access-Control-Allow-Origin header. Something in the " +
-    "server's stack (a proxy, gateway, or WAF in front of the Django API) is stripping " +
-    "CORS headers from POST responses. This can only be fixed by the instance operators."
+    `CORS diagnosis: reads work but writes are blocked. dandi-archive servers allow ` +
+    "GET/HEAD/OPTIONS from ANY origin (the cors_allow_anyone_read_only hook) but only " +
+    `add CORS headers to write responses for allowlisted origins — and ${origin} is not ` +
+    "in this server's DJANGO_CORS_ALLOWED_ORIGINS. Ask the instance operators to add " +
+    "this origin to that allowlist (for DANDI itself: the allowed_external_services " +
+    "list in dandi-infrastructure's terraform/main.tf)."
   );
 }
 

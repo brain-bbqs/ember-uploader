@@ -95,17 +95,25 @@ than the DANDI API and its S3 storage bucket.
 ## Troubleshooting CORS (for instance operators)
 
 The app runs on a different origin than the archive API, so the API
-deployment must allow it. If "Save & test connection" works but uploads fail
-at `POST /uploads/initialize/` with a missing `Access-Control-Allow-Origin`
-header, the app prints a differential CORS diagnosis; server-side, check:
+deployment must allow it. dandi-archive deliberately splits CORS by method
+(`dandiapi/api/signals.py` → `cors_allow_anyone_read_only`): **GET/HEAD/OPTIONS
+are allowed from any origin, but write methods only get CORS headers when the
+origin is explicitly allowlisted.** This produces a distinctive failure mode:
+"Save & test connection" works (reads), yet `POST /uploads/initialize/` dies
+with a missing `Access-Control-Allow-Origin` header on a `200` response — the
+upload actually initialized server-side, but the browser wasn't allowed to
+read the answer. The app detects this and prints a differential CORS
+diagnosis. Server-side checklist:
 
-1. **API (Django)** — the origin hosting this page must be included in
-   `DJANGO_CORS_ALLOWED_ORIGINS` (or matched by
-   `DJANGO_CORS_ALLOWED_ORIGIN_REGEXES`), e.g.
-   `https://<owner>.github.io`. Note that `django-cors-headers` applies to
-   all methods equally — if GETs pass but POSTs don't, look for a proxy, WAF,
-   or gateway in front of the API that answers `OPTIONS` itself or strips
-   response headers on POST.
+1. **API (Django)** — the origin hosting this page (e.g.
+   `https://<owner>.github.io` — origins never include a path) must be added
+   to `DJANGO_CORS_ALLOWED_ORIGINS` (or matched by
+   `DJANGO_CORS_ALLOWED_ORIGIN_REGEXES`). For DANDI's own deployments these
+   env vars are managed in
+   [dandi-infrastructure](https://github.com/dandi/dandi-infrastructure)
+   `terraform/main.tf`, where third-party web apps (medit, Neurosift) are
+   listed in `locals.allowed_external_services` — adding an origin there
+   flows into both the production and sandbox APIs.
 2. **Storage bucket (S3/MinIO)** — the bucket receiving the presigned part
    uploads needs a CORS rule allowing `PUT`/`POST` from the app's origin
    **and exposing the `ETag` response header**:
