@@ -17,11 +17,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # No build step — stage the static site as-is.
-      - name: Stage static site
-        run: |
-          mkdir -p dist
-          cp -r index.html app.js styles.css vendor dist/
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4

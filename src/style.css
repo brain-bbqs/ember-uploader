@@ -47,11 +47,27 @@ body {
 main {
   max-width: 860px;
   margin: 0 auto;
-  padding: 2rem 1rem 4rem;
+  padding: 2rem 1rem 5rem;
 }
 
-header h1 { margin: 0 0 0.25rem; font-size: 1.7rem; }
-.subtitle { color: var(--muted); margin-top: 0; }
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.site-header .brand {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.brand-logo { height: 2.4rem; width: auto; }
+
+header h1 { margin: 0; font-size: 1.7rem; }
+
 a { color: var(--accent); }
 code {
   background: var(--accent-soft);
@@ -155,7 +171,6 @@ button.hint {
 #dropzone.dragover { border-color: var(--accent); background: var(--accent-soft); }
 .dz-icon { font-size: 2rem; }
 .dz-inner p { margin: 0.4rem 0; }
-.dz-sub { color: var(--muted); font-size: 0.85rem; }
 
 #file-list { list-style: none; margin: 1rem 0 0; padding: 0; display: flex; flex-direction: column; gap: 0.75rem; }
 
@@ -215,4 +230,26 @@ button.hint {
 .badge.err { background: var(--err-soft); color: var(--err); }
 .badge.busy { background: var(--accent-soft); color: var(--accent); }
 
-footer { color: var(--muted); font-size: 0.85rem; margin-top: 2rem; }
+.page-footer-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.6rem 1.25rem;
+}
+
+.version-link {
+  color: var(--muted);
+  font-size: 0.8rem;
+  text-decoration: underline;
+}
+
+.con-brand-link img {
+  display: block;
+  height: 2.75rem;
+  width: auto;
+}
