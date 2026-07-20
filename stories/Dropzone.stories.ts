@@ -10,7 +10,7 @@ function buildDropzone(dragover: boolean): HTMLElement {
   dz.innerHTML = `
     <div class="dz-inner">
       <div class="dz-icon">⬆️</div>
-      <p><strong>Drop your research files here</strong> or click to browse</p>
+      <p>Drop your research files here or click to browse</p>
     </div>
   `;
   return withCard(dz);
