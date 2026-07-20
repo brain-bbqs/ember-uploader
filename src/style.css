@@ -383,7 +383,7 @@ button.hint {
 
 .version-link {
   color: var(--muted);
-  font-size: 0.65rem;
+  font-size: 1.3rem;
   text-decoration: underline;
 }
 
@@ -391,5 +391,5 @@ button.hint {
   display: block;
   height: 5rem;
   width: auto;
-  opacity: 0.2;
+  opacity: 0.26;
 }
