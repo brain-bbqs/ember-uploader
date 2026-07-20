@@ -240,8 +240,6 @@ button.hint {
   justify-content: space-between;
   gap: 1rem;
   padding: 0.6rem 1.25rem;
-  background: var(--bg);
-  border-top: 1px solid var(--border);
 }
 
 .version-link {
