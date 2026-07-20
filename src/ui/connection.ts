@@ -12,16 +12,18 @@ export async function testConnection(
   saveSettings();
   const cfg = getConfig();
   const problems = configProblems(cfg);
-  const statusEl = els.connectStatus;
-  statusEl.hidden = false;
+  const barEl = els.connectStatusBar;
+  const textEl = els.connectStatusText;
+  barEl.hidden = false;
   if (problems.length) {
-    statusEl.textContent = problems.join(" ");
-    statusEl.className = "status err";
+    textEl.textContent = problems.join(" ");
+    barEl.title = problems.join(" ");
+    barEl.className = "status-bar err";
     return;
   }
-  statusEl.textContent = "Testing connection…";
-  statusEl.className = "status busy";
-  els.connectBtn.disabled = true;
+  textEl.textContent = "Testing connection…";
+  barEl.title = "Testing connection…";
+  barEl.className = "status-bar busy";
   try {
     let who = "";
     try {
@@ -38,10 +40,12 @@ export async function testConnection(
       most_recent_published_version?: { name?: string };
     }>(cfg, `/dandisets/${cfg.dandisetId}/`);
     const name = ds?.draft_version?.name || ds?.most_recent_published_version?.name || "";
-    statusEl.textContent =
+    const msg =
       `✓ Connected. Dandiset ${cfg.dandisetId}${name ? ` (“${name}”)` : ""} found.${who}` +
       " You can now drop .mp4 files below.";
-    statusEl.className = "status ok";
+    textEl.textContent = msg;
+    barEl.title = msg;
+    barEl.className = "status-bar ok";
   } catch (e) {
     let msg = friendlyError(e);
     if (e instanceof ApiError && e.status === 0) {
@@ -51,9 +55,8 @@ export async function testConnection(
         /* diagnosis is best-effort */
       }
     }
-    statusEl.textContent = `✗ ${msg}`;
-    statusEl.className = "status err";
-  } finally {
-    els.connectBtn.disabled = false;
+    textEl.textContent = `✗ ${msg}`;
+    barEl.title = msg;
+    barEl.className = "status-bar err";
   }
 }

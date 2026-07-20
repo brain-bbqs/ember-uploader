@@ -57,15 +57,10 @@
               <input type="text" id="path-prefix" placeholder="e.g. videos/session1" spellcheck="false" />
             </label>
           </div>
-          <div class="row">
-            <label class="checkbox">
-              <input type="checkbox" id="remember" checked />
-              Remember settings in this browser (API key is stored in localStorage only)
-            </label>
-            <button id="connect-btn" type="submit" class="primary">Save &amp; test connection</button>
-          </div>
         </form>
-        <p id="connect-status" class="status" hidden></p>
+        <div id="connect-status-bar" class="status-bar" hidden>
+          <span id="connect-status-text" class="sr-only"></span>
+        </div>
         <p id="api-key-help-text" class="help" hidden>
           Log in at your DANDI instance, click your user initials in the top-right corner, and choose “API key”. The key
           is kept in this browser only and is sent solely to the API server selected above.

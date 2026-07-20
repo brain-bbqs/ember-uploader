@@ -31,15 +31,10 @@ function buildConnectionCard(status?: { text: string; kind: "ok" | "err" | "busy
           <input type="text" placeholder="e.g. videos/session1" spellcheck="false" />
         </label>
       </div>
-      <div class="row">
-        <label class="checkbox">
-          <input type="checkbox" checked />
-          Remember settings in this browser (API key is stored in localStorage only)
-        </label>
-        <button type="submit" class="primary">Save &amp; test connection</button>
-      </div>
     </form>
-    ${status ? `<p class="status ${status.kind}">${status.text}</p>` : ""}
+    <div class="status-bar${status ? ` ${status.kind}` : ""}"${status ? "" : " hidden"}>
+      <span class="sr-only">${status?.text ?? ""}</span>
+    </div>
   `;
   return withCard(card);
 }

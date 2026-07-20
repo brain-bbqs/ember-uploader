@@ -19,7 +19,7 @@ function toggleCustomApi(): void {
   els.customApiLabel.hidden = els.instance.value !== "custom";
 }
 
-function loadSettings(): void {
+function loadSettings(): boolean {
   const s = loadStoredSettings();
   if (s) {
     if (s.instance) els.instance.value = s.instance;
@@ -29,13 +29,10 @@ function loadSettings(): void {
     if (s.pathPrefix) els.pathPrefix.value = s.pathPrefix;
   }
   toggleCustomApi();
+  return s !== null;
 }
 
 function saveSettings(): void {
-  if (!els.remember.checked) {
-    saveStoredSettings(null);
-    return;
-  }
   saveStoredSettings({
     instance: els.instance.value,
     customApi: els.customApi.value.trim(),
@@ -61,20 +58,21 @@ function addFiles(fileList: FileList): void {
   }
 }
 
-loadSettings();
+function runConnectionCheck(): void {
+  void testConnection(els, currentConfig, saveSettings);
+}
+
+const hadStoredSettings = loadSettings();
 initDropzone(els, addFiles);
 els.instance.addEventListener("change", () => {
   toggleCustomApi();
-  saveSettings();
+  runConnectionCheck();
 });
 [els.customApi, els.apiKey, els.dandisetId, els.pathPrefix].forEach((el) =>
-  el.addEventListener("change", saveSettings),
+  el.addEventListener("change", runConnectionCheck),
 );
-els.remember.addEventListener("change", saveSettings);
-document.getElementById("config-form")!.addEventListener("submit", (e) => {
-  e.preventDefault();
-  void testConnection(els, currentConfig, saveSettings);
-});
+document.getElementById("config-form")!.addEventListener("submit", (e) => e.preventDefault());
+if (hadStoredSettings) runConnectionCheck();
 els.apiKeyHelp.addEventListener("click", () => {
   els.apiKeyHelpText.hidden = !els.apiKeyHelpText.hidden;
 });

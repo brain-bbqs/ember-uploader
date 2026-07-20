@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.0.5
+
+#### 🚀 Enhancement
+
+- Updated the drag-and-drop dropzone copy to reference "research files" instead of `.mp4` files, and made the sentence's styling consistent (no partial bolding) ([#13](https://github.com/brain-bbqs/ember-uploader/pull/13))
+- Removed the "Remember settings in this browser" checkbox; connection settings (including the API key) are now always persisted to `localStorage` ([#13](https://github.com/brain-bbqs/ember-uploader/pull/13))
+- Replaced the "Save & test connection" button with an automatic connection check that runs whenever a connection field changes, shown via a colored status bar instead of a button/status paragraph ([#13](https://github.com/brain-bbqs/ember-uploader/pull/13))
+
 ## 0.0.4
 
 #### 🏠 Internal

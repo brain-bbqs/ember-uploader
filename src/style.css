@@ -157,13 +157,6 @@ button:focus-visible {
   margin-top: 1rem;
 }
 
-.checkbox {
-  flex-direction: row;
-  align-items: center;
-  gap: 0.5rem;
-  color: var(--muted);
-}
-
 button {
   font: inherit;
   border: 1px solid var(--border);
@@ -201,22 +194,32 @@ button.hint {
   font-size: 0.85rem;
 }
 
-.status {
-  padding: 0.55rem 0.8rem;
-  border-radius: 8px;
-  font-size: 0.9rem;
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
-.status.ok {
-  background: var(--ok-soft);
-  color: var(--ok);
+
+.status-bar {
+  height: 4px;
+  border-radius: 999px;
+  margin-top: 1rem;
+  background: var(--border);
 }
-.status.err {
-  background: var(--err-soft);
-  color: var(--err);
+.status-bar.ok {
+  background: var(--ok);
 }
-.status.busy {
-  background: var(--accent-soft);
-  color: var(--accent);
+.status-bar.err {
+  background: var(--err);
+}
+.status-bar.busy {
+  background: var(--accent);
 }
 
 #dropzone {
