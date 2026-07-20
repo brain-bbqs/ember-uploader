@@ -20,12 +20,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # No build step — stage the static site as-is.
-      - name: Stage static site
+      - name: Set up Node
         if: github.event.action != 'closed'
-        run: |
-          mkdir -p dist
-          cp -r index.html app.js styles.css vendor dist/
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        if: github.event.action != 'closed'
+        run: npm ci
+
+      - name: Build
+        if: github.event.action != 'closed'
+        run: npm run build
 
       - name: Deploy preview
         uses: rossjrw/pr-preview-action@v1

@@ -3,19 +3,24 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>DANDI .mp4 Uploader</title>
-  <link rel="stylesheet" href="styles.css" />
-  <link rel="icon" href="data:image/svg+xml,&lt;svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'&gt;&lt;text y='.9em' font-size='90'&gt;🎬&lt;/text&gt;&lt;/svg&gt;" />
+  <title>EMBER .mp4 Uploader</title>
+  <link rel="icon" href="/favicon.ico" />
 </head>
 <body>
   <main>
-    <header>
-      <h1>🎬 DANDI .mp4 Uploader</h1>
-      <p class="subtitle">
-        Drag &amp; drop <code>.mp4</code> files straight into a dandiset on the
-        <a href="https://dandiarchive.org" target="_blank" rel="noopener">DANDI Archive</a>
-        — no backend, no Python, everything runs in your browser.
-      </p>
+    <header class="site-header">
+      <div class="brand">
+        <img class="brand-logo" src="/src/assets/ember-logo.svg" alt="EMBER Archive" />
+        <div>
+          <h1>EMBER .mp4 Uploader</h1>
+          <p class="subtitle">
+            Drag &amp; drop <code>.mp4</code> files straight into a dandiset on the
+            <a href="https://dandiarchive.org" target="_blank" rel="noopener">DANDI Archive</a>
+            — no backend, no Python, everything runs in your browser.
+          </p>
+        </div>
+      </div>
+      <span class="version-badge" id="version-indicator" title="App version"></span>
     </header>
 
     <section class="card" id="config-card">
@@ -86,12 +91,23 @@
         (NWB validation is not performed; the app only verifies that the file is a readable MP4).
         The dandiset must already exist and your account must have permission to edit it.
       </p>
+      <div class="site-footer">
+        <div class="footer-credit">
+          <a href="https://centerforopenneuroscience.org" target="_blank" rel="noopener" aria-label="Center for Open Neuroscience" title="Center for Open Neuroscience">
+            <img src="/src/assets/con-logo.png" alt="Center for Open Neuroscience logo" />
+          </a>
+          <span>
+            Built &amp; maintained by the
+            <a href="https://centerforopenneuroscience.org" target="_blank" rel="noopener">Center for Open Neuroscience</a>
+          </span>
+        </div>
+        <a href="https://github.com/brain-bbqs/ember-uploader" target="_blank" rel="noopener">Source on GitHub ↗</a>
+      </div>
     </footer>
   </main>
 
   <video id="probe-video" preload="metadata" muted hidden></video>
 
-  <script src="vendor/spark-md5.min.js"></script>
-  <script src="app.js"></script>
+  <script type="module" src="/src/main.ts"></script>
 </body>
 </html>
