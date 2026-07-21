@@ -2,13 +2,6 @@ import { test, expect, type Route } from "@playwright/test";
 
 const API = "https://api-dandi.emberarchive.org/api";
 
-function mp4Buffer(): Buffer {
-  const buf = Buffer.alloc(32);
-  buf.writeUInt32BE(32, 0);
-  buf.write("ftyp", 4, "ascii");
-  return buf;
-}
-
 test("full upload pipeline against a mocked DANDI API", async ({ page }) => {
   const createdAssets: unknown[] = [];
 
@@ -71,20 +64,53 @@ test("full upload pipeline against a mocked DANDI API", async ({ page }) => {
   const fileChooserPromise = page.waitForEvent("filechooser");
   await page.locator("#dropzone").click();
   const fileChooser = await fileChooserPromise;
-  await fileChooser.setFiles({ name: "clip.mp4", mimeType: "video/mp4", buffer: mp4Buffer() });
+  await fileChooser.setFiles({ name: "clip.mp4", mimeType: "video/mp4", buffer: Buffer.alloc(32) });
 
   const row = page.locator("#file-list .file-item").first();
-
-  // The buffer isn't a real playable video, so the browser can't decode it —
-  // exercise the "upload anyway" branch of the integrity check.
-  await expect(row.getByRole("button", { name: "Upload anyway" })).toBeVisible({ timeout: 15000 });
-  await row.getByRole("button", { name: "Upload anyway" }).click();
-
-  await row.getByRole("button", { name: "Start upload" }).click();
+  await expect(row.locator('[data-role="badge"]')).toHaveText("Queued");
+  await expect(page.locator("#upload-all-btn")).toHaveText("Upload 1 file");
+  await page.locator("#upload-all-btn").click();
 
   await expect(row.locator('[data-role="badge"]')).toHaveText("Done", { timeout: 15000 });
   await expect(row.locator('[data-role="status"]')).toContainText("Uploaded successfully as sourcedata/raw/clip.mp4");
   expect(createdAssets).toEqual([
     { blob_id: "blob-1", metadata: { path: "sourcedata/raw/clip.mp4", encodingFormat: "video/mp4" } },
   ]);
+});
+
+test("skips a file automatically when an asset already exists at its path, no prompt", async ({ page }) => {
+  let assetCreated = false;
+
+  await page.route(`${API}/users/me/`, (route: Route) => route.fulfill({ json: { username: "test-user" } }));
+  await page.route(`${API}/dandisets/000123/`, (route: Route) =>
+    route.fulfill({ json: { draft_version: { name: "Test dandiset" } } }),
+  );
+  await page.route(`${API}/dandisets/000123/versions/draft/assets/?path=*`, (route: Route) =>
+    route.fulfill({ json: { results: [{ asset_id: "existing-1", path: "sourcedata/raw/clip.mp4" }], next: null } }),
+  );
+  await page.route(`${API}/dandisets/000123/versions/draft/assets/`, (route: Route) => {
+    if (route.request().method() === "POST") {
+      assetCreated = true;
+      return route.fulfill({ json: { asset_id: "asset-1", path: "sourcedata/raw/clip.mp4" } });
+    }
+    return route.continue();
+  });
+
+  await page.goto("/");
+  await page.fill("#api-key", "test-key");
+  await page.fill("#dandiset-id", "000123");
+  await page.locator("#dandiset-id").blur();
+  await expect(page.locator("#connect-status-dot")).toHaveClass(/\bok\b/);
+
+  const fileChooserPromise = page.waitForEvent("filechooser");
+  await page.locator("#dropzone").click();
+  const fileChooser = await fileChooserPromise;
+  await fileChooser.setFiles({ name: "clip.mp4", mimeType: "video/mp4", buffer: Buffer.alloc(32) });
+
+  const row = page.locator("#file-list .file-item").first();
+  await page.locator("#upload-all-btn").click();
+
+  await expect(row.locator('[data-role="badge"]')).toHaveText("Skipped", { timeout: 15000 });
+  await expect(row.locator('[data-role="status"]')).toContainText("an asset already exists at this path");
+  expect(assetCreated).toBe(false);
 });

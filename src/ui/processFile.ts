@@ -1,9 +1,7 @@
 import type { UploaderConfig } from "../lib/types";
-import type { UploaderElements } from "./elements";
-import { createFileRow, askUser } from "./fileRow";
+import { createFileRow, type FileRow } from "./fileRow";
 import { configProblems } from "../lib/settings";
 import { sanitizeFilename, sanitizePath } from "../lib/sanitize";
-import { checkMp4Structure, probeVideoDecodable } from "../lib/mp4";
 import { planParts, computeDandiEtag } from "../lib/etag";
 import { uploadBlob, findExistingAsset, createOrReplaceAsset } from "../lib/upload-pipeline";
 import { diagnoseCors } from "../lib/api";
@@ -11,77 +9,27 @@ import { ApiError, friendlyError } from "../lib/errors";
 
 let fileCounter = 0;
 
-function isMp4(file: File): boolean {
-  return /\.mp4$/i.test(file.name) || file.type === "video/mp4";
-}
-
-export async function processFile(
-  els: UploaderElements,
-  file: File,
-  relativePath: string,
-  getConfig: () => UploaderConfig,
-  activeUploads: Set<AbortController>,
-  container: HTMLUListElement,
-): Promise<void> {
+/** Adds a row to the file list with its suggested archive path, ready for a later batch upload. */
+export function queueFileRow(container: HTMLUListElement, file: File, relativePath: string): FileRow {
   const id = `file-${fileCounter++}`;
   const row = createFileRow(container, file, id);
+  const prefix = ["sourcedata", "raw", ...relativePath.split("/").filter(Boolean)].join("/");
+  row.pathInput.value = sanitizePath(prefix, sanitizeFilename(file.name));
+  row.setBadge("Queued", "busy");
+  row.setStatus("Ready to upload.");
+  return row;
+}
 
-  const cfg = getConfig();
+export async function uploadFile(
+  row: FileRow,
+  file: File,
+  cfg: UploaderConfig,
+  activeUploads: Set<AbortController>,
+): Promise<void> {
   const problems = configProblems(cfg);
   if (problems.length) {
     row.setBadge("Blocked", "err");
-    row.setStatus(`Fix the connection settings first, then re-add this file:\n${problems.join("\n")}`, "err");
-    row.pathInput.disabled = true;
-    return;
-  }
-
-  const prefix = ["sourcedata", "raw", ...relativePath.split("/").filter(Boolean)].join("/");
-  row.pathInput.value = sanitizePath(prefix, sanitizeFilename(file.name));
-
-  // --- 1. Integrity checks (MP4-specific; skipped for other file types) ----
-  if (isMp4(file)) {
-    try {
-      row.setBadge("Checking", "busy");
-      row.setStatus("Verifying MP4 structure…");
-      await checkMp4Structure(file);
-      row.setStatus("Verifying the file can be opened…");
-      const probe = await probeVideoDecodable(els.probeVideo, file);
-      if (probe.ok) {
-        const secs = Number.isFinite(probe.duration) ? `${Math.round(probe.duration!)} s` : "unknown length";
-        row.setStatus(`MP4 verified (${probe.width}×${probe.height}, ${secs}).`, "ok");
-      } else {
-        const answer = await askUser(
-          row,
-          `MP4 structure looks fine, but this browser could not decode it (${probe.reason}). ` +
-            "This can happen with codecs the browser lacks. Upload anyway?",
-          [
-            { label: "Upload anyway", value: "upload", primary: true },
-            { label: "Skip file", value: "skip" },
-          ],
-        );
-        if (answer === "skip") {
-          row.setBadge("Skipped", "warn");
-          row.setStatus("Skipped by user.", "warn");
-          return;
-        }
-      }
-    } catch (e) {
-      row.setBadge("Invalid", "err");
-      row.setStatus(e instanceof Error ? e.message : String(e), "err");
-      return;
-    }
-  } else {
-    row.setBadge("Queued", "busy");
-    row.setStatus("File added.");
-  }
-
-  // --- 2. Wait for the user to confirm the destination path ---------------
-  const proceed = await askUser(row, "Ready — adjust the archive path above if needed, then start.", [
-    { label: "Start upload", value: "go", primary: true },
-    { label: "Remove", value: "remove" },
-  ]);
-  if (proceed === "remove") {
-    row.el.remove();
+    row.setStatus(`Fix the connection settings first:\n${problems.join("\n")}`, "err");
     return;
   }
 
@@ -92,14 +40,12 @@ export async function processFile(
     return;
   }
   row.pathInput.value = path;
-  row.pathInput.disabled = true;
 
   const abort = new AbortController();
   activeUploads.add(abort);
-  let cancelBtn = row.addAction("Cancel", () => abort.abort());
 
   try {
-    // --- 3. Checksum -------------------------------------------------------
+    // --- 1. Checksum ---------------------------------------------------
     row.setBadge("Hashing", "busy");
     row.setStatus("Computing dandi-etag checksum…");
     const parts = planParts(file.size);
@@ -109,28 +55,17 @@ export async function processFile(
     });
     row.setProgress(0);
 
-    // --- 4. Conflict check ---------------------------------------------
+    // --- 2. Conflict check (skip automatically; never overwrites) ------
     row.setBadge("Uploading", "busy");
     row.setStatus("Checking for an existing file at this path…");
     const existing = await findExistingAsset(cfg, path);
-    let existingAssetId: string | null = null;
     if (existing) {
-      cancelBtn.remove();
-      const answer = await askUser(row, `“${path}” already exists in dandiset ${cfg.dandisetId} — replace it?`, [
-        { label: "Replace", value: "replace", primary: true },
-        { label: "Skip file", value: "skip" },
-      ]);
-      cancelBtn = row.addAction("Cancel", () => abort.abort());
-      if (answer === "skip") {
-        row.setBadge("Skipped", "warn");
-        row.setStatus("Skipped — an asset already exists at this path.", "warn");
-        activeUploads.delete(abort);
-        return;
-      }
-      existingAssetId = existing.asset_id;
+      row.setBadge("Skipped", "warn");
+      row.setStatus("Skipped — an asset already exists at this path.", "warn");
+      return;
     }
 
-    // --- 5. Blob upload ------------------------------------------------
+    // --- 3. Blob upload --------------------------------------------------
     row.setStatus("Uploading to the archive…");
     const { blobId, reused } = await uploadBlob(
       cfg,
@@ -144,15 +79,13 @@ export async function processFile(
       abort.signal,
     );
 
-    // --- 6. Asset registration -------------------------------------------
+    // --- 4. Asset registration -------------------------------------------
     row.setStatus(reused ? "Identical file already stored — registering asset…" : "Registering asset…");
-    const asset = await createOrReplaceAsset(cfg, path, blobId, existingAssetId, file.type || undefined);
+    const asset = await createOrReplaceAsset(cfg, path, blobId, null, file.type || undefined);
 
     row.setBadge("Done", "ok");
     row.setProgress(1, true);
-    row.clearActions();
-    const verb = existingAssetId ? "Replaced" : "Uploaded";
-    row.setStatus(`${verb} successfully as ${path}`, "ok");
+    row.setStatus(`Uploaded successfully as ${path}`, "ok");
     if (cfg.web) {
       const folder = path.includes("/") ? path.slice(0, path.lastIndexOf("/") + 1) : "";
       const viewUrl = `${cfg.web}/dandiset/${cfg.dandisetId}/draft/files` + `?location=${encodeURIComponent(folder)}`;
@@ -186,7 +119,6 @@ export async function processFile(
       row.setStatus(msg, "err");
       console.error(e);
     }
-    row.clearActions();
   } finally {
     activeUploads.delete(abort);
   }

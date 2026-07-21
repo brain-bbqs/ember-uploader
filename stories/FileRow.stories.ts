@@ -19,15 +19,6 @@ export const Queued = {
   render: () => buildRow((row) => row.setBadge("Queued", "busy")),
 };
 
-export const Checking = {
-  name: "Checking MP4 structure",
-  render: () =>
-    buildRow((row) => {
-      row.setBadge("Checking", "busy");
-      row.setStatus("Verifying MP4 structure…");
-    }),
-};
-
 export const Uploading = {
   name: "Uploading (in progress)",
   render: () =>
@@ -38,14 +29,12 @@ export const Uploading = {
     }),
 };
 
-export const NeedsConfirmation = {
-  name: "Needs confirmation (existing asset)",
+export const Skipped = {
+  name: "Skipped (existing asset)",
   render: () =>
     buildRow((row) => {
-      row.setBadge("Checking", "busy");
-      row.setStatus("An asset already exists at this path. Overwrite it?", "warn");
-      row.addAction("Skip", () => {});
-      row.addAction("Overwrite", () => {}, true);
+      row.setBadge("Skipped", "warn");
+      row.setStatus("Skipped — an asset already exists at this path.", "warn");
     }),
 };
 

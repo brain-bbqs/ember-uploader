@@ -65,6 +65,10 @@
           <input type="file" id="file-input" multiple hidden />
           <input type="file" id="folder-input" webkitdirectory multiple hidden />
         </div>
+        <div id="upload-bar" class="upload-bar" hidden>
+          <button type="button" id="upload-all-btn" class="primary">Upload</button>
+          <button type="button" id="cancel-all-btn" hidden>Cancel</button>
+        </div>
         <ul id="file-list"></ul>
       </section>
     </main>
@@ -89,8 +93,6 @@
         <img src="/src/assets/con-logo.png" alt="Center for Open Neuroscience" />
       </a>
     </div>
-
-    <video id="probe-video" preload="metadata" muted hidden></video>
 
     <script type="module" src="/src/main.ts"></script>
   </body>

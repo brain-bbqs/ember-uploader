@@ -8,6 +8,11 @@
 - `.git`, `.datalad`, and `.git-annex` folders (and any files inside them) are automatically skipped when uploading a dropped or selected folder ([#17](https://github.com/brain-bbqs/ember-uploader/pull/17))
 - The file list now groups dropped files by folder, collapsing any folder with more than 30 files/subfolders into a single expandable row instead of listing every entry ([#17](https://github.com/brain-bbqs/ember-uploader/pull/17))
 - Reworded the dropzone copy to "Drop your research contents here" instead of "files or folders" ([#17](https://github.com/brain-bbqs/ember-uploader/pull/17))
+- Replaced the per-file "Start upload"/"Remove" confirmation and "Replace/Skip" existing-asset prompt with a single "Upload N files" button above the file list; files with a path collision are now skipped automatically instead of prompting ([#17](https://github.com/brain-bbqs/ember-uploader/pull/17))
+
+#### 🐛 Bug Fix
+
+- Removed the MP4 structure/decodability check, which ran a probe against a single shared hidden `<video>` element and could get many concurrently-dropped files stuck on "Checking" ([#17](https://github.com/brain-bbqs/ember-uploader/pull/17))
 
 ## 0.0.8
 

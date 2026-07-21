@@ -9,8 +9,6 @@ export interface FileRow {
   setBadge(text: string, kind: BadgeKind): void;
   setStatus(text: string, kind?: BadgeKind | ""): void;
   setProgress(fraction: number, done?: boolean): void;
-  clearActions(): void;
-  addAction(label: string, handler: () => void, primary?: boolean): HTMLButtonElement;
 }
 
 export function createFileRow(fileList: HTMLUListElement, file: File, id: string): FileRow {
@@ -29,7 +27,6 @@ export function createFileRow(fileList: HTMLUListElement, file: File, id: string
     </div>
     <div class="progress" data-role="progress-wrap" hidden><div data-role="progress"></div></div>
     <div class="file-status" data-role="status"></div>
-    <div class="file-actions" data-role="actions"></div>
   `;
   li.querySelector(".file-name")!.textContent = file.name;
   fileList.appendChild(li);
@@ -39,9 +36,8 @@ export function createFileRow(fileList: HTMLUListElement, file: File, id: string
   const progressWrap = li.querySelector<HTMLDivElement>('[data-role="progress-wrap"]')!;
   const progressBar = li.querySelector<HTMLDivElement>('[data-role="progress"]')!;
   const status = li.querySelector<HTMLDivElement>('[data-role="status"]')!;
-  const actions = li.querySelector<HTMLDivElement>('[data-role="actions"]')!;
 
-  const row: FileRow = {
+  return {
     el: li,
     pathInput,
     status,
@@ -58,39 +54,5 @@ export function createFileRow(fileList: HTMLUListElement, file: File, id: string
       progressWrap.classList.toggle("done", done);
       progressBar.style.width = `${(fraction * 100).toFixed(1)}%`;
     },
-    clearActions() {
-      actions.replaceChildren();
-    },
-    addAction(label, handler, primary = false) {
-      const btn = document.createElement("button");
-      btn.textContent = label;
-      if (primary) btn.classList.add("primary");
-      btn.addEventListener("click", handler);
-      actions.appendChild(btn);
-      return btn;
-    },
   };
-  return row;
-}
-
-export function askUser<T>(
-  row: FileRow,
-  message: string,
-  choices: { label: string; value: T; primary?: boolean }[],
-): Promise<T> {
-  // Renders buttons on the row and resolves with the value of the clicked one.
-  return new Promise((resolve) => {
-    row.setStatus(message, "warn");
-    row.clearActions();
-    for (const choice of choices) {
-      row.addAction(
-        choice.label,
-        () => {
-          row.clearActions();
-          resolve(choice.value);
-        },
-        Boolean(choice.primary),
-      );
-    }
-  });
 }

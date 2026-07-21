@@ -12,10 +12,6 @@ test("recursive folder selection derives sourcedata/raw paths and skips .git", a
   fs.writeFileSync(path.join(dir, ".git", "config"), "ignored");
 
   await page.goto("/");
-  // processFile only computes the suggested path once the connection config is non-empty
-  // (api key + dandiset id); the connection check itself isn't exercised by this test.
-  await page.fill("#api-key", "test-key");
-  await page.fill("#dandiset-id", "000123");
   await page.locator("#folder-input").setInputFiles(dir);
 
   // Only a.txt should surface — the .git/config file must be filtered out.
@@ -33,8 +29,6 @@ test("a subtree with more than 30 entries renders collapsed by default", async (
   }
 
   await page.goto("/");
-  await page.fill("#api-key", "test-key");
-  await page.fill("#dandiset-id", "000123");
   await page.locator("#folder-input").setInputFiles(dir);
 
   const toggle = page.locator(".dir-toggle").first();
@@ -43,7 +37,7 @@ test("a subtree with more than 30 entries renders collapsed by default", async (
 
   const nestedChildren = page.locator(".dir-children");
   await expect(nestedChildren.first()).toBeHidden();
-  // The 35 file rows exist in the DOM (still uploading) but are hidden behind the collapsed folder.
+  // The 35 file rows exist in the DOM (queued) but are hidden behind the collapsed folder.
   await expect(page.locator("#file-list .file-item")).toHaveCount(35);
   await expect(page.locator("#file-list .file-item").first()).toBeHidden();
   // Click-to-expand itself is covered by the jsdom unit test in tests/unit/fileTree.dom.test.ts.
