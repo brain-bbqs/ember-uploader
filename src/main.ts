@@ -4,6 +4,7 @@ import { initDropzone } from "./ui/dropzone";
 import { queueFileRow, uploadFile } from "./ui/processFile";
 import { testConnection } from "./ui/connection";
 import { renderFileTree } from "./ui/fileTree";
+import { createEtagWorker } from "./lib/etag-worker";
 import { loadStoredSettings, saveStoredSettings, resolveConfig } from "./lib/settings";
 import type { UploaderConfig } from "./lib/types";
 import type { DroppedFile } from "./lib/fileTree";
@@ -11,7 +12,15 @@ import type { FileRow } from "./ui/fileRow";
 
 declare const __APP_VERSION__: string;
 
-const FILE_CONCURRENCY = 3;
+// One hashing worker (a real OS thread) per concurrent file "lane", so hashing N files at once
+// actually uses N CPU cores instead of interleaving on the single JS main thread. Workers are
+// spawned lazily per lane on first use, not eagerly at page load, so just browsing the app (no
+// upload yet) doesn't pay worker startup cost.
+const FILE_CONCURRENCY = Math.max(1, Math.min(navigator.hardwareConcurrency || 4, 8));
+const hashWorkers: ReturnType<typeof createEtagWorker>[] = [];
+function getHashWorker(lane: number): ReturnType<typeof createEtagWorker> {
+  return (hashWorkers[lane] ??= createEtagWorker());
+}
 
 const els = getElements();
 const activeUploads = new Set<AbortController>();
@@ -60,16 +69,16 @@ function addFiles(entries: DroppedFile[]): void {
   updateUploadBar();
 }
 
-async function runQueue<T>(items: T[], worker: (item: T) => Promise<void>): Promise<void> {
+async function runQueue<T>(items: T[], worker: (item: T, lane: number) => Promise<void>): Promise<void> {
   let next = 0;
-  async function run(): Promise<void> {
+  async function run(lane: number): Promise<void> {
     for (;;) {
       const i = next++;
       if (i >= items.length) return;
-      await worker(items[i]);
+      await worker(items[i], lane);
     }
   }
-  await Promise.all(Array.from({ length: Math.min(FILE_CONCURRENCY, items.length) }, run));
+  await Promise.all(Array.from({ length: Math.min(FILE_CONCURRENCY, items.length) }, (_, lane) => run(lane)));
 }
 
 async function startUpload(): Promise<void> {
@@ -77,7 +86,9 @@ async function startUpload(): Promise<void> {
   updateUploadBar();
   els.cancelAllBtn.hidden = false;
   const cfg = currentConfig();
-  await runQueue(batch, ({ file, row, path }) => uploadFile(row, file, path, cfg, activeUploads));
+  await runQueue(batch, ({ file, row, path }, lane) =>
+    uploadFile(row, file, path, cfg, activeUploads, getHashWorker(lane).hash),
+  );
   els.cancelAllBtn.hidden = true;
   updateUploadBar();
 }

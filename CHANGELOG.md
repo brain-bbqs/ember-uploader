@@ -13,6 +13,7 @@
 - Dropped the "Queued" badge (a file being in the list already implies it's queued) and shrank the file tree's rows, borders, spacing, and badges considerably so a handful of folders no longer fills the whole page ([#17](https://github.com/brain-bbqs/ember-uploader/pull/17))
 - Added a rotating chevron to each folder row so expanded/collapsed state is visible at a glance, and replaced the folder emoji with a trailing `/` on folder names for a more compact look ([#17](https://github.com/brain-bbqs/ember-uploader/pull/17))
 - Folder rows now show the total size of their contents (e.g. "9 items · 47 MB"), summed recursively across all nested files, styled a bit lighter than the item count for clarity ([#17](https://github.com/brain-bbqs/ember-uploader/pull/17))
+- Moved the dandi-etag checksum computation into a pool of Web Workers (one per available CPU core, up to 8), so hashing multiple concurrently-uploading files actually uses multiple CPU cores instead of interleaving on the single JS main thread; workers are spawned lazily on first upload, not at page load ([#17](https://github.com/brain-bbqs/ember-uploader/pull/17))
 
 #### 🐛 Bug Fix
 

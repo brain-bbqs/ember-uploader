@@ -1,11 +1,18 @@
-import type { UploaderConfig } from "../lib/types";
+import type { FilePart, UploaderConfig } from "../lib/types";
 import { createFileRow, type FileRow } from "./fileRow";
 import { configProblems } from "../lib/settings";
 import { sanitizeFilename, sanitizePath } from "../lib/sanitize";
-import { planParts, computeDandiEtag } from "../lib/etag";
+import { planParts } from "../lib/etag";
 import { uploadBlob, findExistingAsset, createOrReplaceAsset } from "../lib/upload-pipeline";
 import { diagnoseCors } from "../lib/api";
 import { ApiError, friendlyError } from "../lib/errors";
+
+export type HashFn = (
+  file: File,
+  parts: FilePart[],
+  onProgress: (fraction: number) => void,
+  signal?: AbortSignal,
+) => Promise<string>;
 
 let fileCounter = 0;
 
@@ -28,6 +35,7 @@ export async function uploadFile(
   path: string,
   cfg: UploaderConfig,
   activeUploads: Set<AbortController>,
+  hash: HashFn,
 ): Promise<void> {
   const problems = configProblems(cfg);
   if (problems.length) {
@@ -40,13 +48,10 @@ export async function uploadFile(
   activeUploads.add(abort);
 
   try {
-    // --- 1. Checksum ---------------------------------------------------
+    // --- 1. Checksum (off the main thread, via a per-lane worker) ------
     row.setBadge("Hashing", "busy");
     const parts = planParts(file.size);
-    const etag = await computeDandiEtag(file, parts, (f) => {
-      if (abort.signal.aborted) throw new Error("Upload cancelled.");
-      row.setProgress(f * 0.999);
-    });
+    const etag = await hash(file, parts, (f) => row.setProgress(f * 0.999), abort.signal);
     row.setProgress(0);
 
     // --- 2. Conflict check (skip automatically; never overwrites) ------
