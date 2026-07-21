@@ -5,7 +5,7 @@ function buildRow(configure: (row: ReturnType<typeof createFileRow>) => void): H
   const list = document.createElement("ul");
   list.id = "file-list";
   const file = new File([new Uint8Array(32)], "session1-clip.mp4", { type: "video/mp4" });
-  const row = createFileRow(list, file, "story-file-row");
+  const row = createFileRow(list, file, "story-file-row", "sourcedata/raw/session1-clip.mp4");
   configure(row);
   return withCard(list);
 }
@@ -16,16 +16,7 @@ export default {
 
 export const Queued = {
   name: "Queued",
-  render: () => buildRow((row) => row.setBadge("Queued", "busy")),
-};
-
-export const Checking = {
-  name: "Checking MP4 structure",
-  render: () =>
-    buildRow((row) => {
-      row.setBadge("Checking", "busy");
-      row.setStatus("Verifying MP4 structure…");
-    }),
+  render: () => buildRow(() => {}),
 };
 
 export const Uploading = {
@@ -34,18 +25,16 @@ export const Uploading = {
     buildRow((row) => {
       row.setBadge("Uploading", "busy");
       row.setProgress(0.62);
-      row.setStatus("Uploading to the archive… 62.0%");
+      row.setStatus("62%");
     }),
 };
 
-export const NeedsConfirmation = {
-  name: "Needs confirmation (existing asset)",
+export const Skipped = {
+  name: "Skipped (existing asset)",
   render: () =>
     buildRow((row) => {
-      row.setBadge("Checking", "busy");
-      row.setStatus("An asset already exists at this path. Overwrite it?", "warn");
-      row.addAction("Skip", () => {});
-      row.addAction("Overwrite", () => {}, true);
+      row.setBadge("Skipped", "warn");
+      row.setStatus("already exists", "warn");
     }),
 };
 
@@ -55,7 +44,6 @@ export const Done = {
     buildRow((row) => {
       row.setBadge("Done", "ok");
       row.setProgress(1, true);
-      row.setStatus("Uploaded successfully as session1-clip.mp4", "ok");
     }),
 };
 

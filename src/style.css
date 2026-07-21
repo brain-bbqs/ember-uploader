@@ -249,58 +249,138 @@ button.hint {
 .dz-inner p {
   margin: 0.4rem 0;
 }
+.dz-alt {
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.linklike {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--accent);
+  text-decoration: underline;
+  cursor: pointer;
+  font: inherit;
+}
+
+.dir-item {
+  list-style: none;
+}
+.dir-item .dir-children {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  padding-left: 1rem;
+}
+.dir-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  padding: 0.15rem 0.3rem;
+  font: inherit;
+  font-size: 0.85rem;
+  color: var(--text);
+  cursor: pointer;
+}
+.dir-toggle:hover {
+  background: var(--accent-soft);
+}
+.dir-chevron {
+  display: inline-block;
+  width: 0.75em;
+  flex-shrink: 0;
+  color: var(--muted);
+  transition: transform 0.12s ease;
+}
+.dir-toggle[aria-expanded="true"] .dir-chevron {
+  transform: rotate(90deg);
+}
+.dir-name {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.dir-count {
+  color: var(--muted);
+  font-size: 0.78rem;
+  margin-left: auto;
+  white-space: nowrap;
+}
+.dir-size {
+  color: var(--muted);
+  opacity: 0.7;
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.dir-size::before {
+  content: "· ";
+}
+
+.dest-root {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+
+.expand-control {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+.expand-control input[type="range"] {
+  width: 90px;
+}
 
 #file-list {
   list-style: none;
-  margin: 1rem 0 0;
+  margin: 0.25rem 0 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
 }
 
 .file-item {
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 0.75rem 1rem;
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.15rem 0.3rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  flex-wrap: nowrap;
+}
+.file-item:hover {
+  background: var(--accent-soft);
 }
 
-.file-head {
-  display: flex;
-  align-items: baseline;
-  gap: 0.6rem;
-  flex-wrap: wrap;
-}
 .file-name {
   font-weight: 600;
-  word-break: break-all;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .file-size {
   color: var(--muted);
-  font-size: 0.85rem;
-}
-
-.file-path {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.85rem;
-}
-.file-path input {
-  flex: 1;
-  font-size: 0.85rem;
-  padding: 0.3rem 0.5rem;
-}
-.file-path .prefix-label {
-  color: var(--muted);
+  font-size: 0.78rem;
   white-space: nowrap;
 }
 
 .file-status {
-  font-size: 0.88rem;
+  margin-left: auto;
+  font-size: 0.78rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .file-status.ok {
   color: var(--ok);
@@ -310,18 +390,69 @@ button.hint {
 }
 .file-status.err {
   color: var(--err);
-  white-space: pre-wrap;
-  word-break: break-word;
+  white-space: normal;
 }
 
 .progress {
+  display: inline-block;
+  width: 50px;
+  flex-shrink: 0;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--border);
+  overflow: hidden;
+}
+
+.progress > [data-role="progress"] {
+  display: block;
+  height: 100%;
+  width: 0%;
+  border-radius: 2px;
+  background: var(--accent);
+  transition: width 0.15s linear;
+}
+
+.progress.done > [data-role="progress"] {
+  background: var(--ok);
+}
+
+.upload-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+.view-dataset-link {
+  margin-left: auto;
+  font-size: 0.85rem;
+}
+
+.progress-summary {
+  margin-bottom: 1rem;
+}
+.progress-phase {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.3rem;
+}
+.progress-phase-label {
+  flex-shrink: 0;
+  width: 4.4rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.progress-summary-bar {
+  flex: 1;
   height: 8px;
   border-radius: 4px;
   background: var(--border);
   overflow: hidden;
 }
-
-.progress > div {
+.progress-summary-bar > div {
   height: 100%;
   width: 0%;
   border-radius: 4px;
@@ -329,28 +460,61 @@ button.hint {
   transition: width 0.15s linear;
 }
 
-.progress.done > div {
-  background: var(--ok);
+.progress-mono {
+  font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-variant-numeric: tabular-nums;
 }
 
-.file-actions {
-  display: flex;
-  gap: 0.5rem;
-  flex-wrap: wrap;
+.progress-phase-stats {
+  flex-shrink: 0;
+  min-width: 27ch;
+  font-size: 0.76rem;
+  white-space: nowrap;
+  text-align: right;
 }
-.file-actions button {
-  padding: 0.3rem 0.8rem;
-  font-size: 0.85rem;
+.stat-pct {
+  font-weight: 700;
+  color: var(--accent);
+}
+.stat-bytes {
+  margin-left: 0.35rem;
+  color: var(--text);
+  opacity: 0.72;
+}
+.stat-timing {
+  margin-left: 0.45rem;
+  color: var(--muted);
+}
+
+.progress-summary-footer {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+.progress-summary-footer > :first-child {
+  text-align: left;
+}
+.progress-summary-footer > :nth-child(2) {
+  text-align: center;
+}
+.progress-summary-footer > :last-child {
+  text-align: right;
 }
 
 .badge {
   display: inline-block;
-  font-size: 0.72rem;
+  flex-shrink: 0;
+  font-size: 0.68rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  border-radius: 5px;
-  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+  padding: 0.05rem 0.35rem;
 }
 .badge.ok {
   background: var(--ok-soft);

@@ -16,12 +16,24 @@ describe("sanitizeSegment", () => {
 });
 
 describe("sanitizeFilename", () => {
-  it("replaces the extension with .mp4", () => {
-    expect(sanitizeFilename("My Video.mov")).toBe("My_Video.mp4");
+  it("sanitizes the base name and preserves the original extension", () => {
+    expect(sanitizeFilename("My Video.mov")).toBe("My_Video.mov");
+  });
+
+  it("lowercases the extension", () => {
+    expect(sanitizeFilename("Clip.MP4")).toBe("Clip.mp4");
   });
 
   it("handles filenames with no extension", () => {
-    expect(sanitizeFilename("video")).toBe("video.mp4");
+    expect(sanitizeFilename("README")).toBe("README");
+  });
+
+  it("falls back when nothing survives sanitization", () => {
+    expect(sanitizeFilename("!!!.mov")).toBe("file.mov");
+  });
+
+  it("treats a leading dot as a dotfile, not an extension", () => {
+    expect(sanitizeFilename(".gitignore")).toBe("gitignore");
   });
 });
 

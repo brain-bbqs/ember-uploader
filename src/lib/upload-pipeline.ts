@@ -125,11 +125,11 @@ export async function createOrReplaceAsset(
   path: string,
   blobId: string,
   existingAssetId: string | null,
+  encodingFormat?: string,
 ): Promise<Asset> {
-  const payload = {
-    blob_id: blobId,
-    metadata: { path, encodingFormat: "video/mp4" },
-  };
+  const metadata: { path: string; encodingFormat?: string } = { path };
+  if (encodingFormat) metadata.encodingFormat = encodingFormat;
+  const payload = { blob_id: blobId, metadata };
   if (existingAssetId) {
     return (await apiFetch<Asset>(cfg, `/dandisets/${cfg.dandisetId}/versions/draft/assets/${existingAssetId}/`, {
       method: "PUT",

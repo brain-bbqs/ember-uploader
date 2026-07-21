@@ -6,8 +6,11 @@ export function sanitizeSegment(segment: string, fallback: string): string {
 }
 
 export function sanitizeFilename(originalName: string): string {
-  const base = originalName.replace(/\.[^.]*$/, "");
-  return `${sanitizeSegment(base, "video")}.mp4`;
+  const dot = originalName.lastIndexOf(".");
+  const hasExt = dot > 0; // a dot at index 0 is a dotfile, not an extension
+  const base = hasExt ? originalName.slice(0, dot) : originalName;
+  const ext = hasExt ? originalName.slice(dot).toLowerCase() : "";
+  return `${sanitizeSegment(base, "file")}${ext}`;
 }
 
 export function sanitizePath(prefix: string, filename: string): string {
