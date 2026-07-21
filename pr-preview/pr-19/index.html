@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>EMBER Uploader</title>
     <link rel="icon" href="./favicon.ico" />
-    <script type="module" crossorigin src="./assets/index-BJuT8_37.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-7H4wa6du.css">
+    <script type="module" crossorigin src="./assets/index-l4W_ZXJy.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-BtcTGq1q.css">
   </head>
   <body>
     <main>
@@ -17,10 +17,6 @@
             <h1>EMBER Uploader</h1>
           </div>
         </div>
-      </header>
-
-      <section class="card" id="config-card">
-        <h2>1 · Connection</h2>
         <div id="oauth-row" class="oauth-row">
           <button type="button" id="oauth-signin-btn" class="primary">Sign in with EMBER</button>
           <div id="oauth-signed-in" class="oauth-signed-in" hidden>
@@ -28,38 +24,26 @@
             <button type="button" id="oauth-signout-btn" class="linklike">Sign out</button>
           </div>
         </div>
+      </header>
+
+      <section class="card" id="config-card">
+        <h2>1 · Connection</h2>
         <form id="config-form">
           <div class="grid">
-            <label id="api-key-label">
-              <span
-                >API key
-                <button type="button" class="hint" id="api-key-help" title="Where do I find this?">?</button>
-              </span>
-              <input
-                type="password"
-                id="api-key"
-                placeholder="paste your DANDI API key"
-                autocomplete="off"
-                spellcheck="false"
-              />
-            </label>
             <label>
               <span
-                >Dandiset ID
+                >Incoming dataset
                 <span class="status-indicator" role="status" aria-live="polite">
                   <span id="connect-status-dot" class="status-dot" hidden></span>
                   <span id="connect-status-text" class="status-text sr-only"></span>
                 </span>
               </span>
-              <input type="text" id="dandiset-id" placeholder="e.g. 000123 or DANDI:000123" spellcheck="false" />
+              <select id="dandiset-id">
+                <option value="" selected disabled>Sign in to see your incoming datasets</option>
+              </select>
             </label>
           </div>
         </form>
-        <p id="api-key-help-text" class="help" hidden>
-          Log in at the EMBER-DANDI archive, click your user initials in the top-right corner, and choose “API key”. The
-          key is kept in this browser only and is sent solely to the EMBER-DANDI API server. Signing in above does this
-          for you automatically, so you shouldn't need to paste one.
-        </p>
       </section>
 
       <section class="card" id="drop-card">
