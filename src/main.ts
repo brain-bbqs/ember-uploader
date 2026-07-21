@@ -252,7 +252,7 @@ function setDandisetPlaceholder(text: string, disabled: boolean): void {
 function showDandisetSingle(dataset: IncomingDandiset): void {
   els.dandisetId.hidden = true;
   els.dandisetSingle.hidden = false;
-  els.dandisetSingleText.textContent = dataset.title;
+  els.dandisetSingleText.textContent = `Uploading directly to EMBER Dandiset ${dataset.identifier}, "${dataset.title}"`;
   const cfg = currentConfig();
   els.dandisetSingleLink.href = `${cfg.web}/dandiset/${dataset.identifier}/draft/files`;
 }
