@@ -235,23 +235,24 @@ async function ensureFreshOAuth(): Promise<void> {
   }
 }
 
-function setDandisetPlaceholder(text: string, disabled: boolean): void {
-  const opt = document.createElement("option");
-  opt.value = "";
-  opt.textContent = text;
-  opt.disabled = true;
-  opt.selected = true;
-  els.dandisetId.replaceChildren(opt);
-  els.dandisetId.disabled = disabled;
-  els.dandisetId.hidden = false;
-  els.dandisetSingle.hidden = true;
+// The dataset picker has three mutually exclusive views: a plain-text status message (signed
+// out, loading, no datasets, error), plain text naming the one dataset there's nothing to choose
+// between, or a dropdown when there's an actual choice to make.
+function showDandisetView(view: "message" | "single" | "dropdown"): void {
+  els.dandisetMessage.hidden = view !== "message";
+  els.dandisetSingle.hidden = view !== "single";
+  els.dandisetId.hidden = view !== "dropdown";
+}
+
+function setDandisetPlaceholder(text: string): void {
+  els.dandisetMessage.textContent = text;
+  showDandisetView("message");
 }
 
 // With only one incoming dataset there's nothing to choose between, so show its name as plain
 // text (with a link out to the archive) instead of a single-option dropdown.
 function showDandisetSingle(dataset: IncomingDandiset): void {
-  els.dandisetId.hidden = true;
-  els.dandisetSingle.hidden = false;
+  showDandisetView("single");
   const idCode = document.createElement("code");
   idCode.textContent = dataset.identifier;
   els.dandisetSingleText.replaceChildren("Uploading directly to EMBER Dandiset ", idCode, `, "${dataset.title}"`);
@@ -265,7 +266,6 @@ function applyDatasetList(datasets: IncomingDandiset[]): void {
   if (!datasets.length) {
     setDandisetPlaceholder(
       "You have not been added to any direct-upload datasets; please reach out to EMBER/BBQS admins and request to be added.",
-      true,
     );
     return;
   }
@@ -277,14 +277,15 @@ function applyDatasetList(datasets: IncomingDandiset[]): void {
       return opt;
     }),
   );
-  els.dandisetId.disabled = false;
-  els.dandisetId.hidden = false;
-  els.dandisetSingle.hidden = true;
   const match = datasets.find((d) => d.identifier === storedDandisetId);
   const selected = match ?? datasets[0];
+  // The select stays populated even when hidden (single-dataset view) so currentConfig() keeps
+  // reading a real dandiset id from it.
   els.dandisetId.value = selected.identifier;
   if (datasets.length === 1) {
     showDandisetSingle(selected);
+  } else {
+    showDandisetView("dropdown");
   }
 }
 
@@ -321,18 +322,18 @@ async function refreshDandisetOptions(): Promise<void> {
     return;
   }
   if (!oauthTokens) {
-    setDandisetPlaceholder("Sign in to see your incoming datasets", true);
+    setDandisetPlaceholder("Sign in to see your incoming datasets");
     updateViewDatasetLink();
     return;
   }
   await ensureFreshOAuth();
   void renderIdentity(els, currentConfig());
-  setDandisetPlaceholder("Loading your incoming datasets…", true);
+  setDandisetPlaceholder("Loading your incoming datasets…");
   try {
     const datasets = await listIncomingDandisets(currentConfig());
     applyDatasetList(datasets);
   } catch {
-    setDandisetPlaceholder("Could not load your datasets", true);
+    setDandisetPlaceholder("Could not load your datasets");
   }
   saveSettings();
   runConnectionCheck();

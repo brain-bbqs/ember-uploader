@@ -10,6 +10,7 @@
 - Renamed the app to "BBQS Uploader" with the BBQS logo in the header, and added a subtitle ("Your direct upload link to the EMBER-DANDI Archive") flanked by a doubled-size EMBER logo on both sides ([#20](https://github.com/brain-bbqs/ember-uploader/pull/20))
 - Reworded the no-datasets-found message to "You have not been added to any direct-upload datasets; please reach out to EMBER/BBQS admins and request to be added." ([#20](https://github.com/brain-bbqs/ember-uploader/pull/20))
 - Replaced the dropzone's arrow icon with a page icon, and removed the "or select a folder" link underneath it; folders can still be uploaded by dragging them onto the box ([#20](https://github.com/brain-bbqs/ember-uploader/pull/20))
+- The dataset picker's status messages (signed out, loading, no datasets, error) are now shown as plain text instead of a disabled dropdown option ([#20](https://github.com/brain-bbqs/ember-uploader/pull/20))
 
 #### 🏠 Internal
 
