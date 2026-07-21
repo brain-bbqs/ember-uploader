@@ -98,10 +98,6 @@ export function initDropzone(els: UploaderElements, addFiles: (entries: DroppedF
     if (els.fileInput.files?.length) addFiles(filesFromFileList(els.fileInput.files));
     els.fileInput.value = "";
   });
-  els.folderPickerBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    els.folderInput.click();
-  });
   els.folderInput.addEventListener("change", () => {
     if (els.folderInput.files?.length) addFiles(filesFromFileList(els.folderInput.files));
     els.folderInput.value = "";

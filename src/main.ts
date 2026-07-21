@@ -3,14 +3,14 @@ import { getElements } from "./ui/elements";
 import { initDropzone } from "./ui/dropzone";
 import { queueFileRow, uploadFile, type UploadOutcome, type HashJob } from "./ui/processFile";
 import { humanSize, formatDuration } from "./lib/format";
-import { testConnection, renderIdentity } from "./ui/connection";
+import { renderIdentity } from "./ui/connection";
 import { renderFileTree, setExpandDepth, DEFAULT_EXPAND_DEPTH } from "./ui/fileTree";
 import { createEtagWorker } from "./lib/etag-worker";
 import { planParts } from "./lib/etag";
 import { loadStoredSettings, saveStoredSettings, resolveConfig } from "./lib/settings";
 import { maxDepth, buildTree } from "./lib/fileTree";
 import { startLogin, handleRedirectCallback, ensureFreshToken, revokeToken } from "./lib/oauth";
-import { listIncomingDandisets } from "./lib/dandisets";
+import { listIncomingDandisets, type IncomingDandiset } from "./lib/dandisets";
 import type { UploaderConfig, OAuthTokenSet } from "./lib/types";
 import type { DroppedFile } from "./lib/fileTree";
 import type { FileRow } from "./ui/fileRow";
@@ -235,48 +235,105 @@ async function ensureFreshOAuth(): Promise<void> {
   }
 }
 
-function setDandisetPlaceholder(text: string, disabled: boolean): void {
-  const opt = document.createElement("option");
-  opt.value = "";
-  opt.textContent = text;
-  opt.disabled = true;
-  opt.selected = true;
-  els.dandisetId.replaceChildren(opt);
-  els.dandisetId.disabled = disabled;
+// The dataset picker has three mutually exclusive views: a plain-text status message (signed
+// out, loading, no datasets, error), plain text naming the one dataset there's nothing to choose
+// between, or a dropdown when there's an actual choice to make.
+function showDandisetView(view: "message" | "single" | "dropdown"): void {
+  els.dandisetMessage.hidden = view !== "message";
+  els.dandisetSingle.hidden = view !== "single";
+  els.dandisetId.hidden = view !== "dropdown";
+}
+
+function setDandisetPlaceholder(text: string): void {
+  els.dandisetMessage.textContent = text;
+  showDandisetView("message");
+}
+
+// With only one incoming dataset there's nothing to choose between, so show its name as plain
+// text (with a link out to the archive) instead of a single-option dropdown.
+function showDandisetSingle(dataset: IncomingDandiset): void {
+  showDandisetView("single");
+  const idCode = document.createElement("code");
+  idCode.textContent = dataset.identifier;
+  els.dandisetSingleText.replaceChildren("Uploading directly to EMBER Dandiset ", idCode, `, "${dataset.title}"`);
+  const cfg = currentConfig();
+  els.dandisetSingleLink.href = `${cfg.web}/dandiset/${dataset.identifier}/draft/files`;
+}
+
+// Populates the dandiset picker (dropdown or single-dataset text) from a resolved list of
+// datasets, shared by the real signed-in fetch and the "?test&num_datasets=N" debug override.
+function applyDatasetList(datasets: IncomingDandiset[]): void {
+  if (!datasets.length) {
+    setDandisetPlaceholder(
+      "You have not been added to any direct-upload datasets; please reach out to EMBER/BBQS admins to request this.",
+    );
+    return;
+  }
+  els.dandisetId.replaceChildren(
+    ...datasets.map((d) => {
+      const opt = document.createElement("option");
+      opt.value = d.identifier;
+      opt.textContent = `${d.title} (${d.identifier})`;
+      return opt;
+    }),
+  );
+  const match = datasets.find((d) => d.identifier === storedDandisetId);
+  const selected = match ?? datasets[0];
+  // The select stays populated even when hidden (single-dataset view) so currentConfig() keeps
+  // reading a real dandiset id from it.
+  els.dandisetId.value = selected.identifier;
+  if (datasets.length === 1) {
+    showDandisetSingle(selected);
+  } else {
+    showDandisetView("dropdown");
+  }
+}
+
+// Debug-only escape hatch for previewing the dataset picker's various states without a real
+// account: e.g. "?test&num_datasets=2" fills in that many fake datasets, and "?test&num_datasets=0"
+// previews the no-datasets-found state. Bypasses sign-in entirely, so it also works for a
+// signed-out visitor. "?test" alone (no num_datasets) is a no-op, so the override only ever
+// kicks in when explicitly parameterized.
+function readTestDatasetOverride(): IncomingDandiset[] | null {
+  const params = new URLSearchParams(window.location.search);
+  const raw = params.get("num_datasets");
+  if (!params.has("test") || raw === null) return null;
+  const count = Math.max(0, Number(raw) || 0);
+  // Negative identifiers (e.g. "-000001") so a fake dataset is never mistaken for a real one.
+  return Array.from({ length: count }, (_, i) => ({
+    identifier: `-${String(i + 1).padStart(6, "0")}`,
+    title: `Incoming: Test dataset ${i + 1}`,
+  }));
 }
 
 // Populates the "Incoming dataset" dropdown from the signed-in user's owned dandisets, since
 // there's no longer a free-text Dandiset ID field to type into.
 async function refreshDandisetOptions(): Promise<void> {
+  const testDatasets = readTestDatasetOverride();
+  if (testDatasets) {
+    // Only the dataset list is faked; sign-in state (and thus the header avatar) still reflects
+    // whatever the browser is really signed in as, if anything.
+    if (oauthTokens) {
+      await ensureFreshOAuth();
+      void renderIdentity(els, currentConfig());
+    }
+    applyDatasetList(testDatasets);
+    updateViewDatasetLink();
+    return;
+  }
   if (!oauthTokens) {
-    setDandisetPlaceholder("Sign in to see your incoming datasets", true);
+    setDandisetPlaceholder("Please sign in to see your incoming datasets.");
     updateViewDatasetLink();
     return;
   }
   await ensureFreshOAuth();
   void renderIdentity(els, currentConfig());
-  setDandisetPlaceholder("Loading your incoming datasets…", true);
+  setDandisetPlaceholder("Loading your incoming datasets…");
   try {
     const datasets = await listIncomingDandisets(currentConfig());
-    if (!datasets.length) {
-      setDandisetPlaceholder("No incoming datasets found for your account", true);
-    } else {
-      els.dandisetId.replaceChildren(
-        ...datasets.map((d) => {
-          const opt = document.createElement("option");
-          opt.value = d.identifier;
-          opt.textContent = `${d.title} (${d.identifier})`;
-          return opt;
-        }),
-      );
-      // Nothing to choose between with only one dataset, so grey it out rather than implying
-      // there's a live pick to make.
-      els.dandisetId.disabled = datasets.length === 1;
-      const match = datasets.find((d) => d.identifier === storedDandisetId);
-      els.dandisetId.value = match ? match.identifier : datasets[0].identifier;
-    }
+    applyDatasetList(datasets);
   } catch {
-    setDandisetPlaceholder("Could not load your datasets", true);
+    setDandisetPlaceholder("Could not load your datasets");
   }
   saveSettings();
   runConnectionCheck();
@@ -367,7 +424,6 @@ async function startUpload(): Promise<void> {
 function runConnectionCheck(): void {
   void (async () => {
     await ensureFreshOAuth();
-    await testConnection(els, currentConfig, saveSettings);
     updateViewDatasetLink();
   })();
 }

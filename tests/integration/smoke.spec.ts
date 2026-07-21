@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 test.describe("EMBER uploader shell", () => {
   test("renders branding, version, and the connection form", async ({ page }) => {
     await page.goto("/");
-    await expect(page).toHaveTitle(/EMBER Uploader/);
+    await expect(page).toHaveTitle(/BBQS Uploader/);
     await expect(page.locator(".brand-logo")).toBeVisible();
     const versionLink = page.locator("#version-indicator");
     await expect(versionLink).toHaveText(/^v\d+\.\d+\.\d+$/);

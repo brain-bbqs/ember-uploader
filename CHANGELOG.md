@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.0.12
+
+#### 🚀 Enhancement
+
+- Simplified the "Dataset" and file-drop cards: dropped the numbered "1 ·"/"2 ·" section titles and the "Files" heading, since the cards are self-explanatory ([#20](https://github.com/brain-bbqs/ember-uploader/pull/20))
+- When the signed-in user has only one incoming dataset, it's now shown as "Uploading directly to EMBER Dandiset `000xyz`, "Incoming: ..."" (the identifier in a code style) with a link out to its archive view, instead of a disabled single-option dropdown ([#20](https://github.com/brain-bbqs/ember-uploader/pull/20))
+- Removed the connection status dot and its hover text next to the dataset picker, since the picker's own states already communicate sign-in and loading status ([#20](https://github.com/brain-bbqs/ember-uploader/pull/20))
+- Renamed the app to "BBQS Uploader" with the BBQS logo in the header, and added a subtitle ("Your direct upload link to the EMBER-DANDI Archive") flanked by a doubled-size EMBER logo on both sides ([#20](https://github.com/brain-bbqs/ember-uploader/pull/20))
+- Reworded the no-datasets-found message to "You have not been added to any direct-upload datasets; please reach out to EMBER/BBQS admins to request this." ([#20](https://github.com/brain-bbqs/ember-uploader/pull/20))
+- Replaced the dropzone's arrow icon with a page icon, and removed the "or select a folder" link underneath it; folders can still be uploaded by dragging them onto the box ([#20](https://github.com/brain-bbqs/ember-uploader/pull/20))
+- The dataset picker's status messages (signed out, loading, no datasets, error) are now shown as plain text instead of a disabled dropdown option ([#20](https://github.com/brain-bbqs/ember-uploader/pull/20))
+- Cropped the BBQS header logo to a circle and made it 25% larger ([#20](https://github.com/brain-bbqs/ember-uploader/pull/20))
+- Tightened up copy: added periods to the dropzone prompt and the sign-in message ([#20](https://github.com/brain-bbqs/ember-uploader/pull/20))
+
+#### 🏠 Internal
+
+- Added a `?test&num_datasets=N` URL override that fills the dataset picker with fake "Incoming: Test dataset" entries under negative identifiers (e.g. `-000001`, so they're never mistaken for real dandisets), including `N=0` for the no-datasets-found state, so any dataset-picker state can be previewed without a real account; `?test` alone (without `num_datasets`) is a no-op ([#20](https://github.com/brain-bbqs/ember-uploader/pull/20))
+- Fixed the `?test` override clearing the header avatar/username for an already signed-in user, since it now leaves real sign-in state untouched and only fakes the dataset list ([#20](https://github.com/brain-bbqs/ember-uploader/pull/20))
+
 ## 0.0.11
 
 #### 🚀 Enhancement

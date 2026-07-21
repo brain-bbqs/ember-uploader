@@ -1,27 +1,24 @@
 import { withCard } from "./utils";
 
-function buildConnectionCard(status?: { text: string; kind: "ok" | "err" | "busy" }): HTMLElement {
+function buildDatasetCard(mode: "signed-out" | "dropdown" | "single"): HTMLElement {
   const card = document.createElement("section");
   card.className = "card";
   card.id = "config-card";
   card.innerHTML = `
-    <h2>1 · Connection</h2>
+    <h2>Dataset</h2>
     <form id="config-form">
       <div class="grid">
-        <label>
-          <span>API key</span>
-          <input type="password" placeholder="paste your DANDI API key" autocomplete="off" spellcheck="false" />
-        </label>
-        <label>
-          <span
-            >Dandiset ID
-            <span class="status-indicator" role="status" aria-live="polite">
-              <span class="status-dot${status ? ` ${status.kind}` : ""}"${status ? "" : " hidden"}></span>
-              <span class="status-text${status?.kind === "err" ? "" : " sr-only"}">${status?.text ?? ""}</span>
-            </span>
-          </span>
-          <input type="text" placeholder="e.g. 000123 or DANDI:000123" spellcheck="false" />
-        </label>
+        <select${mode === "dropdown" ? "" : " hidden"}>
+          <option value="000123">Incoming: Throughput test (000123)</option>
+          <option value="000456">Incoming: Another lab dataset (000456)</option>
+        </select>
+        <p class="dandiset-single"${
+          mode === "signed-out" ? "" : " hidden"
+        }>Please sign in to see your incoming datasets.</p>
+        <p class="dandiset-single"${mode === "single" ? "" : " hidden"}>
+          <span>Uploading directly to EMBER Dandiset <code>000475</code>, "Incoming: Throughput test"</span>
+          <a class="dandiset-single-link" target="_blank" rel="noopener">View in archive ↗</a>
+        </p>
       </div>
     </form>
   `;
@@ -32,17 +29,17 @@ export default {
   title: "Components/ConnectionCard",
 };
 
-export const Default = {
-  name: "Default",
-  render: () => buildConnectionCard(),
+export const SignedOut = {
+  name: "Signed out",
+  render: () => buildDatasetCard("signed-out"),
 };
 
-export const Connected = {
-  name: "Connected",
-  render: () => buildConnectionCard({ text: "Connected to DANDI as test-user.", kind: "ok" }),
+export const MultipleDatasets = {
+  name: "Multiple datasets",
+  render: () => buildDatasetCard("dropdown"),
 };
 
-export const ConnectionError = {
-  name: "Connection error",
-  render: () => buildConnectionCard({ text: "Could not connect: invalid API key.", kind: "err" }),
+export const SingleDataset = {
+  name: "Single dataset",
+  render: () => buildDatasetCard("single"),
 };

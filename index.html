@@ -3,16 +3,16 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>EMBER Uploader</title>
+    <title>BBQS Uploader</title>
     <link rel="icon" href="/favicon.ico" />
   </head>
   <body>
     <main>
       <header class="site-header">
         <div class="brand">
-          <img class="brand-logo" src="/src/assets/ember-logo.png" alt="EMBER Archive" />
+          <img class="brand-logo" src="/src/assets/bbqs-logo.png" alt="BBQS" />
           <div>
-            <h1>EMBER Uploader</h1>
+            <h1>BBQS Uploader</h1>
           </div>
         </div>
         <div id="oauth-row" class="oauth-row">
@@ -46,28 +46,29 @@
         </div>
       </header>
 
+      <p class="site-subtitle">
+        <img class="site-subtitle-logo" src="/src/assets/ember-logo.png" alt="" />
+        <span>Your direct upload link to the EMBER-DANDI Archive</span>
+        <img class="site-subtitle-logo" src="/src/assets/ember-logo.png" alt="" />
+      </p>
+
       <section class="card" id="config-card">
-        <h2>1 · Connection</h2>
+        <h2>Dataset</h2>
         <form id="config-form">
           <div class="grid">
-            <label>
-              <span
-                >Dataset
-                <span class="status-indicator" role="status" aria-live="polite">
-                  <span id="connect-status-dot" class="status-dot" hidden></span>
-                  <span id="connect-status-text" class="status-text sr-only"></span>
-                </span>
-              </span>
-              <select id="dandiset-id">
-                <option value="" selected disabled>Sign in to see your incoming datasets</option>
-              </select>
-            </label>
+            <select id="dandiset-id" hidden></select>
+            <p id="dandiset-message" class="dandiset-single">Please sign in to see your incoming datasets.</p>
+            <p id="dandiset-single" class="dandiset-single" hidden>
+              <span id="dandiset-single-text"></span>
+              <a id="dandiset-single-link" class="dandiset-single-link" target="_blank" rel="noopener"
+                >View in archive ↗</a
+              >
+            </p>
           </div>
         </form>
       </section>
 
       <section class="card" id="drop-card">
-        <h2>2 · Files</h2>
         <div id="progress-summary" class="progress-summary" hidden>
           <div class="progress-phase">
             <span class="progress-phase-label">Scanning</span>
@@ -85,13 +86,15 @@
             <span id="progress-footer-right" class="progress-mono"></span>
           </div>
         </div>
-        <div id="dropzone" tabindex="0" role="button" aria-label="Drop your research contents here, or click to browse">
+        <div
+          id="dropzone"
+          tabindex="0"
+          role="button"
+          aria-label="Drop your research contents here, or click to browse."
+        >
           <div class="dz-inner">
-            <div class="dz-icon">⬆️</div>
-            <p>Drop your research contents here, or click to browse</p>
-            <p class="dz-alt">
-              or <button type="button" id="folder-picker-btn" class="linklike">select a folder</button>
-            </p>
+            <div class="dz-icon">📄</div>
+            <p>Drop your research contents here, or click to browse.</p>
           </div>
           <input type="file" id="file-input" multiple hidden />
           <input type="file" id="folder-input" webkitdirectory multiple hidden />

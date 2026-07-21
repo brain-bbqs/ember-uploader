@@ -77,13 +77,31 @@ main {
 }
 
 .brand-logo {
-  height: 2.4rem;
-  width: auto;
+  height: 3rem;
+  width: 3rem;
+  object-fit: cover;
+  border-radius: 50%;
 }
 
 header h1 {
   margin: 0;
   font-size: 1.7rem;
+}
+
+.site-subtitle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  margin: 0.75rem 0 0;
+  color: var(--muted);
+  font-size: 1.35rem;
+  text-align: center;
+}
+
+.site-subtitle-logo {
+  height: 2.2rem;
+  width: auto;
 }
 
 a {
@@ -212,35 +230,17 @@ button.hint {
   border: 0;
 }
 
-.status-indicator {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  margin-left: 0.35rem;
+.dandiset-single {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin: 0;
+  font-size: 0.95rem;
 }
 
-.status-dot {
-  display: inline-block;
-  width: 0.55rem;
-  height: 0.55rem;
-  border-radius: 50%;
-  background: var(--border);
-  flex-shrink: 0;
-}
-.status-dot.ok {
-  background: var(--ok);
-}
-.status-dot.err {
-  background: var(--err);
-}
-.status-dot.busy {
-  background: var(--accent);
-}
-
-.status-text {
-  font-weight: 400;
-  font-size: 0.8rem;
-  color: var(--err);
+.dandiset-single-link {
+  font-size: 0.85rem;
+  white-space: nowrap;
 }
 
 #dropzone {
@@ -263,19 +263,6 @@ button.hint {
 }
 .dz-inner p {
   margin: 0.4rem 0;
-}
-.dz-alt {
-  color: var(--muted);
-  font-size: 0.85rem;
-}
-.linklike {
-  border: none;
-  background: none;
-  padding: 0;
-  color: var(--accent);
-  text-decoration: underline;
-  cursor: pointer;
-  font: inherit;
 }
 
 .oauth-row {

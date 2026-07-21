@@ -47,7 +47,7 @@ test("tracks overall progress and per-outcome counts across a mixed batch", asyn
 
   await seedSignedIn(page);
   await page.goto("/");
-  await expect(page.locator("#connect-status-dot")).toHaveClass(/\bok\b/);
+  await expect(page.locator("#dandiset-single")).toBeVisible();
 
   await expect(page.locator("#progress-summary")).toBeHidden();
 
