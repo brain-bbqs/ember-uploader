@@ -56,4 +56,33 @@ describe("renderChangelogHtml", () => {
     expect(html).not.toContain("<script>");
     expect(html).toContain("&lt;script&gt;");
   });
+
+  it("renders plain paragraph lines outside of lists and headings", () => {
+    const html = renderChangelogHtml("## 0.0.1\n\nJust a note, no list.\n", 1);
+    expect(html).toContain("<p>Just a note, no list.</p>");
+  });
+
+  it("closes an open list before a following heading or paragraph", () => {
+    const html = renderChangelogHtml(
+      "## 0.0.1\n\n- item one\n\n#### 🏠 Internal\n\n- item two\n\nsome trailing note\n",
+      1,
+    );
+    expect(html).toContain("<li>item one</li></ul><h4>");
+    expect(html).toContain("<li>item two</li></ul><p>some trailing note</p>");
+  });
+
+  it("handles a version heading with no body", () => {
+    const html = renderChangelogHtml("## 0.0.1", 1);
+    expect(html).toBe('<section class="changelog-version"><h3>0.0.1</h3></section>');
+  });
+
+  it("leaves non-http(s) link syntax unrendered as a link", () => {
+    const html = renderChangelogHtml("## 0.0.1\n\n- see [local](../file.md)\n", 1);
+    expect(html).not.toContain("<a ");
+  });
+
+  it("keeps consecutive list items within a single <ul>", () => {
+    const html = renderChangelogHtml("## 0.0.1\n\n- item one\n- item two\n", 1);
+    expect(html).toContain("<ul><li>item one</li><li>item two</li></ul>");
+  });
 });
