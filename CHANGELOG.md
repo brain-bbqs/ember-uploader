@@ -12,6 +12,7 @@
 #### 🐛 Bug Fix
 
 - The signed-in username/avatar in the header now appears as soon as sign-in succeeds, instead of being gated behind having an "Incoming: " dataset available to select ([#19](https://github.com/brain-bbqs/ember-uploader/pull/19))
+- The OAuth redirect URI is now computed from wherever the page is actually being served (production root, a PR preview, local dev) instead of a hardcoded production URL, so sign-in can work from any of those locations once registered on the archive side ([#19](https://github.com/brain-bbqs/ember-uploader/pull/19))
 
 ## 0.0.10
 

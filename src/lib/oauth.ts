@@ -1,7 +1,13 @@
 import type { OAuthTokenSet } from "./types";
-import { EMBER_INSTANCE, OAUTH_CLIENT_ID, OAUTH_REDIRECT_URI } from "./instances";
+import { EMBER_INSTANCE, OAUTH_CLIENT_ID } from "./instances";
 
 const VERIFIER_STORAGE_KEY = "dandi-mp4-uploader.oauth-pkce.v1";
+
+// Wherever this page is actually being served from (production root, a PR preview, local dev) —
+// must be registered as a valid redirect URI on the archive side for that specific location.
+function getRedirectUri(): string {
+  return `${window.location.origin}${window.location.pathname}`;
+}
 
 // django-oauth-toolkit's default access token lifetime; refreshed proactively before it's hit.
 const REFRESH_SKEW_MS = 60_000;
@@ -55,7 +61,7 @@ export async function startLogin(
   const url = new URL(`${EMBER_INSTANCE.oauth}/authorize/`);
   url.searchParams.set("response_type", "code");
   url.searchParams.set("client_id", OAUTH_CLIENT_ID);
-  url.searchParams.set("redirect_uri", OAUTH_REDIRECT_URI);
+  url.searchParams.set("redirect_uri", getRedirectUri());
   url.searchParams.set("code_challenge", challenge);
   url.searchParams.set("code_challenge_method", "S256");
   url.searchParams.set("state", state);
@@ -105,7 +111,7 @@ export async function handleRedirectCallback(): Promise<OAuthTokenSet | null> {
   return postTokenRequest({
     grant_type: "authorization_code",
     code,
-    redirect_uri: OAUTH_REDIRECT_URI,
+    redirect_uri: getRedirectUri(),
     client_id: OAUTH_CLIENT_ID,
     code_verifier: pending.verifier,
   });

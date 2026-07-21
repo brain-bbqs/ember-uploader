@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { startLogin, handleRedirectCallback, ensureFreshToken, revokeToken } from "../../src/lib/oauth";
-import { OAUTH_CLIENT_ID, OAUTH_REDIRECT_URI } from "../../src/lib/instances";
+import { OAUTH_CLIENT_ID } from "../../src/lib/instances";
 
 beforeEach(() => {
   sessionStorage.clear();
@@ -19,10 +19,20 @@ describe("startLogin", () => {
     expect(url.origin + url.pathname).toBe("https://api-dandi.emberarchive.org/oauth/authorize/");
     expect(url.searchParams.get("response_type")).toBe("code");
     expect(url.searchParams.get("client_id")).toBe(OAUTH_CLIENT_ID);
-    expect(url.searchParams.get("redirect_uri")).toBe(OAUTH_REDIRECT_URI);
+    expect(url.searchParams.get("redirect_uri")).toBe(`${window.location.origin}${window.location.pathname}`);
     expect(url.searchParams.get("code_challenge_method")).toBe("S256");
     expect(url.searchParams.get("code_challenge")).toBeTruthy();
     expect(url.searchParams.get("state")).toBeTruthy();
+  });
+});
+
+describe("startLogin redirect_uri", () => {
+  it("uses the page's own current path, not a hardcoded one, so it works from any deploy location", async () => {
+    window.history.replaceState({}, "", `${window.location.origin}/pr-preview/pr-19/`);
+    const navigate = vi.fn();
+    await startLogin(navigate);
+    const url = new URL(navigate.mock.calls[0][0] as string);
+    expect(url.searchParams.get("redirect_uri")).toBe(`${window.location.origin}/pr-preview/pr-19/`);
   });
 });
 
