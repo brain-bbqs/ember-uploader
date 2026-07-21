@@ -6,7 +6,9 @@ const API = "https://api-dandi.emberarchive.org/api";
 test("full upload pipeline against a mocked DANDI API", async ({ page }) => {
   const createdAssets: unknown[] = [];
 
-  await page.route(`${API}/users/me/`, (route: Route) => route.fulfill({ json: { username: "test-user" } }));
+  await page.route(`${API}/users/me/`, (route: Route) =>
+    route.fulfill({ json: { username: "test-user", name: "Test User" } }),
+  );
   await page.route(`${API}/dandisets/000123/`, (route: Route) =>
     route.fulfill({ json: { draft_version: { name: "Test dandiset" } } }),
   );
@@ -59,6 +61,9 @@ test("full upload pipeline against a mocked DANDI API", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("#connect-status-dot")).toHaveClass(/\bok\b/);
   await expect(page.locator("#connect-status-text")).toContainText("Connected");
+  await expect(page.locator("#oauth-signed-in")).toBeVisible();
+  await expect(page.locator("#oauth-avatar")).toHaveText("TU");
+  await expect(page.locator("#oauth-username")).toHaveText("test-user");
 
   const fileChooserPromise = page.waitForEvent("filechooser");
   await page.locator("#dropzone").click();
@@ -87,7 +92,9 @@ test("full upload pipeline against a mocked DANDI API", async ({ page }) => {
 test("skips a file automatically when an asset already exists at its path, no prompt", async ({ page }) => {
   let assetCreated = false;
 
-  await page.route(`${API}/users/me/`, (route: Route) => route.fulfill({ json: { username: "test-user" } }));
+  await page.route(`${API}/users/me/`, (route: Route) =>
+    route.fulfill({ json: { username: "test-user", name: "Test User" } }),
+  );
   await page.route(`${API}/dandisets/000123/`, (route: Route) =>
     route.fulfill({ json: { draft_version: { name: "Test dandiset" } } }),
   );

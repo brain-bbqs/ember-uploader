@@ -3,7 +3,7 @@ import { getElements } from "./ui/elements";
 import { initDropzone } from "./ui/dropzone";
 import { queueFileRow, uploadFile, type UploadOutcome, type HashJob } from "./ui/processFile";
 import { humanSize, formatDuration } from "./lib/format";
-import { testConnection } from "./ui/connection";
+import { testConnection, renderIdentity } from "./ui/connection";
 import { renderFileTree, setExpandDepth, DEFAULT_EXPAND_DEPTH } from "./ui/fileTree";
 import { createEtagWorker } from "./lib/etag-worker";
 import { planParts } from "./lib/etag";
@@ -254,6 +254,7 @@ async function refreshDandisetOptions(): Promise<void> {
     return;
   }
   await ensureFreshOAuth();
+  void renderIdentity(els, currentConfig());
   setDandisetPlaceholder("Loading your incoming datasets…", true);
   try {
     const datasets = await listIncomingDandisets(currentConfig());

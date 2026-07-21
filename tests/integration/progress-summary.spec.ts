@@ -4,7 +4,9 @@ import { seedSignedIn } from "./helpers/auth";
 const API = "https://api-dandi.emberarchive.org/api";
 
 test("tracks overall progress and per-outcome counts across a mixed batch", async ({ page }) => {
-  await page.route(`${API}/users/me/`, (route: Route) => route.fulfill({ json: { username: "test-user" } }));
+  await page.route(`${API}/users/me/`, (route: Route) =>
+    route.fulfill({ json: { username: "test-user", name: "Test User" } }),
+  );
   await page.route(`${API}/dandisets/000123/`, (route: Route) =>
     route.fulfill({ json: { draft_version: { name: "Test dandiset" } } }),
   );

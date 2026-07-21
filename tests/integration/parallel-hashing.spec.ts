@@ -7,7 +7,9 @@ test("hashes concurrently-uploading files on separate workers, not the main thre
   const workerUrls: string[] = [];
   page.on("worker", (w) => workerUrls.push(w.url()));
 
-  await page.route(`${API}/users/me/`, (route: Route) => route.fulfill({ json: { username: "test-user" } }));
+  await page.route(`${API}/users/me/`, (route: Route) =>
+    route.fulfill({ json: { username: "test-user", name: "Test User" } }),
+  );
   await page.route(`${API}/dandisets/000123/`, (route: Route) =>
     route.fulfill({ json: { draft_version: { name: "Test dandiset" } } }),
   );

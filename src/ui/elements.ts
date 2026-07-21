@@ -9,6 +9,7 @@ export function getElements() {
     dandisetId: required<HTMLSelectElement>("dandiset-id"),
     oauthSigninBtn: required<HTMLButtonElement>("oauth-signin-btn"),
     oauthSignedIn: required<HTMLDivElement>("oauth-signed-in"),
+    oauthAvatar: required<HTMLSpanElement>("oauth-avatar"),
     oauthUsername: required<HTMLSpanElement>("oauth-username"),
     oauthSignoutBtn: required<HTMLButtonElement>("oauth-signout-btn"),
     connectStatusDot: required<HTMLSpanElement>("connect-status-dot"),

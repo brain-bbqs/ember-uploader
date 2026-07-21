@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatDuration, humanSize } from "../../src/lib/format";
+import { formatDuration, humanSize, initialsFrom } from "../../src/lib/format";
 
 describe("humanSize", () => {
   it("formats bytes with the right unit", () => {
@@ -25,5 +25,18 @@ describe("formatDuration", () => {
     expect(formatDuration(NaN)).toBe("--:--");
     expect(formatDuration(Infinity)).toBe("--:--");
     expect(formatDuration(-5)).toBe("--:--");
+  });
+});
+
+describe("initialsFrom", () => {
+  it("takes the first letter of the first and last word, matching the main archive's convention", () => {
+    expect(initialsFrom("Cody Baker")).toBe("CB");
+    expect(initialsFrom("Cody C Baker")).toBe("CB");
+    expect(initialsFrom("  cody   baker  ")).toBe("CB");
+  });
+
+  it("falls back to '??' for an empty or single-word name", () => {
+    expect(initialsFrom("")).toBe("??");
+    expect(initialsFrom("cbaker")).toBe("??");
   });
 });

@@ -3,6 +3,29 @@ import type { UploaderConfig } from "../lib/types";
 import { apiFetch, diagnoseCors } from "../lib/api";
 import { ApiError, friendlyError } from "../lib/errors";
 import { configProblems } from "../lib/settings";
+import { initialsFrom } from "../lib/format";
+
+/**
+ * Renders the header's "who's signed in" avatar/username as soon as there's an access token,
+ * independent of whether a dandiset has been selected yet — that gate is for the dandiset check
+ * below, not for showing that sign-in itself succeeded.
+ */
+export async function renderIdentity(
+  els: UploaderElements,
+  cfg: UploaderConfig,
+): Promise<{ username?: string; name?: string } | null> {
+  if (!cfg.accessToken) return null;
+  try {
+    const me = await apiFetch<{ username?: string; name?: string }>(cfg, "/users/me/");
+    if (me?.username) {
+      els.oauthUsername.textContent = me.username;
+      els.oauthAvatar.textContent = initialsFrom(me.name ?? "");
+    }
+    return me;
+  } catch {
+    return null; // surfaced again (and handled) by testConnection's own /users/me/ call
+  }
+}
 
 export async function testConnection(
   els: UploaderElements,
@@ -11,6 +34,7 @@ export async function testConnection(
 ): Promise<void> {
   saveSettings();
   const cfg = getConfig();
+  void renderIdentity(els, cfg);
   const problems = configProblems(cfg);
   const dotEl = els.connectStatusDot;
   const textEl = els.connectStatusText;
@@ -30,11 +54,8 @@ export async function testConnection(
   try {
     let who = "";
     try {
-      const me = await apiFetch<{ username?: string }>(cfg, "/users/me/");
-      if (me?.username) {
-        who = ` Signed in as ${me.username}.`;
-        els.oauthUsername.textContent = me.username;
-      }
+      const me = await apiFetch<{ username?: string; name?: string }>(cfg, "/users/me/");
+      if (me?.username) who = ` Signed in as ${me.username}.`;
     } catch (e) {
       if (e instanceof ApiError && e.status === 401) {
         throw new ApiError("Sign-in was rejected (HTTP 401): please sign in again.", 401);
