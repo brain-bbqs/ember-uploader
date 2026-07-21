@@ -18,6 +18,12 @@ test("recursive folder selection derives sourcedata/raw paths and skips .git", a
   const row = page.locator("#file-list .file-item").first();
   await expect(page.locator("#file-list .file-item")).toHaveCount(1);
   await expect(row).toHaveAttribute("title", `sourcedata/raw/${dirName}/session1/a.txt`);
+
+  // Two levels of nesting (dirName/, session1/) — the depth slider's range should match exactly,
+  // with one tick per level, and default to showing both (depth 2) since that's within the default.
+  await expect(page.locator("#expand-depth")).toHaveAttribute("max", "2");
+  expect(await page.locator("#expand-depth").inputValue()).toBe("2");
+  await expect(page.locator("#expand-depth-ticks option")).toHaveCount(3);
 });
 
 test("a subtree with more than 30 entries renders collapsed by default", async ({ page }) => {

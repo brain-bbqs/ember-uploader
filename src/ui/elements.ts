@@ -23,6 +23,7 @@ export function getElements() {
     destRoot: required<HTMLDivElement>("dest-root"),
     expandDepthInput: required<HTMLInputElement>("expand-depth"),
     expandDepthValue: required<HTMLSpanElement>("expand-depth-value"),
+    expandDepthTicks: required<HTMLDataListElement>("expand-depth-ticks"),
     uploadBar: required<HTMLDivElement>("upload-bar"),
     uploadAllBtn: required<HTMLButtonElement>("upload-all-btn"),
     cancelAllBtn: required<HTMLButtonElement>("cancel-all-btn"),

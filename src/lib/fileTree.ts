@@ -52,3 +52,12 @@ export function sumSize(node: TreeNode): number {
   }
   return total;
 }
+
+/** Deepest level of folder nesting anywhere in this node's subtree (0 if it has no subfolders). */
+export function maxDepth(node: TreeNode): number {
+  let max = 0;
+  for (const child of node.dirs.values()) {
+    max = Math.max(max, 1 + maxDepth(child));
+  }
+  return max;
+}

@@ -4,9 +4,10 @@ import { initDropzone } from "./ui/dropzone";
 import { queueFileRow, uploadFile, type UploadOutcome } from "./ui/processFile";
 import { humanSize } from "./lib/format";
 import { testConnection } from "./ui/connection";
-import { renderFileTree, setExpandDepth } from "./ui/fileTree";
+import { renderFileTree, setExpandDepth, DEFAULT_EXPAND_DEPTH } from "./ui/fileTree";
 import { createEtagWorker } from "./lib/etag-worker";
 import { loadStoredSettings, saveStoredSettings, resolveConfig } from "./lib/settings";
+import { maxDepth, buildTree } from "./lib/fileTree";
 import type { UploaderConfig } from "./lib/types";
 import type { DroppedFile } from "./lib/fileTree";
 import type { FileRow } from "./ui/fileRow";
@@ -27,35 +28,47 @@ const els = getElements();
 const activeUploads = new Set<AbortController>();
 const pending: { file: File; row: FileRow; path: string }[] = [];
 
-// Batch-scoped progress tracker for the current (or most recently finished) "Upload" click.
-let batchTotalBytes = 0;
-let batchDoneBytes = 0;
-let batchTotalFiles = 0;
-const batchCounts: Record<UploadOutcome, number> = { done: 0, skipped: 0, error: 0, cancelled: 0, blocked: 0 };
+// Cumulative progress tracker covering every file added this session (across all "Upload"
+// clicks), so the summary stays meaningful even after multiple rounds of dropping + uploading.
+let totalBytes = 0;
+let doneBytes = 0;
+let totalFiles = 0;
+const counts: Record<UploadOutcome, number> = { done: 0, skipped: 0, error: 0, cancelled: 0, blocked: 0 };
 const lastReportedBytes = new Map<File, number>();
+let treeMaxDepth = 0;
 
 function reportFileBytes(file: File, bytesDone: number): void {
   const prev = lastReportedBytes.get(file) ?? 0;
-  batchDoneBytes += bytesDone - prev;
+  doneBytes += bytesDone - prev;
   lastReportedBytes.set(file, bytesDone);
   updateProgressSummary();
 }
 
 function updateProgressSummary(): void {
-  const pct = batchTotalBytes > 0 ? Math.min(100, Math.round((batchDoneBytes / batchTotalBytes) * 100)) : 0;
+  const pct = totalBytes > 0 ? Math.min(100, Math.round((doneBytes / totalBytes) * 100)) : 0;
   els.progressSummaryFill.style.width = `${pct}%`;
-  const finished =
-    batchCounts.done + batchCounts.skipped + batchCounts.error + batchCounts.cancelled + batchCounts.blocked;
+  const finished = counts.done + counts.skipped + counts.error + counts.cancelled + counts.blocked;
   const parts: string[] = [];
-  if (batchCounts.done) parts.push(`${batchCounts.done} done`);
-  if (batchCounts.skipped) parts.push(`${batchCounts.skipped} skipped`);
-  if (batchCounts.error) parts.push(`${batchCounts.error} error${batchCounts.error === 1 ? "" : "s"}`);
-  if (batchCounts.cancelled) parts.push(`${batchCounts.cancelled} cancelled`);
-  if (batchCounts.blocked) parts.push(`${batchCounts.blocked} blocked`);
-  const summary = parts.length ? parts.join(", ") : "starting…";
+  if (counts.done) parts.push(`${counts.done} done`);
+  if (counts.skipped) parts.push(`${counts.skipped} skipped`);
+  if (counts.error) parts.push(`${counts.error} error${counts.error === 1 ? "" : "s"}`);
+  if (counts.cancelled) parts.push(`${counts.cancelled} cancelled`);
+  if (counts.blocked) parts.push(`${counts.blocked} blocked`);
+  const summary = parts.length ? parts.join(", ") : "not started";
   els.progressSummaryText.textContent =
-    `${pct}% (${humanSize(batchDoneBytes)} / ${humanSize(batchTotalBytes)}) — ` +
-    `${finished}/${batchTotalFiles} files — ${summary}`;
+    `${pct}% (${humanSize(doneBytes)} / ${humanSize(totalBytes)}) — ` + `${finished}/${totalFiles} files — ${summary}`;
+}
+
+function updateExpandDepthRange(): void {
+  els.expandDepthInput.max = String(treeMaxDepth);
+  els.expandDepthTicks.replaceChildren(
+    ...Array.from({ length: treeMaxDepth + 1 }, (_, i) => {
+      const opt = document.createElement("option");
+      opt.value = String(i);
+      return opt;
+    }),
+  );
+  els.expandDepthValue.textContent = els.expandDepthInput.value;
 }
 
 if (els.versionIndicator) {
@@ -91,13 +104,27 @@ function updateUploadBar(): void {
 }
 
 function addFiles(entries: DroppedFile[]): void {
+  const isFirstBatch = totalFiles === 0;
+  treeMaxDepth = Math.max(treeMaxDepth, maxDepth(buildTree(entries)));
+  updateExpandDepthRange();
+  if (isFirstBatch) {
+    els.expandDepthInput.value = String(Math.min(DEFAULT_EXPAND_DEPTH, treeMaxDepth));
+    els.expandDepthValue.textContent = els.expandDepthInput.value;
+  }
+
   const targets = renderFileTree(els.fileList, entries, Number(els.expandDepthInput.value));
   for (const entry of entries) {
     const container = targets.get(entry.file) ?? els.fileList;
     const { row, path } = queueFileRow(container, entry.file, entry.relativePath);
     pending.push({ file: entry.file, row, path });
+    totalBytes += entry.file.size;
   }
-  els.destRoot.hidden = els.fileList.children.length === 0;
+  totalFiles += entries.length;
+
+  const hasFiles = els.fileList.children.length > 0;
+  els.destRoot.hidden = !hasFiles;
+  els.progressSummary.hidden = !hasFiles;
+  updateProgressSummary();
   updateUploadBar();
 }
 
@@ -119,19 +146,11 @@ async function startUpload(): Promise<void> {
   els.cancelAllBtn.hidden = false;
   const cfg = currentConfig();
 
-  batchTotalBytes = batch.reduce((sum, b) => sum + b.file.size, 0);
-  batchDoneBytes = 0;
-  batchTotalFiles = batch.length;
-  lastReportedBytes.clear();
-  (Object.keys(batchCounts) as UploadOutcome[]).forEach((k) => (batchCounts[k] = 0));
-  els.progressSummary.hidden = false;
-  updateProgressSummary();
-
   await runQueue(batch, async ({ file, row, path }, lane) => {
     const outcome = await uploadFile(row, file, path, cfg, activeUploads, getHashWorker(lane).hash, (bytesDone) =>
       reportFileBytes(file, bytesDone),
     );
-    batchCounts[outcome]++;
+    counts[outcome]++;
     updateProgressSummary();
   });
 

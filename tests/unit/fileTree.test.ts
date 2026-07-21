@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildTree, countDescendants, sumSize, type DroppedFile } from "../../src/lib/fileTree";
+import { buildTree, countDescendants, maxDepth, sumSize, type DroppedFile } from "../../src/lib/fileTree";
 
 function fakeFile(name: string, size = 1): File {
   return new File([new Uint8Array(size)], name);
@@ -63,5 +63,25 @@ describe("sumSize", () => {
   it("is zero for an empty node", () => {
     const tree = buildTree([]);
     expect(sumSize(tree)).toBe(0);
+  });
+});
+
+describe("maxDepth", () => {
+  it("is zero for a node with only top-level files, no subfolders", () => {
+    const tree = buildTree([{ file: fakeFile("a.txt"), relativePath: "" }]);
+    expect(maxDepth(tree)).toBe(0);
+  });
+
+  it("counts the deepest nested chain of folders", () => {
+    const tree = buildTree([{ file: fakeFile("a.txt"), relativePath: "l1/l2/l3" }]);
+    expect(maxDepth(tree)).toBe(3);
+  });
+
+  it("takes the deepest of multiple branches", () => {
+    const tree = buildTree([
+      { file: fakeFile("a.txt"), relativePath: "shallow" },
+      { file: fakeFile("b.txt"), relativePath: "deep/deeper/deepest" },
+    ]);
+    expect(maxDepth(tree)).toBe(3);
   });
 });

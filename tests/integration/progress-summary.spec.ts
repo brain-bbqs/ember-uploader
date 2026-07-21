@@ -56,8 +56,13 @@ test("tracks overall progress and per-outcome counts across a mixed batch", asyn
     { name: "other.bin", mimeType: "application/octet-stream", buffer: Buffer.alloc(16) },
   ]);
 
-  await page.locator("#upload-all-btn").click();
+  // The summary is present as soon as files are queued, showing the total size up front.
   await expect(page.locator("#progress-summary")).toBeVisible();
+  await expect(page.locator("#progress-summary-text")).toContainText("0/2 files");
+  await expect(page.locator("#progress-summary-text")).toContainText("32 B");
+  await expect(page.locator("#progress-summary-text")).toContainText("not started");
+
+  await page.locator("#upload-all-btn").click();
 
   await expect(page.locator("#progress-summary-text")).toContainText("2/2 files", { timeout: 15000 });
   await expect(page.locator("#progress-summary-text")).toContainText("1 done");
