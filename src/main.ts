@@ -259,9 +259,54 @@ function showDandisetSingle(dataset: IncomingDandiset): void {
   els.dandisetSingleLink.href = `${cfg.web}/dandiset/${dataset.identifier}/draft/files`;
 }
 
+// Populates the dandiset picker (dropdown or single-dataset text) from a resolved list of
+// datasets, shared by the real signed-in fetch and the "?test&num_datasets=N" debug override.
+function applyDatasetList(datasets: IncomingDandiset[]): void {
+  if (!datasets.length) {
+    setDandisetPlaceholder("No incoming datasets found for your account", true);
+    return;
+  }
+  els.dandisetId.replaceChildren(
+    ...datasets.map((d) => {
+      const opt = document.createElement("option");
+      opt.value = d.identifier;
+      opt.textContent = `${d.title} (${d.identifier})`;
+      return opt;
+    }),
+  );
+  els.dandisetId.disabled = false;
+  els.dandisetId.hidden = false;
+  els.dandisetSingle.hidden = true;
+  const match = datasets.find((d) => d.identifier === storedDandisetId);
+  const selected = match ?? datasets[0];
+  els.dandisetId.value = selected.identifier;
+  if (datasets.length === 1) {
+    showDandisetSingle(selected);
+  }
+}
+
+// Debug-only escape hatch for previewing the multi-dataset dropdown without a real account that
+// owns several "Incoming: " dandisets: e.g. "?test&num_datasets=2" fills in that many fake
+// datasets. Bypasses sign-in entirely, so it also works for a signed-out visitor.
+function readTestDatasetOverride(): IncomingDandiset[] | null {
+  const params = new URLSearchParams(window.location.search);
+  if (!params.has("test")) return null;
+  const count = Math.max(1, Number(params.get("num_datasets")) || 1);
+  return Array.from({ length: count }, (_, i) => ({
+    identifier: String(i + 1).padStart(6, "0"),
+    title: `Incoming: Test dataset ${i + 1}`,
+  }));
+}
+
 // Populates the "Incoming dataset" dropdown from the signed-in user's owned dandisets, since
 // there's no longer a free-text Dandiset ID field to type into.
 async function refreshDandisetOptions(): Promise<void> {
+  const testDatasets = readTestDatasetOverride();
+  if (testDatasets) {
+    applyDatasetList(testDatasets);
+    updateViewDatasetLink();
+    return;
+  }
   if (!oauthTokens) {
     setDandisetPlaceholder("Sign in to see your incoming datasets", true);
     updateViewDatasetLink();
@@ -272,25 +317,7 @@ async function refreshDandisetOptions(): Promise<void> {
   setDandisetPlaceholder("Loading your incoming datasets…", true);
   try {
     const datasets = await listIncomingDandisets(currentConfig());
-    if (!datasets.length) {
-      setDandisetPlaceholder("No incoming datasets found for your account", true);
-    } else {
-      els.dandisetId.replaceChildren(
-        ...datasets.map((d) => {
-          const opt = document.createElement("option");
-          opt.value = d.identifier;
-          opt.textContent = `${d.title} (${d.identifier})`;
-          return opt;
-        }),
-      );
-      els.dandisetId.disabled = false;
-      const match = datasets.find((d) => d.identifier === storedDandisetId);
-      const selected = match ?? datasets[0];
-      els.dandisetId.value = selected.identifier;
-      if (datasets.length === 1) {
-        showDandisetSingle(selected);
-      }
-    }
+    applyDatasetList(datasets);
   } catch {
     setDandisetPlaceholder("Could not load your datasets", true);
   }

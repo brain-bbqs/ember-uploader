@@ -8,6 +8,10 @@
 - When the signed-in user has only one incoming dataset, it's now shown as "Uploading directly to EMBER Dandiset `000xyz`, "Incoming: ..."" (the identifier in a code style) with a link out to its archive view, instead of a disabled single-option dropdown ([#20](https://github.com/brain-bbqs/ember-uploader/pull/20))
 - Removed the connection status dot and its hover text next to the dataset picker, since the picker's own states already communicate sign-in and loading status ([#20](https://github.com/brain-bbqs/ember-uploader/pull/20))
 
+#### 🏠 Internal
+
+- Added a `?test&num_datasets=N` URL override that fills the dataset picker with fake "Incoming: Test dataset" entries, bypassing sign-in, so the multi-dataset dropdown can be previewed without a real account that owns several incoming dandisets ([#20](https://github.com/brain-bbqs/ember-uploader/pull/20))
+
 ## 0.0.11
 
 #### 🚀 Enhancement
