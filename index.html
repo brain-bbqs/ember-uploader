@@ -18,9 +18,11 @@
         <div id="oauth-row" class="oauth-row">
           <button type="button" id="oauth-signin-btn" class="primary">Sign in with EMBER</button>
           <div id="oauth-signed-in" class="oauth-signed-in" hidden>
-            <span id="oauth-avatar" class="oauth-avatar" aria-hidden="true"></span>
-            <span id="oauth-username"></span>
-            <button type="button" id="oauth-signout-btn" class="linklike">Sign out</button>
+            <span id="oauth-avatar" class="oauth-avatar" tabindex="0" aria-label="Account menu"></span>
+            <div class="oauth-popover" role="menu">
+              <span id="oauth-username" class="oauth-popover-username"></span>
+              <button type="button" id="oauth-signout-btn" class="linklike" role="menuitem">Sign out</button>
+            </div>
           </div>
         </div>
       </header>
