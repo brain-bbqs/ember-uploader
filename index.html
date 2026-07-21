@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>EMBER Uploader</title>
     <link rel="icon" href="./favicon.ico" />
-    <script type="module" crossorigin src="./assets/index-C2yh_9Vi.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-BumK8wEK.css">
+    <script type="module" crossorigin src="./assets/index-CclBrrJX.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-s7YSuGY6.css">
   </head>
   <body>
     <main>
@@ -17,6 +17,35 @@
             <h1>EMBER Uploader</h1>
           </div>
         </div>
+        <div id="oauth-row" class="oauth-row">
+          <button type="button" id="oauth-signin-btn" class="primary">Sign in with EMBER</button>
+          <div id="oauth-signed-in" class="oauth-signed-in" hidden>
+            <span id="oauth-avatar" class="oauth-avatar" tabindex="0" aria-label="Account menu"></span>
+            <div class="oauth-popover" role="menu">
+              <p class="oauth-popover-greeting">You are logged in as <strong id="oauth-username"></strong>.</p>
+              <hr class="oauth-popover-divider" />
+              <button type="button" id="oauth-signout-btn" class="oauth-popover-signout" role="menuitem">
+                <span>Sign out</span>
+                <svg
+                  class="oauth-popover-signout-icon"
+                  viewBox="0 0 24 24"
+                  width="14"
+                  height="14"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                  <polyline points="16 17 21 12 16 7" />
+                  <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
       </header>
 
       <section class="card" id="config-card">
@@ -25,33 +54,18 @@
           <div class="grid">
             <label>
               <span
-                >API key
-                <button type="button" class="hint" id="api-key-help" title="Where do I find this?">?</button>
-              </span>
-              <input
-                type="password"
-                id="api-key"
-                placeholder="paste your DANDI API key"
-                autocomplete="off"
-                spellcheck="false"
-              />
-            </label>
-            <label>
-              <span
-                >Dandiset ID
+                >Dataset
                 <span class="status-indicator" role="status" aria-live="polite">
                   <span id="connect-status-dot" class="status-dot" hidden></span>
                   <span id="connect-status-text" class="status-text sr-only"></span>
                 </span>
               </span>
-              <input type="text" id="dandiset-id" placeholder="e.g. 000123 or DANDI:000123" spellcheck="false" />
+              <select id="dandiset-id">
+                <option value="" selected disabled>Sign in to see your incoming datasets</option>
+              </select>
             </label>
           </div>
         </form>
-        <p id="api-key-help-text" class="help" hidden>
-          Log in at the EMBER-DANDI archive, click your user initials in the top-right corner, and choose “API key”. The
-          key is kept in this browser only and is sent solely to the EMBER-DANDI API server.
-        </p>
       </section>
 
       <section class="card" id="drop-card">
