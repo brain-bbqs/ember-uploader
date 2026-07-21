@@ -11,6 +11,7 @@
 - Replaced the per-file "Start upload"/"Remove" confirmation and "Replace/Skip" existing-asset prompt with a single "Upload N files" button above the file list; files with a path collision are now skipped automatically instead of prompting ([#17](https://github.com/brain-bbqs/ember-uploader/pull/17))
 - Simplified each file row to a single compact line (badge, name, size, and a right-aligned progress bar/status) and added a static `sourcedata/raw` heading above the tree, removing the per-file editable archive-path box and idle "Ready to upload." text — the full destination path is still available as a hover tooltip on each row ([#17](https://github.com/brain-bbqs/ember-uploader/pull/17))
 - Dropped the "Queued" badge (a file being in the list already implies it's queued) and shrank the file tree's rows, borders, spacing, and badges considerably so a handful of folders no longer fills the whole page ([#17](https://github.com/brain-bbqs/ember-uploader/pull/17))
+- Added a rotating chevron to each folder row so expanded/collapsed state is visible at a glance, and replaced the folder emoji with a trailing `/` on folder names for a more compact look ([#17](https://github.com/brain-bbqs/ember-uploader/pull/17))
 
 #### 🐛 Bug Fix
 

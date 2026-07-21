@@ -290,6 +290,16 @@ button.hint {
 .dir-toggle:hover {
   background: var(--accent-soft);
 }
+.dir-chevron {
+  display: inline-block;
+  width: 0.75em;
+  flex-shrink: 0;
+  color: var(--muted);
+  transition: transform 0.12s ease;
+}
+.dir-toggle[aria-expanded="true"] .dir-chevron {
+  transform: rotate(90deg);
+}
 .dir-name {
   font-weight: 600;
   overflow: hidden;

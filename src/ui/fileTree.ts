@@ -22,13 +22,13 @@ function renderNode(node: TreeNode, container: HTMLUListElement, targets: Map<Fi
     li.className = "dir-item";
     li.innerHTML = `
       <button type="button" class="dir-toggle" aria-expanded="${!collapsed}">
-        <span class="dir-icon">📁</span>
+        <span class="dir-chevron" aria-hidden="true">▸</span>
         <span class="dir-name"></span>
         <span class="dir-count">${count} item${count === 1 ? "" : "s"}</span>
       </button>
       <ul class="dir-children"></ul>
     `;
-    li.querySelector(".dir-name")!.textContent = child.name;
+    li.querySelector(".dir-name")!.textContent = `${child.name}/`;
     const childUl = li.querySelector<HTMLUListElement>(".dir-children")!;
     childUl.hidden = collapsed;
     const toggle = li.querySelector<HTMLButtonElement>(".dir-toggle")!;
