@@ -545,10 +545,27 @@ button.hint {
   padding: 0 0.5rem 0.15rem 0.35rem;
 }
 
+.footer-left {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
 .version-link {
   color: var(--muted);
   font-size: 1.04rem;
   text-decoration: underline;
+}
+
+.whats-new-link {
+  font: inherit;
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--accent);
+  font-size: 0.92rem;
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 .con-brand-link img {
@@ -556,4 +573,73 @@ button.hint {
   height: 5rem;
   width: auto;
   opacity: 0.312;
+}
+
+.whats-new-modal {
+  width: min(560px, 90vw);
+  max-height: min(640px, 80vh);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0;
+  color: var(--text);
+  background: var(--card);
+  box-shadow: 0 8px 30px rgb(0 0 0 / 0.2);
+}
+
+.whats-new-modal::backdrop {
+  background: rgb(0 0 0 / 0.45);
+}
+
+.whats-new-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.whats-new-modal-header h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.whats-new-close {
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-size: 1.3rem;
+  line-height: 1;
+  padding: 0;
+  cursor: pointer;
+}
+
+.whats-new-content {
+  padding: 0.5rem 1.25rem 1.25rem;
+  overflow-y: auto;
+}
+
+.whats-new-content .changelog-version + .changelog-version {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--border);
+}
+
+.whats-new-content h3 {
+  margin: 0.75rem 0 0.25rem;
+  font-size: 1rem;
+}
+
+.whats-new-content h4 {
+  margin: 0.75rem 0 0.25rem;
+  font-size: 0.85rem;
+}
+
+.whats-new-content ul {
+  margin: 0.25rem 0;
+  padding-left: 1.25rem;
+}
+
+.whats-new-content li {
+  margin: 0.3rem 0;
+  font-size: 0.9rem;
 }

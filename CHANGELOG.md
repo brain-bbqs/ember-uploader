@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.10
+
+#### 🚀 Enhancement
+
+- Added a "What's New" link next to the version tag that opens a modal showing the rendered CHANGELOG.md content for the latest 3 versions ([#18](https://github.com/brain-bbqs/ember-uploader/pull/18))
+
 ## 0.0.9
 
 #### 🚀 Enhancement

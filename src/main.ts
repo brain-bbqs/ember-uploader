@@ -12,6 +12,8 @@ import { maxDepth, buildTree } from "./lib/fileTree";
 import type { UploaderConfig } from "./lib/types";
 import type { DroppedFile } from "./lib/fileTree";
 import type { FileRow } from "./ui/fileRow";
+import { renderChangelogHtml } from "./lib/changelog";
+import changelog from "../CHANGELOG.md?raw";
 
 declare const __APP_VERSION__: string;
 
@@ -178,6 +180,13 @@ function updateExpandDepthRange(): void {
 if (els.versionIndicator) {
   els.versionIndicator.textContent = `v${__APP_VERSION__}`;
 }
+
+els.whatsNewContent.innerHTML = renderChangelogHtml(changelog, 3);
+els.whatsNewButton.addEventListener("click", () => els.whatsNewModal.showModal());
+els.whatsNewClose.addEventListener("click", () => els.whatsNewModal.close());
+els.whatsNewModal.addEventListener("click", (e) => {
+  if (e.target === els.whatsNewModal) els.whatsNewModal.close();
+});
 
 function loadSettings(): boolean {
   const s = loadStoredSettings();

@@ -34,6 +34,10 @@ export function getElements() {
     cancelAllBtn: required<HTMLButtonElement>("cancel-all-btn"),
     viewDatasetLink: required<HTMLAnchorElement>("view-dataset-link"),
     versionIndicator: document.getElementById("version-indicator"),
+    whatsNewButton: required<HTMLButtonElement>("whats-new-button"),
+    whatsNewModal: required<HTMLDialogElement>("whats-new-modal"),
+    whatsNewClose: required<HTMLButtonElement>("whats-new-close"),
+    whatsNewContent: required<HTMLDivElement>("whats-new-content"),
   };
 }
 

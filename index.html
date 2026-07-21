@@ -101,14 +101,17 @@
     </main>
 
     <div class="page-footer-bar">
-      <a
-        id="version-indicator"
-        class="version-link"
-        href="https://github.com/brain-bbqs/ember-uploader"
-        target="_blank"
-        rel="noopener"
-        title="View source on GitHub"
-      ></a>
+      <div class="footer-left">
+        <a
+          id="version-indicator"
+          class="version-link"
+          href="https://github.com/brain-bbqs/ember-uploader"
+          target="_blank"
+          rel="noopener"
+          title="View source on GitHub"
+        ></a>
+        <button id="whats-new-button" class="whats-new-link" type="button">What's New</button>
+      </div>
       <a
         class="con-brand-link"
         href="https://centerforopenneuroscience.org"
@@ -120,6 +123,14 @@
         <img src="/src/assets/con-logo.png" alt="Center for Open Neuroscience" />
       </a>
     </div>
+
+    <dialog id="whats-new-modal" class="whats-new-modal">
+      <div class="whats-new-modal-header">
+        <h2>What's New</h2>
+        <button id="whats-new-close" class="whats-new-close" type="button" aria-label="Close">&times;</button>
+      </div>
+      <div id="whats-new-content" class="whats-new-content"></div>
+    </dialog>
 
     <script type="module" src="/src/main.ts"></script>
   </body>
