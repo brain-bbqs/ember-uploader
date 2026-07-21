@@ -263,6 +263,18 @@ button.hint {
   font: inherit;
 }
 
+.oauth-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.oauth-signed-in {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 .dir-item {
   list-style: none;
 }

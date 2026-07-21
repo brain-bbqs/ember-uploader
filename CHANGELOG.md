@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.11
+
+#### 🚀 Enhancement
+
+- Added a "Sign in with EMBER" button that authenticates via the archive's OAuth2 (Authorization Code + PKCE) flow instead of pasting an API key; the pasted-key field is now a fallback, hidden while signed in ([#19](https://github.com/brain-bbqs/ember-uploader/pull/19))
+
 ## 0.0.10
 
 #### 🚀 Enhancement

@@ -22,13 +22,19 @@ export function saveStoredSettings(settings: StoredSettings | null): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
 }
 
-export function resolveConfig(input: { apiKey: string; dandisetId: string }): UploaderConfig {
+export function resolveConfig(input: {
+  apiKey: string;
+  dandisetId: string;
+  oauthAccessToken?: string;
+}): UploaderConfig {
   const rawId = input.dandisetId.trim();
   const idMatch = rawId.match(/(\d{6,})/);
+  const signedIn = Boolean(input.oauthAccessToken);
   return {
     api: EMBER_INSTANCE.api,
     web: EMBER_INSTANCE.web,
-    apiKey: input.apiKey.trim(),
+    apiKey: signedIn ? input.oauthAccessToken! : input.apiKey.trim(),
+    authScheme: signedIn ? "Bearer" : "token",
     dandisetId: idMatch ? idMatch[1] : "",
   };
 }
@@ -36,7 +42,7 @@ export function resolveConfig(input: { apiKey: string; dandisetId: string }): Up
 export function configProblems(cfg: UploaderConfig): string[] {
   const problems: string[] = [];
   if (!cfg.api || !/^https?:\/\//.test(cfg.api)) problems.push("API base URL is missing or invalid.");
-  if (!cfg.apiKey) problems.push("API key is missing.");
+  if (!cfg.apiKey) problems.push(cfg.authScheme === "Bearer" ? "Not signed in." : "API key is missing.");
   if (!cfg.dandisetId) problems.push("Dandiset ID is missing (expected something like 000123).");
   return problems;
 }

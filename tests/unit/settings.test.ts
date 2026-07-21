@@ -10,6 +10,7 @@ describe("resolveConfig", () => {
     expect(cfg.api).toBe("https://api-dandi.emberarchive.org/api");
     expect(cfg.web).toBe("https://dandi.emberarchive.org");
     expect(cfg.apiKey).toBe("key123");
+    expect(cfg.authScheme).toBe("token");
     expect(cfg.dandisetId).toBe("000123");
   });
 
@@ -20,11 +21,21 @@ describe("resolveConfig", () => {
     });
     expect(cfg.dandisetId).toBe("");
   });
+
+  it("prefers an OAuth access token over a pasted API key, using the Bearer scheme", () => {
+    const cfg = resolveConfig({
+      apiKey: "pasted-key",
+      dandisetId: "000123",
+      oauthAccessToken: "the-access-token",
+    });
+    expect(cfg.apiKey).toBe("the-access-token");
+    expect(cfg.authScheme).toBe("Bearer");
+  });
 });
 
 describe("configProblems", () => {
   it("flags a missing API URL, API key, and dandiset id", () => {
-    const problems = configProblems({ api: "", web: null, apiKey: "", dandisetId: "" });
+    const problems = configProblems({ api: "", web: null, apiKey: "", authScheme: "token", dandisetId: "" });
     expect(problems).toHaveLength(3);
   });
 
@@ -33,8 +44,14 @@ describe("configProblems", () => {
       api: "https://api-dandi.emberarchive.org/api",
       web: "https://dandi.emberarchive.org",
       apiKey: "abc",
+      authScheme: "token",
       dandisetId: "000123",
     });
     expect(problems).toHaveLength(0);
+  });
+
+  it("reports 'Not signed in.' rather than an API-key message when the auth scheme is Bearer", () => {
+    const problems = configProblems({ api: "https://x", web: null, apiKey: "", authScheme: "Bearer", dandisetId: "1" });
+    expect(problems).toContain("Not signed in.");
   });
 });

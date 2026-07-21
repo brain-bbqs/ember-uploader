@@ -9,7 +9,8 @@ import { createEtagWorker } from "./lib/etag-worker";
 import { planParts } from "./lib/etag";
 import { loadStoredSettings, saveStoredSettings, resolveConfig } from "./lib/settings";
 import { maxDepth, buildTree } from "./lib/fileTree";
-import type { UploaderConfig } from "./lib/types";
+import { startLogin, handleRedirectCallback, ensureFreshToken, revokeToken } from "./lib/oauth";
+import type { UploaderConfig, OAuthTokenSet } from "./lib/types";
 import type { DroppedFile } from "./lib/fileTree";
 import type { FileRow } from "./ui/fileRow";
 import { renderChangelogHtml } from "./lib/changelog";
@@ -188,11 +189,14 @@ els.whatsNewModal.addEventListener("click", (e) => {
   if (e.target === els.whatsNewModal) els.whatsNewModal.close();
 });
 
+let oauthTokens: OAuthTokenSet | null = null;
+
 function loadSettings(): boolean {
   const s = loadStoredSettings();
   if (s) {
     if (s.apiKey) els.apiKey.value = s.apiKey;
     if (s.dandisetId) els.dandisetId.value = s.dandisetId;
+    if (s.oauth) oauthTokens = s.oauth;
   }
   return s !== null;
 }
@@ -201,6 +205,7 @@ function saveSettings(): void {
   saveStoredSettings({
     apiKey: els.apiKey.value.trim(),
     dandisetId: els.dandisetId.value.trim(),
+    oauth: oauthTokens ?? undefined,
   });
 }
 
@@ -208,7 +213,26 @@ function currentConfig(): UploaderConfig {
   return resolveConfig({
     apiKey: els.apiKey.value,
     dandisetId: els.dandisetId.value,
+    oauthAccessToken: oauthTokens?.accessToken,
   });
+}
+
+function renderAuthUI(): void {
+  const signedIn = !!oauthTokens;
+  els.oauthSigninBtn.hidden = signedIn;
+  els.oauthSignedIn.hidden = !signedIn;
+  els.apiKeyLabel.hidden = signedIn;
+}
+
+// Refreshes the OAuth access token first if it's near expiry, so the config used for the request
+// that follows always carries a live token instead of one that's about to be rejected.
+async function ensureFreshOAuth(): Promise<void> {
+  if (!oauthTokens) return;
+  const fresh = await ensureFreshToken(oauthTokens).catch(() => oauthTokens!);
+  if (fresh !== oauthTokens) {
+    oauthTokens = fresh;
+    saveSettings();
+  }
 }
 
 function updateViewDatasetLink(): void {
@@ -267,6 +291,7 @@ async function runQueue<T>(items: T[], worker: (item: T, lane: number) => Promis
 }
 
 async function startUpload(): Promise<void> {
+  await ensureFreshOAuth();
   const batch = pending.splice(0, pending.length);
   updateUploadBar();
   els.cancelAllBtn.hidden = false;
@@ -293,15 +318,36 @@ async function startUpload(): Promise<void> {
 }
 
 function runConnectionCheck(): void {
-  void testConnection(els, currentConfig, saveSettings);
-  updateViewDatasetLink();
+  void (async () => {
+    await ensureFreshOAuth();
+    await testConnection(els, currentConfig, saveSettings);
+    updateViewDatasetLink();
+  })();
 }
 
+const callbackTokens = await handleRedirectCallback().catch((e) => {
+  console.warn("OAuth sign-in callback failed:", e);
+  return null;
+});
 const hadStoredSettings = loadSettings();
+if (callbackTokens) {
+  oauthTokens = callbackTokens;
+  saveSettings();
+}
+renderAuthUI();
 initDropzone(els, addFiles);
 [els.apiKey, els.dandisetId].forEach((el) => el.addEventListener("change", runConnectionCheck));
 document.getElementById("config-form")!.addEventListener("submit", (e) => e.preventDefault());
-if (hadStoredSettings) runConnectionCheck();
+els.oauthSigninBtn.addEventListener("click", () => void startLogin());
+els.oauthSignoutBtn.addEventListener("click", () => {
+  const tokens = oauthTokens;
+  oauthTokens = null;
+  saveSettings();
+  renderAuthUI();
+  if (tokens) void revokeToken(tokens);
+  runConnectionCheck();
+});
+if (hadStoredSettings || oauthTokens) runConnectionCheck();
 els.apiKeyHelp.addEventListener("click", () => {
   els.apiKeyHelpText.hidden = !els.apiKeyHelpText.hidden;
 });

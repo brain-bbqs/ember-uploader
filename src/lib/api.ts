@@ -12,7 +12,7 @@ export async function apiFetch<T = unknown>(
   path: string,
   { method = "GET", json, expectJson = true }: ApiFetchOptions = {},
 ): Promise<T | null> {
-  const headers: Record<string, string> = { Authorization: `token ${cfg.apiKey}` };
+  const headers: Record<string, string> = { Authorization: `${cfg.authScheme} ${cfg.apiKey}` };
   let body: string | undefined;
   if (json !== undefined) {
     headers["Content-Type"] = "application/json";
@@ -60,7 +60,7 @@ export async function diagnoseCors(cfg: UploaderConfig): Promise<string> {
     }
   };
   const simple = await probe({}); // no preflight needed
-  const preflighted = await probe({ Authorization: `token ${cfg.apiKey}` });
+  const preflighted = await probe({ Authorization: `${cfg.authScheme} ${cfg.apiKey}` });
   const origin = window.location.origin;
   if (!simple && !preflighted) {
     return (
@@ -82,7 +82,7 @@ export async function diagnoseCors(cfg: UploaderConfig): Promise<string> {
     const r = await fetch(`${cfg.api}/blobs/digest/`, {
       method: "POST",
       headers: {
-        Authorization: `token ${cfg.apiKey}`,
+        Authorization: `${cfg.authScheme} ${cfg.apiKey}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({

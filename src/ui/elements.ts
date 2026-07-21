@@ -7,7 +7,12 @@ function required<T extends Element>(id: string): T {
 export function getElements() {
   return {
     apiKey: required<HTMLInputElement>("api-key"),
+    apiKeyLabel: required<HTMLLabelElement>("api-key-label"),
     dandisetId: required<HTMLInputElement>("dandiset-id"),
+    oauthSigninBtn: required<HTMLButtonElement>("oauth-signin-btn"),
+    oauthSignedIn: required<HTMLDivElement>("oauth-signed-in"),
+    oauthUsername: required<HTMLSpanElement>("oauth-username"),
+    oauthSignoutBtn: required<HTMLButtonElement>("oauth-signout-btn"),
     connectStatusDot: required<HTMLSpanElement>("connect-status-dot"),
     connectStatusText: required<HTMLSpanElement>("connect-status-text"),
     apiKeyHelp: required<HTMLButtonElement>("api-key-help"),

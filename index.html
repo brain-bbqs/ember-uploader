@@ -19,9 +19,16 @@
 
       <section class="card" id="config-card">
         <h2>1 · Connection</h2>
+        <div id="oauth-row" class="oauth-row">
+          <button type="button" id="oauth-signin-btn" class="primary">Sign in with EMBER</button>
+          <div id="oauth-signed-in" class="oauth-signed-in" hidden>
+            <span id="oauth-username"></span>
+            <button type="button" id="oauth-signout-btn" class="linklike">Sign out</button>
+          </div>
+        </div>
         <form id="config-form">
           <div class="grid">
-            <label>
+            <label id="api-key-label">
               <span
                 >API key
                 <button type="button" class="hint" id="api-key-help" title="Where do I find this?">?</button>
@@ -48,7 +55,8 @@
         </form>
         <p id="api-key-help-text" class="help" hidden>
           Log in at the EMBER-DANDI archive, click your user initials in the top-right corner, and choose “API key”. The
-          key is kept in this browser only and is sent solely to the EMBER-DANDI API server.
+          key is kept in this browser only and is sent solely to the EMBER-DANDI API server. Signing in above does this
+          for you automatically, so you shouldn't need to paste one.
         </p>
       </section>
 
