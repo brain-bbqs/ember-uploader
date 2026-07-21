@@ -9,7 +9,7 @@ function buildDropzone(dragover: boolean): HTMLElement {
   if (dragover) dz.classList.add("dragover");
   dz.innerHTML = `
     <div class="dz-inner">
-      <div class="dz-icon">📄</div>
+      <div class="dz-icon"><span>🎥</span><span>🔬</span><span>📄</span></div>
       <p>Drop your research contents here, or click to browse.</p>
     </div>
   `;

@@ -259,6 +259,9 @@ button.hint {
   background: var(--accent-soft);
 }
 .dz-icon {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
   font-size: 2rem;
 }
 .dz-inner p {

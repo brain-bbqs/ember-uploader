@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.13
+
+#### 🚀 Enhancement
+
+- Replaced the dropzone's single page icon with three icons (video camera, microscope, paper) to better represent the range of research contents that can be uploaded ([#22](https://github.com/brain-bbqs/ember-uploader/pull/22))
+
 ## 0.0.12
 
 #### 🚀 Enhancement
