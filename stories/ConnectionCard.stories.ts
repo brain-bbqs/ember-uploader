@@ -17,7 +17,7 @@ function buildDatasetCard(mode: "signed-out" | "dropdown" | "single"): HTMLEleme
           ${optionsHtml}
         </select>
         <p class="dandiset-single"${mode === "single" ? "" : " hidden"}>
-          <span>Uploading directly to EMBER Dandiset 000475, "Incoming: Throughput test"</span>
+          <span>Uploading directly to EMBER Dandiset <code>000475</code>, "Incoming: Throughput test"</span>
           <a class="dandiset-single-link" target="_blank" rel="noopener">View in archive ↗</a>
         </p>
       </div>
