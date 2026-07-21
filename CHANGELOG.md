@@ -10,7 +10,6 @@
 
 #### 🚀 Enhancement
 
-<<<<<<< HEAD
 - Added recursive folder drag-and-drop (and a "select a folder" click-to-browse alternative), walking the full directory tree and uploading every file, not just `.mp4`s, under `sourcedata/raw/<same relative path>` in the dandiset ([#17](https://github.com/brain-bbqs/ember-uploader/pull/17))
 - `.git`, `.datalad`, and `.git-annex` folders (and any files inside them) are automatically skipped when uploading a dropped or selected folder ([#17](https://github.com/brain-bbqs/ember-uploader/pull/17))
 - The file list now groups dropped files by folder, collapsing any folder with more than 30 files/subfolders into a single expandable row instead of listing every entry ([#17](https://github.com/brain-bbqs/ember-uploader/pull/17))
