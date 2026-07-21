@@ -44,7 +44,9 @@ function takePendingLogin(): PendingLogin | null {
 }
 
 /** Redirects the browser to the archive's OAuth2 authorize page (Authorization Code + PKCE). */
-export async function startLogin(navigate: (url: string) => void = (url) => window.location.assign(url)): Promise<void> {
+export async function startLogin(
+  navigate: (url: string) => void = (url) => window.location.assign(url),
+): Promise<void> {
   const verifier = randomString(32);
   const state = randomString(16);
   const challenge = await sha256Base64Url(verifier);
