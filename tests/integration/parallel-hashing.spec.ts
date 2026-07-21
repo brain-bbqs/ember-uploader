@@ -25,7 +25,7 @@ test("hashes concurrently-uploading files on separate workers, not the main thre
 
   await seedSignedIn(page);
   await page.goto("/");
-  await expect(page.locator("#connect-status-dot")).toHaveClass(/\bok\b/);
+  await expect(page.locator("#dandiset-single")).toBeVisible();
 
   const fileChooserPromise = page.waitForEvent("filechooser");
   await page.locator("#dropzone").click();

@@ -212,35 +212,17 @@ button.hint {
   border: 0;
 }
 
-.status-indicator {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  margin-left: 0.35rem;
+.dandiset-single {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  margin: 0;
+  font-size: 0.95rem;
 }
 
-.status-dot {
-  display: inline-block;
-  width: 0.55rem;
-  height: 0.55rem;
-  border-radius: 50%;
-  background: var(--border);
-  flex-shrink: 0;
-}
-.status-dot.ok {
-  background: var(--ok);
-}
-.status-dot.err {
-  background: var(--err);
-}
-.status-dot.busy {
-  background: var(--accent);
-}
-
-.status-text {
-  font-weight: 400;
-  font-size: 0.8rem;
-  color: var(--err);
+.dandiset-single-link {
+  font-size: 0.85rem;
+  white-space: nowrap;
 }
 
 #dropzone {

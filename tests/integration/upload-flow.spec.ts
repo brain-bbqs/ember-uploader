@@ -59,11 +59,10 @@ test("full upload pipeline against a mocked DANDI API", async ({ page }) => {
 
   await seedSignedIn(page);
   await page.goto("/");
-  await expect(page.locator("#connect-status-dot")).toHaveClass(/\bok\b/);
-  await expect(page.locator("#connect-status-text")).toContainText("Connected");
+  await expect(page.locator("#dandiset-single")).toBeVisible();
   await expect(page.locator("#oauth-signed-in")).toBeVisible();
-  // Only one "Incoming: " dataset was seeded, so there's nothing to pick between.
-  await expect(page.locator("#dandiset-id")).toBeDisabled();
+  // Only one "Incoming: " dataset was seeded, so it's shown as plain text, not a dropdown.
+  await expect(page.locator("#dandiset-id")).toBeHidden();
   await expect(page.locator("#oauth-avatar")).toHaveText("TU");
   await expect(page.locator("#oauth-username")).toHaveText("test-user");
 
@@ -113,7 +112,7 @@ test("skips a file automatically when an asset already exists at its path, no pr
 
   await seedSignedIn(page);
   await page.goto("/");
-  await expect(page.locator("#connect-status-dot")).toHaveClass(/\bok\b/);
+  await expect(page.locator("#dandiset-single")).toBeVisible();
 
   const fileChooserPromise = page.waitForEvent("filechooser");
   await page.locator("#dropzone").click();

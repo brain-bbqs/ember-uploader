@@ -3,14 +3,14 @@ import { getElements } from "./ui/elements";
 import { initDropzone } from "./ui/dropzone";
 import { queueFileRow, uploadFile, type UploadOutcome, type HashJob } from "./ui/processFile";
 import { humanSize, formatDuration } from "./lib/format";
-import { testConnection, renderIdentity } from "./ui/connection";
+import { renderIdentity } from "./ui/connection";
 import { renderFileTree, setExpandDepth, DEFAULT_EXPAND_DEPTH } from "./ui/fileTree";
 import { createEtagWorker } from "./lib/etag-worker";
 import { planParts } from "./lib/etag";
 import { loadStoredSettings, saveStoredSettings, resolveConfig } from "./lib/settings";
 import { maxDepth, buildTree } from "./lib/fileTree";
 import { startLogin, handleRedirectCallback, ensureFreshToken, revokeToken } from "./lib/oauth";
-import { listIncomingDandisets } from "./lib/dandisets";
+import { listIncomingDandisets, type IncomingDandiset } from "./lib/dandisets";
 import type { UploaderConfig, OAuthTokenSet } from "./lib/types";
 import type { DroppedFile } from "./lib/fileTree";
 import type { FileRow } from "./ui/fileRow";
@@ -243,6 +243,18 @@ function setDandisetPlaceholder(text: string, disabled: boolean): void {
   opt.selected = true;
   els.dandisetId.replaceChildren(opt);
   els.dandisetId.disabled = disabled;
+  els.dandisetId.hidden = false;
+  els.dandisetSingle.hidden = true;
+}
+
+// With only one incoming dataset there's nothing to choose between, so show its name as plain
+// text (with a link out to the archive) instead of a single-option dropdown.
+function showDandisetSingle(dataset: IncomingDandiset): void {
+  els.dandisetId.hidden = true;
+  els.dandisetSingle.hidden = false;
+  els.dandisetSingleText.textContent = dataset.title;
+  const cfg = currentConfig();
+  els.dandisetSingleLink.href = `${cfg.web}/dandiset/${dataset.identifier}/draft/files`;
 }
 
 // Populates the "Incoming dataset" dropdown from the signed-in user's owned dandisets, since
@@ -269,11 +281,13 @@ async function refreshDandisetOptions(): Promise<void> {
           return opt;
         }),
       );
-      // Nothing to choose between with only one dataset, so grey it out rather than implying
-      // there's a live pick to make.
-      els.dandisetId.disabled = datasets.length === 1;
+      els.dandisetId.disabled = false;
       const match = datasets.find((d) => d.identifier === storedDandisetId);
-      els.dandisetId.value = match ? match.identifier : datasets[0].identifier;
+      const selected = match ?? datasets[0];
+      els.dandisetId.value = selected.identifier;
+      if (datasets.length === 1) {
+        showDandisetSingle(selected);
+      }
     }
   } catch {
     setDandisetPlaceholder("Could not load your datasets", true);
@@ -367,7 +381,6 @@ async function startUpload(): Promise<void> {
 function runConnectionCheck(): void {
   void (async () => {
     await ensureFreshOAuth();
-    await testConnection(els, currentConfig, saveSettings);
     updateViewDatasetLink();
   })();
 }

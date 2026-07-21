@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.0.12
+
+#### 🚀 Enhancement
+
+- Simplified the "Dataset" and file-drop cards: dropped the numbered "1 ·"/"2 ·" section titles and the "Files" heading, since the cards are self-explanatory ([#20](https://github.com/brain-bbqs/ember-uploader/pull/20))
+- When the signed-in user has only one incoming dataset, its name is now shown as plain text with a link out to its archive view, instead of a disabled single-option dropdown ([#20](https://github.com/brain-bbqs/ember-uploader/pull/20))
+- Removed the connection status dot and its hover text next to the dataset picker, since the picker's own states already communicate sign-in and loading status ([#20](https://github.com/brain-bbqs/ember-uploader/pull/20))
+
 ## 0.0.11
 
 #### 🚀 Enhancement

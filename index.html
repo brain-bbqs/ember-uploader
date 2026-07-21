@@ -47,27 +47,23 @@
       </header>
 
       <section class="card" id="config-card">
-        <h2>1 · Connection</h2>
+        <h2>Dataset</h2>
         <form id="config-form">
           <div class="grid">
-            <label>
-              <span
-                >Dataset
-                <span class="status-indicator" role="status" aria-live="polite">
-                  <span id="connect-status-dot" class="status-dot" hidden></span>
-                  <span id="connect-status-text" class="status-text sr-only"></span>
-                </span>
-              </span>
-              <select id="dandiset-id">
-                <option value="" selected disabled>Sign in to see your incoming datasets</option>
-              </select>
-            </label>
+            <select id="dandiset-id">
+              <option value="" selected disabled>Sign in to see your incoming datasets</option>
+            </select>
+            <p id="dandiset-single" class="dandiset-single" hidden>
+              <span id="dandiset-single-text"></span>
+              <a id="dandiset-single-link" class="dandiset-single-link" target="_blank" rel="noopener"
+                >View in archive ↗</a
+              >
+            </p>
           </div>
         </form>
       </section>
 
       <section class="card" id="drop-card">
-        <h2>2 · Files</h2>
         <div id="progress-summary" class="progress-summary" hidden>
           <div class="progress-phase">
             <span class="progress-phase-label">Scanning</span>
