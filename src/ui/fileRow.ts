@@ -17,10 +17,10 @@ export function createFileRow(fileList: HTMLUListElement, file: File, id: string
   li.id = id;
   li.title = destinationPath;
   li.innerHTML = `
-    <span class="badge" data-role="badge" hidden></span>
     <span class="file-name"></span>
     <span class="file-size">${humanSize(file.size)}</span>
     <span class="file-status" data-role="status"></span>
+    <span class="badge" data-role="badge" hidden></span>
     <span class="progress" data-role="progress-wrap" hidden><span data-role="progress"></span></span>
   `;
   li.querySelector(".file-name")!.textContent = file.name;

@@ -38,6 +38,8 @@ export async function uploadFile(
   hashJob: HashJob,
   // Reports bytes uploaded so far for this file (0..file.size), for an aggregate progress bar.
   onUploadProgress?: (bytesDone: number) => void,
+  // Fires once, right before the first real byte leaves for S3 (not on skip/blocked/error).
+  onUploadStart?: () => void,
 ): Promise<UploadOutcome> {
   const problems = configProblems(cfg);
   if (problems.length) {
@@ -66,6 +68,7 @@ export async function uploadFile(
     }
 
     // --- 3. Blob upload --------------------------------------------------
+    onUploadStart?.();
     const { blobId } = await uploadBlob(
       cfg,
       file,

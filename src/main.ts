@@ -43,10 +43,10 @@ function runOnLane(lane: number, task: () => Promise<string>): Promise<string> {
 }
 
 function startHashing(file: File, row: FileRow): HashJob {
-  ensureTimerStarted();
+  ensureScanTimerStarted();
   const parts = planParts(file.size);
   const lane = nextHashLane++ % FILE_CONCURRENCY;
-  row.setBadge("Hashing", "busy");
+  row.setBadge("Scanning", "busy");
   const promise = runOnLane(lane, () =>
     getHashWorker(lane).hash(file, parts, (f) => {
       row.setProgress(f * 0.999);
@@ -77,16 +77,28 @@ const counts: Record<UploadOutcome, number> = { done: 0, skipped: 0, error: 0, c
 const lastHashBytes = new Map<File, number>();
 const lastUploadBytes = new Map<File, number>();
 let treeMaxDepth = 0;
-let runStart: number | null = null;
+let scanStart: number | null = null;
+let uploadStart: number | null = null;
+let tickerRunning = false;
 
-function ensureTimerStarted(): void {
-  if (runStart !== null) return;
-  runStart = performance.now();
+function ensureTicker(): void {
+  if (tickerRunning) return;
+  tickerRunning = true;
   window.setInterval(updateProgressSummary, 500);
 }
 
-function currentElapsedMs(): number {
-  return runStart !== null ? performance.now() - runStart : 0;
+function ensureScanTimerStarted(): void {
+  ensureTicker();
+  scanStart ??= performance.now();
+}
+
+function ensureUploadTimerStarted(): void {
+  ensureTicker();
+  uploadStart ??= performance.now();
+}
+
+function elapsedMsSince(start: number | null): number {
+  return start !== null ? performance.now() - start : 0;
 }
 
 function reportHashBytes(file: File, bytesDone: number): void {
@@ -114,19 +126,31 @@ function renderPhaseBar(
   const rate = elapsedSec > 0 ? phaseDoneBytes / elapsedSec : 0;
   const remaining = Math.max(0, totalBytes - phaseDoneBytes);
   const etaSec = rate > 0 ? remaining / rate : NaN;
-  const timing =
-    rate > 0
-      ? `[${formatDuration(elapsedSec)}<${formatDuration(etaSec)}, ${humanSize(rate)}/s]`
-      : elapsedSec > 0
-        ? `[${formatDuration(elapsedSec)}]`
-        : "";
-  textEl.textContent = `${pct}% (${humanSize(phaseDoneBytes)} / ${humanSize(totalBytes)}) ${timing}`;
+
+  const pctSpan = document.createElement("span");
+  pctSpan.className = "stat-pct";
+  pctSpan.textContent = `${pct}%`;
+
+  const bytesSpan = document.createElement("span");
+  bytesSpan.className = "stat-bytes";
+  bytesSpan.textContent = `(${humanSize(phaseDoneBytes)} / ${humanSize(totalBytes)})`;
+
+  const nodes: Node[] = [pctSpan, bytesSpan];
+  if (elapsedSec > 0) {
+    const timingSpan = document.createElement("span");
+    timingSpan.className = "stat-timing";
+    timingSpan.textContent =
+      rate > 0
+        ? `[${formatDuration(elapsedSec)}<${formatDuration(etaSec)}, ${humanSize(rate)}/s]`
+        : `[${formatDuration(elapsedSec)}]`;
+    nodes.push(timingSpan);
+  }
+  textEl.replaceChildren(...nodes);
 }
 
 function updateProgressSummary(): void {
-  const elapsedSec = currentElapsedMs() / 1000;
-  renderPhaseBar(els.progressHashFill, els.progressHashText, hashDoneBytes, elapsedSec);
-  renderPhaseBar(els.progressUploadFill, els.progressUploadText, uploadDoneBytes, elapsedSec);
+  renderPhaseBar(els.progressHashFill, els.progressHashText, hashDoneBytes, elapsedMsSince(scanStart) / 1000);
+  renderPhaseBar(els.progressUploadFill, els.progressUploadText, uploadDoneBytes, elapsedMsSince(uploadStart) / 1000);
 
   const finished = counts.done + counts.skipped + counts.error + counts.cancelled + counts.blocked;
   const leftParts: string[] = [];
@@ -241,8 +265,15 @@ async function startUpload(): Promise<void> {
 
   await runQueue(batch, async ({ file, row, path }) => {
     const job = hashJobs.get(file)!;
-    const outcome = await uploadFile(row, file, path, cfg, activeUploads, job, (bytesDone) =>
-      reportUploadBytes(file, bytesDone),
+    const outcome = await uploadFile(
+      row,
+      file,
+      path,
+      cfg,
+      activeUploads,
+      job,
+      (bytesDone) => reportUploadBytes(file, bytesDone),
+      ensureUploadTimerStarted,
     );
     counts[outcome]++;
     updateProgressSummary();
