@@ -1,13 +1,13 @@
 import { test, expect } from "@playwright/test";
 
-test.describe("EMBER uploader shell", () => {
+test.describe("BBQS uploader shell", () => {
   test("renders branding, version, and the connection form", async ({ page }) => {
     await page.goto("/");
     await expect(page).toHaveTitle(/BBQS Uploader/);
     await expect(page.locator(".brand-logo")).toBeVisible();
     const versionLink = page.locator("#version-indicator");
     await expect(versionLink).toHaveText(/^v\d+\.\d+\.\d+$/);
-    await expect(versionLink).toHaveAttribute("href", "https://github.com/brain-bbqs/ember-uploader");
+    await expect(versionLink).toHaveAttribute("href", "https://github.com/brain-bbqs/bbqs-uploader");
     const conLink = page.locator('a.con-brand-link[href="https://centerforopenneuroscience.org"]');
     await expect(conLink).toBeVisible();
     await expect(page.locator("#dropzone")).toBeVisible();

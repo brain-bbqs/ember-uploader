@@ -8,7 +8,7 @@ description: Threat-model checklist for this repo's client-side security (XSS su
 Full writeup and rationale: [`SECURITY.md`](../../../SECURITY.md) at the repo
 root — read it before acting, this file is just the triggerable summary.
 
-ember-uploader is a fully static, backend-free page. There is no server to
+bbqs-uploader is a fully static, backend-free page. There is no server to
 hold a session, so any API credential (OAuth tokens, previously a pasted API
 key) necessarily lives somewhere client-side JS can read it. That's a fixed
 constraint, not a bug to route around — the job is managing it deliberately.

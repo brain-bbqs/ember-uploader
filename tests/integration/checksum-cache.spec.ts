@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test, expect, type Page } from "@playwright/test";
 
-const DB_NAME = "ember-uploader.checksum-cache";
+const DB_NAME = "bbqs-uploader.checksum-cache";
 const STORE = "files";
 
 async function dropFile(page: Page, path: string): Promise<void> {
@@ -46,7 +46,7 @@ test("re-dropping an unchanged file after a reload hashes only one verification 
   // 64MB + 10 bytes plans exactly two parts. Written to disk (Playwright rejects in-memory
   // setFiles buffers this large), and re-dropped from the same path so name/size/mtime — the
   // cache's file identity — are identical across the two drops.
-  const bigPath = join(mkdtempSync(join(tmpdir(), "ember-cache-")), "big.bin");
+  const bigPath = join(mkdtempSync(join(tmpdir(), "bbqs-cache-")), "big.bin");
   const bytes = Buffer.alloc(64 * 1024 * 1024 + 10);
   bytes.fill(7);
   writeFileSync(bigPath, bytes);

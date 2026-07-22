@@ -4,7 +4,7 @@ import os from "node:os";
 import path from "node:path";
 
 test("recursive folder selection derives sourcedata/raw paths and skips .git", async ({ page }) => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "ember-upload-"));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "bbqs-upload-"));
   const dirName = path.basename(dir);
   fs.mkdirSync(path.join(dir, "session1"));
   fs.writeFileSync(path.join(dir, "session1", "a.txt"), "a");
@@ -44,7 +44,7 @@ test("the dropzone browse links open the file and folder pickers respectively", 
 test("a folder with more than 30 files reveals the first 30 and truncates the rest with a placeholder", async ({
   page,
 }) => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "ember-upload-big-"));
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "bbqs-upload-big-"));
   const bigDir = path.join(dir, "bigfolder");
   fs.mkdirSync(bigDir);
   for (let i = 0; i < 35; i++) {
