@@ -273,6 +273,15 @@ button.hint {
   align-items: center;
   gap: 0.75rem;
 }
+.auto-hash-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+  cursor: pointer;
+  white-space: nowrap;
+}
 .oauth-signed-in {
   position: relative;
   display: inline-flex;
@@ -281,13 +290,13 @@ button.hint {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.85rem;
-  height: 1.85rem;
+  width: 2.22rem;
+  height: 2.22rem;
   border-radius: 50%;
   background: var(--card);
   border: 2px solid var(--ember-red);
   color: var(--ember-red);
-  font-size: 0.72rem;
+  font-size: 0.86rem;
   font-weight: 700;
   letter-spacing: 0.02em;
   flex-shrink: 0;

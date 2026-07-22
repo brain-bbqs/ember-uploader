@@ -2,6 +2,11 @@
 
 ## 0.0.14
 
+#### 🚀 Enhancement
+
+- Added an "Auto-checksum on drop" toggle, top-right in the header; unchecked, a file's checksum is only computed once its upload reaches it instead of starting the moment it's dropped ([#23](https://github.com/brain-bbqs/ember-uploader/pull/23))
+- Made the signed-in avatar icon 20% larger ([#23](https://github.com/brain-bbqs/ember-uploader/pull/23))
+
 #### 🐛 Bug Fix
 
 - Fixed the file tree failing to render and the expand-depth slider becoming unresponsive when dropping a large folder, by yielding to the browser periodically while building the tree/queueing files, coalescing hash-progress UI updates to once per animation frame, and debouncing the slider's full-tree traversal ([#23](https://github.com/brain-bbqs/ember-uploader/pull/23))
