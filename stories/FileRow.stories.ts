@@ -29,12 +29,23 @@ export const Uploading = {
     }),
 };
 
-export const Skipped = {
-  name: "Skipped (existing asset)",
+export const ReplacedUpdated = {
+  name: "Replaced (content updated)",
   render: () =>
     buildRow((row) => {
-      row.setBadge("Skipped", "warn");
-      row.setStatus("already exists", "warn");
+      row.setBadge("Replaced", "ok");
+      row.setStatus("content updated", "ok");
+      row.setProgress(1, true);
+    }),
+};
+
+export const ReplacedMatched = {
+  name: "Replaced (matched existing content)",
+  render: () =>
+    buildRow((row) => {
+      row.setBadge("Replaced", "ok");
+      row.setStatus("matched existing content", "ok");
+      row.setProgress(1, true);
     }),
 };
 

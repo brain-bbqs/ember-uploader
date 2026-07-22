@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.18
+
+#### 🐛 Bug Fix
+
+- Files whose destination path already holds an asset are no longer silently skipped on a pure path match (which ignored content, so a changed local file never updated its stale asset); they now upload normally and replace the existing asset, with content dedup left to the server's blob digest check so unchanged bytes are still never re-transferred. Rows finish as "Replaced" (with "content updated" or "matched existing content") instead of "Skipped", and the progress footer counts replaced files ([#27](https://github.com/brain-bbqs/ember-uploader/pull/27))
+
 ## 0.0.17
 
 #### 🚀 Enhancement

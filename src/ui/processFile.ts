@@ -6,7 +6,7 @@ import { uploadBlob, findExistingAsset, createOrReplaceAsset } from "../lib/uplo
 import { diagnoseCors } from "../lib/api";
 import { ApiError, friendlyError } from "../lib/errors";
 
-export type UploadOutcome = "blocked" | "cancelled" | "error" | "skipped" | "done";
+export type UploadOutcome = "blocked" | "cancelled" | "error" | "replaced" | "done";
 
 /** A background hash already started (or completed) for a file — see `startHashing` in main.ts. */
 export interface HashJob {
@@ -38,7 +38,7 @@ export async function uploadFile(
   hashJob: HashJob,
   // Reports bytes uploaded so far for this file (0..file.size), for an aggregate progress bar.
   onUploadProgress?: (bytesDone: number) => void,
-  // Fires once, right before the first real byte leaves for S3 (not on skip/blocked/error).
+  // Fires once, right before the first real byte leaves for S3 (not on blocked/error).
   onUploadStart?: () => void,
 ): Promise<UploadOutcome> {
   const problems = configProblems(cfg);
@@ -57,19 +57,17 @@ export async function uploadFile(
     const etag = await hashJob.promise;
     row.setProgress(0);
 
-    // --- 2. Conflict check (skip automatically; never overwrites) ------
+    // --- 2. Existing-asset lookup -----------------------------------------
+    // A path match alone says nothing about content, so it never skips the upload;
+    // it only tells asset registration to replace (PUT) instead of create (POST).
+    // Content dedup stays server-side: uploadBlob's digest check reuses the
+    // existing blob without re-transferring bytes when the content is already known.
     row.setBadge("Uploading", "busy");
     const existing = await findExistingAsset(cfg, path);
-    if (existing) {
-      row.setBadge("Skipped", "warn");
-      row.setStatus("already exists", "warn");
-      onUploadProgress?.(file.size);
-      return "skipped";
-    }
 
     // --- 3. Blob upload --------------------------------------------------
     onUploadStart?.();
-    const { blobId } = await uploadBlob(
+    const { blobId, reused } = await uploadBlob(
       cfg,
       file,
       etag,
@@ -83,13 +81,18 @@ export async function uploadFile(
     );
 
     // --- 4. Asset registration -------------------------------------------
-    await createOrReplaceAsset(cfg, path, blobId, null, file.type || undefined);
+    await createOrReplaceAsset(cfg, path, blobId, existing?.asset_id ?? null, file.type || undefined);
 
-    row.setBadge("Done", "ok");
+    if (existing) {
+      row.setBadge("Replaced", "ok");
+      row.setStatus(reused ? "matched existing content" : "content updated", "ok");
+    } else {
+      row.setBadge("Done", "ok");
+      row.setStatus("", "ok");
+    }
     row.setProgress(1, true);
-    row.setStatus("", "ok");
     onUploadProgress?.(file.size);
-    return "done";
+    return existing ? "replaced" : "done";
   } catch (e) {
     onUploadProgress?.(file.size);
     // The AbortError check catches a hash cancelled via "Cancel all" before this upload's own

@@ -93,7 +93,7 @@ let hashDoneBytes = 0;
 let uploadDoneBytes = 0;
 let hashedFiles = 0;
 let totalFiles = 0;
-const counts: Record<UploadOutcome, number> = { done: 0, skipped: 0, error: 0, cancelled: 0, blocked: 0 };
+const counts: Record<UploadOutcome, number> = { done: 0, replaced: 0, error: 0, cancelled: 0, blocked: 0 };
 const lastHashBytes = new Map<File, number>();
 const lastUploadBytes = new Map<File, number>();
 let scanStart: number | null = null;
@@ -186,7 +186,7 @@ function renderPhaseBar(
 }
 
 function updateProgressSummary(): void {
-  const finished = counts.done + counts.skipped + counts.error + counts.cancelled + counts.blocked;
+  const finished = counts.done + counts.replaced + counts.error + counts.cancelled + counts.blocked;
   renderPhaseBar(
     els.progressHashFill,
     els.progressHashText,
@@ -208,7 +208,7 @@ function updateProgressSummary(): void {
   if (counts.cancelled) leftParts.push(`${counts.cancelled} cancelled`);
   if (counts.blocked) leftParts.push(`${counts.blocked} blocked`);
   els.progressFooterLeft.textContent = leftParts.join(", ");
-  els.progressFooterMid.textContent = counts.skipped ? `${counts.skipped} skipped` : "";
+  els.progressFooterMid.textContent = counts.replaced ? `${counts.replaced} replaced` : "";
   els.progressFooterRight.textContent = `${finished}/${totalFiles} files done`;
 }
 

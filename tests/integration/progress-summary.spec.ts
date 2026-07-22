@@ -10,7 +10,7 @@ test("tracks overall progress and per-outcome counts across a mixed batch", asyn
   await page.route(`${API}/dandisets/000123/`, (route: Route) =>
     route.fulfill({ json: { draft_version: { name: "Test dandiset" } } }),
   );
-  // clip.mp4 already exists (skipped); other.bin does not (uploaded).
+  // clip.mp4 already exists (replaced via PUT); other.bin does not (created via POST).
   await page.route(`${API}/dandisets/000123/versions/draft/assets/?path=*`, (route: Route) => {
     const url = new URL(route.request().url());
     const path = url.searchParams.get("path");
@@ -41,6 +41,12 @@ test("tracks overall progress and per-outcome counts across a mixed batch", asyn
   await page.route(`${API}/dandisets/000123/versions/draft/assets/`, (route: Route) => {
     if (route.request().method() === "POST") {
       return route.fulfill({ json: { asset_id: "asset-1", path: "sourcedata/raw/other.bin" } });
+    }
+    return route.continue();
+  });
+  await page.route(`${API}/dandisets/000123/versions/draft/assets/existing-1/`, (route: Route) => {
+    if (route.request().method() === "PUT") {
+      return route.fulfill({ json: { asset_id: "existing-1", path: "sourcedata/raw/clip.mp4" } });
     }
     return route.continue();
   });
@@ -75,7 +81,7 @@ test("tracks overall progress and per-outcome counts across a mixed batch", asyn
   await expect(page.locator("#progress-footer-right")).toContainText("2/2 files", { timeout: 15000 });
   await expect(page.locator("#progress-upload-text")).toContainText("2/2 files");
   await expect(page.locator("#progress-footer-left")).toContainText("1 done");
-  await expect(page.locator("#progress-footer-mid")).toContainText("1 skipped");
+  await expect(page.locator("#progress-footer-mid")).toContainText("1 replaced");
   const hashWidth = await page.locator("#progress-hash-fill").evaluate((el) => el.style.width);
   const uploadWidth = await page.locator("#progress-upload-fill").evaluate((el) => el.style.width);
   expect(hashWidth).toBe("100%");
