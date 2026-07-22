@@ -1,8 +1,6 @@
 # BBQS Uploader
 
-A **fully static, backend-free** web app for uploading files to an
-existing dandiset on the [EMBER Archive](https://emberarchive.org) with a
-simple drag-and-drop interface.
+A **fully static, backend-free** web app for BBQS teams to upload files to an existing Dandiset on the EMBER Archive through a simple drag-and-drop interface.
 
 ---
 
