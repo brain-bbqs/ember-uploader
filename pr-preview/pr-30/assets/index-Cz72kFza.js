@@ -24,6 +24,10 @@ var e=Object.create,t=Object.defineProperty,n=Object.getOwnPropertyDescriptor,r=
 - Time-left estimates now read in plain words ("~3 minutes", "a few seconds") and round more coarsely as they grow, and the Speed figure is smoothed with a ~3s exponential moving average instead of the lifetime average, so both track current throughput without flickering ([#30](https://github.com/brain-bbqs/ember-uploader/pull/30))
 - The summary bars now carry \`role="progressbar"\` with live \`aria-valuenow\`, so overall progress is announced to screen readers ([#30](https://github.com/brain-bbqs/ember-uploader/pull/30))
 
+#### 🐛 Bug Fix
+
+- The fixed footer bar at the bottom of the viewport no longer swallows clicks aimed at page content behind its empty middle stretch (such as the upload bar's Upload/Cancel buttons once the file card grows tall enough to reach it); pointer events now pass through everywhere except over the bar's actual links and logo ([#30](https://github.com/brain-bbqs/ember-uploader/pull/30))
+
 ## 0.0.19
 
 #### 🚀 Enhancement
