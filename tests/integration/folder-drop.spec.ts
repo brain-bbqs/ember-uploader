@@ -20,10 +20,11 @@ test("recursive folder selection derives sourcedata/raw paths and skips .git", a
   await expect(row).toHaveAttribute("title", `sourcedata/raw/${dirName}/session1/a.txt`);
 
   // The slider now ranges over the total number of dropped files (1 here), and defaults to
-  // revealing everything since 1 is within the default reveal count (30).
+  // revealing everything since 1 is within the default reveal count (30). The ruler's quarter
+  // labels dedupe down to just "0" and "1" for a single-file drop.
   await expect(page.locator("#expand-depth")).toHaveAttribute("max", "1");
   expect(await page.locator("#expand-depth").inputValue()).toBe("1");
-  await expect(page.locator("#expand-depth-ticks option")).toHaveCount(2);
+  await expect(page.locator("#expand-depth-ticks .tick-label")).toHaveCount(2);
 });
 
 test("a folder with more than 30 files reveals the first 30 and truncates the rest with a placeholder", async ({
@@ -48,12 +49,15 @@ test("a folder with more than 30 files reveals the first 30 and truncates the re
   // the truncation is signposted by a free "… N more files" placeholder row.
   await expect(page.locator("#expand-depth")).toHaveAttribute("max", "35");
   expect(await page.locator("#expand-depth").inputValue()).toBe("30");
+  await expect(page.locator("#expand-depth-bubble")).toHaveText("30 files");
   await expect(page.locator("#file-list .file-item")).toHaveCount(35);
   await expect(page.locator("#file-list .file-item:visible")).toHaveCount(30);
   await expect(page.locator("#file-list .more-files")).toHaveText("… 5 more files");
 
-  // Dragging the slider to the max reveals every row and drops the placeholder.
+  // Dragging the slider to the max reveals every row, drops the placeholder, and the value
+  // bubble riding the thumb tracks the new count.
   await page.locator("#expand-depth").fill("35");
+  await expect(page.locator("#expand-depth-bubble")).toHaveText("35 files");
   await expect(page.locator("#file-list .file-item:visible")).toHaveCount(35);
   await expect(page.locator("#file-list .more-files")).toHaveCount(0);
 });

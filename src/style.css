@@ -432,8 +432,67 @@ button.hint {
   font-size: 0.78rem;
   white-space: nowrap;
 }
-.expand-control input[type="range"] {
-  width: 90px;
+.expand-slider {
+  position: relative;
+  display: inline-block;
+  width: 220px;
+  /* Headroom above for the value bubble, room below for the tick ruler. */
+  padding: 1.4rem 0 1.1rem;
+}
+.expand-slider input[type="range"] {
+  display: block;
+  width: 100%;
+  margin: 0;
+}
+.expand-bubble {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 0.05rem 0.35rem;
+  border-radius: 4px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.expand-bubble::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 100%;
+  transform: translateX(-50%);
+  border: 4px solid transparent;
+  border-top-color: var(--accent);
+}
+/* Inset by half the native thumb width so tick positions line up with thumb-center positions. */
+.expand-ruler {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 0;
+  height: 1.05rem;
+  pointer-events: none;
+}
+.expand-ruler .tick {
+  position: absolute;
+  top: 0;
+  width: 1px;
+  height: 4px;
+  background: var(--border);
+}
+.expand-ruler .tick.major {
+  height: 6px;
+  background: var(--muted);
+}
+.expand-ruler .tick-label {
+  position: absolute;
+  top: 7px;
+  transform: translateX(-50%);
+  font-size: 0.64rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
 }
 
 #file-list {

@@ -112,9 +112,11 @@
           <code>sourcedata/raw/</code>
           <span class="expand-control">
             <label for="expand-depth">Show</label>
-            <input type="range" id="expand-depth" min="0" max="0" value="0" step="1" list="expand-depth-ticks" />
-            <datalist id="expand-depth-ticks"></datalist>
-            <span id="expand-depth-value">0</span> files
+            <span class="expand-slider">
+              <span class="expand-bubble" id="expand-depth-bubble"><span id="expand-depth-value">0</span> files</span>
+              <input type="range" id="expand-depth" min="0" max="0" value="0" step="1" />
+              <span class="expand-ruler" id="expand-depth-ticks" aria-hidden="true"></span>
+            </span>
           </span>
         </div>
         <ul id="file-list"></ul>

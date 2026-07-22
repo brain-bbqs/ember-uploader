@@ -199,24 +199,45 @@ function updateProgressSummary(): void {
   els.progressFooterRight.textContent = `${finished}/${totalFiles} files done`;
 }
 
-// A tick per possible value would mean one <option> element per dropped file — the same kind of
-// unbounded DOM growth this file's other perf fixes avoid — so cap it at a fixed number of evenly
-// spaced ticks instead.
-const MAX_EXPAND_TICKS = 10;
+// The slider's ruler is drawn at fixed percentages of the track — a tick per possible value
+// would mean one element per dropped file, the same kind of unbounded DOM growth this file's
+// other perf fixes avoid. Minor ticks land every 5%, with a labeled major tick per quarter.
+const EXPAND_MINOR_TICKS = 20;
+const EXPAND_LABEL_STOPS = 4;
 
 function updateExpandDepthRange(): void {
   els.expandDepthInput.max = String(totalFiles);
-  const tickCount = Math.min(MAX_EXPAND_TICKS, totalFiles);
-  const step = tickCount > 0 ? totalFiles / tickCount : 0;
-  const values = new Set(Array.from({ length: tickCount + 1 }, (_, i) => Math.round(i * step)));
-  els.expandDepthTicks.replaceChildren(
-    ...Array.from(values, (v) => {
-      const opt = document.createElement("option");
-      opt.value = String(v);
-      return opt;
-    }),
+  const ruler: HTMLSpanElement[] = [];
+  for (let i = 0; i <= EXPAND_MINOR_TICKS; i++) {
+    const tick = document.createElement("span");
+    tick.className = i % (EXPAND_MINOR_TICKS / EXPAND_LABEL_STOPS) === 0 ? "tick major" : "tick";
+    tick.style.left = `${(i / EXPAND_MINOR_TICKS) * 100}%`;
+    ruler.push(tick);
+  }
+  // Deduped so a small drop doesn't repeat the same rounded number; each label sits at the track
+  // position its value actually maps to.
+  const values = new Set(
+    Array.from({ length: EXPAND_LABEL_STOPS + 1 }, (_, i) => Math.round((i * totalFiles) / EXPAND_LABEL_STOPS)),
   );
-  els.expandDepthValue.textContent = els.expandDepthInput.value;
+  for (const v of values) {
+    const label = document.createElement("span");
+    label.className = "tick-label";
+    label.style.left = totalFiles > 0 ? `${(v / totalFiles) * 100}%` : "0%";
+    label.textContent = String(v);
+    ruler.push(label);
+  }
+  els.expandDepthTicks.replaceChildren(...ruler);
+  updateExpandBubble();
+}
+
+// Keeps the "N files" bubble riding centered over the slider thumb (the 8px inset is half the
+// native thumb's width) and its number in sync with the input's value.
+function updateExpandBubble(): void {
+  const value = Number(els.expandDepthInput.value);
+  const max = Number(els.expandDepthInput.max);
+  els.expandDepthValue.textContent = String(value);
+  const fraction = max > 0 ? value / max : 0;
+  els.expandDepthBubble.style.left = `calc(8px + (100% - 16px) * ${fraction})`;
 }
 
 if (els.versionIndicator) {
@@ -410,7 +431,7 @@ async function addFiles(entries: DroppedFile[]): Promise<void> {
   updateExpandDepthRange();
   if (isFirstBatch) {
     els.expandDepthInput.value = String(Math.min(DEFAULT_REVEAL_COUNT, totalFiles));
-    els.expandDepthValue.textContent = els.expandDepthInput.value;
+    updateExpandBubble();
   }
 
   const targets = await renderFileTree(els.fileList, entries);
@@ -509,7 +530,7 @@ void refreshDandisetOptions();
 // animation frame keeps a drag from becoming an unresponsive flood of full-tree traversals.
 let expandDepthUpdateScheduled = false;
 els.expandDepthInput.addEventListener("input", () => {
-  els.expandDepthValue.textContent = els.expandDepthInput.value;
+  updateExpandBubble();
   if (expandDepthUpdateScheduled) return;
   expandDepthUpdateScheduled = true;
   requestAnimationFrame(() => {
