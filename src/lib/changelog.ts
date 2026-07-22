@@ -40,6 +40,11 @@ function renderVersionBody(body: string): string {
   return html;
 }
 
+/** Number of `## x.y.z` version sections in a CHANGELOG.md-style document. */
+export function countChangelogVersions(markdown: string): number {
+  return markdown.split(/^## /m).length - 1;
+}
+
 /** Renders the latest `versionCount` version sections of a CHANGELOG.md-style document as HTML. */
 export function renderChangelogHtml(markdown: string, versionCount = 3): string {
   const versions = markdown.split(/^## /m).slice(1, versionCount + 1);

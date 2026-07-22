@@ -8,13 +8,13 @@ import { renderFileTree, setRevealCount, DEFAULT_REVEAL_COUNT } from "./ui/fileT
 import { createHashPool } from "./lib/etag-worker";
 import { openChecksumCache, checksumCacheKey } from "./lib/checksum-cache";
 import { planParts } from "./lib/etag";
-import { loadStoredSettings, saveStoredSettings, resolveConfig } from "./lib/settings";
+import { loadStoredSettings, saveStoredSettings, resolveConfig, saveStoredTheme } from "./lib/settings";
 import { startLogin, handleRedirectCallback, ensureFreshToken, revokeToken } from "./lib/oauth";
 import { listIncomingDandisets, type IncomingDandiset } from "./lib/dandisets";
 import type { UploaderConfig, OAuthTokenSet } from "./lib/types";
 import type { DroppedFile } from "./lib/fileTree";
 import type { FileRow } from "./ui/fileRow";
-import { renderChangelogHtml } from "./lib/changelog";
+import { renderChangelogHtml, countChangelogVersions } from "./lib/changelog";
 import changelog from "../CHANGELOG.md?raw";
 
 declare const __APP_VERSION__: string;
@@ -150,6 +150,7 @@ function reportUploadBytes(file: File, bytesDone: number): void {
 function renderPhaseBar(
   fillEl: HTMLDivElement,
   textEl: HTMLSpanElement,
+  filesEl: HTMLSpanElement,
   phaseDoneBytes: number,
   phaseDoneFiles: number,
   elapsedSec: number,
@@ -160,19 +161,19 @@ function renderPhaseBar(
   const remaining = Math.max(0, totalBytes - phaseDoneBytes);
   const etaSec = rate > 0 ? remaining / rate : NaN;
 
+  // The simple bold file counter lives below and to the right of the bar, not in the byte-level
+  // stats line beside it.
+  filesEl.textContent = `${phaseDoneFiles}/${totalFiles} files`;
+
   const pctSpan = document.createElement("span");
   pctSpan.className = "stat-pct";
   pctSpan.textContent = `${pct}%`;
-
-  const filesSpan = document.createElement("span");
-  filesSpan.className = "stat-files";
-  filesSpan.textContent = `${phaseDoneFiles}/${totalFiles} files`;
 
   const bytesSpan = document.createElement("span");
   bytesSpan.className = "stat-bytes";
   bytesSpan.textContent = `(${humanSize(phaseDoneBytes)} / ${humanSize(totalBytes)})`;
 
-  const nodes: Node[] = [pctSpan, filesSpan, bytesSpan];
+  const nodes: Node[] = [pctSpan, bytesSpan];
   if (elapsedSec > 0) {
     const timingSpan = document.createElement("span");
     timingSpan.className = "stat-timing";
@@ -190,6 +191,7 @@ function updateProgressSummary(): void {
   renderPhaseBar(
     els.progressHashFill,
     els.progressHashText,
+    els.progressHashFiles,
     hashDoneBytes,
     hashedFiles,
     elapsedMsSince(scanStart) / 1000,
@@ -197,6 +199,7 @@ function updateProgressSummary(): void {
   renderPhaseBar(
     els.progressUploadFill,
     els.progressUploadText,
+    els.progressUploadFiles,
     uploadDoneBytes,
     finished,
     elapsedMsSince(uploadStart) / 1000,
@@ -209,7 +212,6 @@ function updateProgressSummary(): void {
   if (counts.blocked) leftParts.push(`${counts.blocked} blocked`);
   els.progressFooterLeft.textContent = leftParts.join(", ");
   els.progressFooterMid.textContent = counts.replaced ? `${counts.replaced} replaced` : "";
-  els.progressFooterRight.textContent = `${finished}/${totalFiles} files done`;
 }
 
 // The slider's ruler is drawn at fixed percentages of the track — a tick per possible value
@@ -257,11 +259,30 @@ if (els.versionIndicator) {
   els.versionIndicator.textContent = `v${__APP_VERSION__}`;
 }
 
-els.whatsNewContent.innerHTML = renderChangelogHtml(changelog, 3);
+// The modal opens on the latest few versions; "Show more" swaps in the entire changelog for
+// anyone curious enough to keep reading.
+const WHATS_NEW_RECENT_VERSIONS = 3;
+els.whatsNewContent.innerHTML = renderChangelogHtml(changelog, WHATS_NEW_RECENT_VERSIONS);
+els.whatsNewShowMore.hidden = countChangelogVersions(changelog) <= WHATS_NEW_RECENT_VERSIONS;
+els.whatsNewShowMore.addEventListener("click", () => {
+  els.whatsNewContent.innerHTML = renderChangelogHtml(changelog, Infinity);
+  els.whatsNewShowMore.hidden = true;
+});
 els.whatsNewButton.addEventListener("click", () => els.whatsNewModal.showModal());
 els.whatsNewClose.addEventListener("click", () => els.whatsNewModal.close());
 els.whatsNewModal.addEventListener("click", (e) => {
   if (e.target === els.whatsNewModal) els.whatsNewModal.close();
+});
+
+// The inline script in index.html already applied any stored theme override before first paint,
+// so the toggle only has to flip and persist it. With nothing stored, data-theme is unset and the
+// OS preference is in effect, so the first click flips away from whatever is currently showing.
+const prefersDark = window.matchMedia("(prefers-color-scheme: dark)");
+els.themeToggle.addEventListener("click", () => {
+  const current = document.documentElement.dataset.theme ?? (prefersDark.matches ? "dark" : "light");
+  const next = current === "dark" ? "light" : "dark";
+  document.documentElement.dataset.theme = next;
+  saveStoredTheme(next);
 });
 
 let oauthTokens: OAuthTokenSet | null = null;
@@ -324,14 +345,13 @@ function setDandisetPlaceholder(text: string): void {
 }
 
 // With only one incoming dataset there's nothing to choose between, so show its name as plain
-// text (with a link out to the archive) instead of a single-option dropdown.
+// text instead of a single-option dropdown (the card heading's "View dataset" link covers the
+// way out to the archive).
 function showDandisetSingle(dataset: IncomingDandiset): void {
   showDandisetView("single");
   const idCode = document.createElement("code");
   idCode.textContent = dataset.identifier;
   els.dandisetSingleText.replaceChildren("Uploading directly to EMBER Dandiset ", idCode, `, "${dataset.title}"`);
-  const cfg = currentConfig();
-  els.dandisetSingleLink.href = `${cfg.web}/dandiset/${dataset.identifier}/draft/files`;
 }
 
 // Populates the dandiset picker (dropdown or single-dataset text) from a resolved list of

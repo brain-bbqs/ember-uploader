@@ -17,8 +17,10 @@
   --err-soft: #fdecec;
 }
 
+/* The header's theme toggle sets data-theme on <html> to override the OS preference; without it
+   the OS preference applies. The two dark blocks below must stay identical — update both together. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --bg: #12141c;
     --card: #1b1f2c;
     --text: #e8eaf2;
@@ -33,6 +35,22 @@
     --err: #f87171;
     --err-soft: #3d1a1a;
   }
+}
+
+:root[data-theme="dark"] {
+  --bg: #12141c;
+  --card: #1b1f2c;
+  --text: #e8eaf2;
+  --muted: #9aa3b8;
+  --border: #2c3245;
+  --accent: #818cf8;
+  --accent-soft: #262b45;
+  --ok: #4ade80;
+  --ok-soft: #16321f;
+  --warn: #fbbf24;
+  --warn-soft: #3a2d12;
+  --err: #f87171;
+  --err-soft: #3d1a1a;
 }
 
 * {
@@ -62,18 +80,13 @@ main {
   padding: 2rem 1rem 5rem;
 }
 
+/* Equal 1fr side columns keep the title truly centered on the page, with the logo and the
+   sign-in controls flanking it symmetrically. */
 .site-header {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
   gap: 1rem;
-  flex-wrap: wrap;
-}
-
-.site-header .brand {
-  display: flex;
-  align-items: center;
-  gap: 0.65rem;
 }
 
 .brand-logo {
@@ -81,11 +94,13 @@ main {
   width: 3rem;
   object-fit: cover;
   border-radius: 50%;
+  justify-self: start;
 }
 
 header h1 {
   margin: 0;
   font-size: 1.7rem;
+  text-align: center;
 }
 
 .site-subtitle {
@@ -126,6 +141,17 @@ code {
 .card h2 {
   margin: 0 0 1rem;
   font-size: 1.1rem;
+}
+
+.card-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+.card-heading h2 {
+  margin: 0;
 }
 
 .grid {
@@ -238,11 +264,6 @@ button.hint {
   font-size: 0.95rem;
 }
 
-.dandiset-single-link {
-  font-size: 0.85rem;
-  white-space: nowrap;
-}
-
 #dropzone {
   border: 2px dashed var(--border);
   border-radius: 12px;
@@ -272,6 +293,43 @@ button.hint {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  justify-self: end;
+}
+
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* Matches .brand-logo and .oauth-avatar, so all header circles are the same size. */
+  width: 3rem;
+  height: 3rem;
+  padding: 0;
+  border-radius: 50%;
+  color: var(--muted);
+  flex-shrink: 0;
+}
+.theme-toggle:hover {
+  background: var(--accent-soft);
+  color: var(--text);
+}
+/* The moon (switch to dark) shows in light mode, the sun (switch to light) in dark mode, keyed
+   off the same data-theme/OS-preference combination that selects the theme variables above. */
+.theme-toggle-sun {
+  display: none;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .theme-toggle-sun {
+    display: block;
+  }
+  :root:not([data-theme="light"]) .theme-toggle-moon {
+    display: none;
+  }
+}
+:root[data-theme="dark"] .theme-toggle-sun {
+  display: block;
+}
+:root[data-theme="dark"] .theme-toggle-moon {
+  display: none;
 }
 .oauth-signed-in {
   position: relative;
@@ -281,8 +339,9 @@ button.hint {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.44rem;
-  height: 2.44rem;
+  /* Matches .brand-logo, so the two circles flanking the header are the same size. */
+  width: 3rem;
+  height: 3rem;
   border-radius: 50%;
   background: var(--card);
   border: 2px solid var(--ember-red);
@@ -589,20 +648,20 @@ button.hint {
 .progress-summary {
   margin-bottom: 1rem;
 }
+/* Each bar hugs its own "N/M files" counter line (small margin below), while the counter's
+   larger bottom margin separates the Scanning group from the Uploading group. */
 .progress-phase {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-bottom: 0.3rem;
+  margin-bottom: 0.05rem;
 }
+/* Styled exactly like .file-name, so the bar titles read like the per-file rows' names. */
 .progress-phase-label {
   flex-shrink: 0;
   width: 4.4rem;
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   font-weight: 600;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  color: var(--muted);
 }
 .progress-summary-bar {
   flex: 1;
@@ -626,7 +685,7 @@ button.hint {
 
 .progress-phase-stats {
   flex-shrink: 0;
-  min-width: 36ch;
+  min-width: 28ch;
   font-size: 0.76rem;
   white-space: nowrap;
   text-align: right;
@@ -634,10 +693,6 @@ button.hint {
 .stat-pct {
   font-weight: 700;
   color: var(--accent);
-}
-.stat-files {
-  margin-left: 0.35rem;
-  color: var(--muted);
 }
 .stat-bytes {
   margin-left: 0.35rem;
@@ -649,14 +704,27 @@ button.hint {
   color: var(--muted);
 }
 
+/* The per-bar file counters sit below and to the right of their bar, styled like the footer's
+   original bold count (the Uploading one lives in the footer's right cell, which is exactly
+   that position). */
+.progress-phase-files {
+  margin-bottom: 0.75rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--muted);
+  text-align: right;
+}
+
 .progress-summary-footer {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 0.5rem;
-  margin-top: 0.5rem;
+  margin-top: 0;
   font-size: 0.78rem;
   font-weight: 600;
+  line-height: 1.2;
   color: var(--muted);
 }
 .progress-summary-footer > :first-child {
@@ -749,6 +817,13 @@ button.hint {
   box-shadow: 0 8px 30px rgb(0 0 0 / 0.2);
 }
 
+/* Flex column (only while open — display overrides the UA's display:none otherwise) so the
+   header and "Show more" footer stay put while the version list scrolls between them. */
+.whats-new-modal[open] {
+  display: flex;
+  flex-direction: column;
+}
+
 .whats-new-modal::backdrop {
   background: rgb(0 0 0 / 0.45);
 }
@@ -779,6 +854,23 @@ button.hint {
 .whats-new-content {
   padding: 0.5rem 1.25rem 1.25rem;
   overflow-y: auto;
+}
+
+.whats-new-show-more {
+  display: block;
+  width: 100%;
+  border: none;
+  border-top: 1px solid var(--border);
+  border-radius: 0;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 0.6rem 1.25rem;
+  cursor: pointer;
+}
+.whats-new-show-more:hover {
+  background: var(--accent-soft);
 }
 
 .whats-new-content .changelog-version + .changelog-version {

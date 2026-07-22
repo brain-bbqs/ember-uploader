@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.0.19
+
+#### 🚀 Enhancement
+
+- Centered the "BBQS Uploader" title in the header, flanked symmetrically by the BBQS logo and the sign-in controls ([#28](https://github.com/brain-bbqs/ember-uploader/pull/28))
+- Matched the signed-in avatar circle's size to the circular BBQS header logo (both 3rem) ([#28](https://github.com/brain-bbqs/ember-uploader/pull/28))
+- Restyled the "Scanning"/"Uploading" progress bar titles to match the file-name text at the left of the per-file progress rows (normal case, regular text color) instead of uppercase muted labels ([#28](https://github.com/brain-bbqs/ember-uploader/pull/28))
+- Moved each phase's "done/total files" count out of the byte-level stats line beside its bar; both the Scanning and Uploading bars now have their own simple bold file counter below and to the right of the bar, in the style of the footer's original count (which the Uploading counter replaces) ([#28](https://github.com/brain-bbqs/ember-uploader/pull/28))
+- Added a "Show more" button at the bottom of the What's New modal that renders the entire rest of the changelog ([#28](https://github.com/brain-bbqs/ember-uploader/pull/28))
+- Moved the "View dataset ↗" link from the file-drop card's upload bar into the Dataset card's heading, and dropped the single-dataset view's redundant "View in archive ↗" link pointing at the same page ([#28](https://github.com/brain-bbqs/ember-uploader/pull/28))
+- Added a light/dark mode toggle next to the sign-in button that overrides the OS preference and persists across visits ([#28](https://github.com/brain-bbqs/ember-uploader/pull/28))
+
 ## 0.0.18
 
 #### 🐛 Bug Fix

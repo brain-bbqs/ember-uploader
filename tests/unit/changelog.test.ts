@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { renderChangelogHtml } from "../../src/lib/changelog";
+import { renderChangelogHtml, countChangelogVersions } from "../../src/lib/changelog";
 
 const CHANGELOG = `# Changelog
 
@@ -28,6 +28,13 @@ describe("renderChangelogHtml", () => {
     expect(html).toContain("0.0.3");
     expect(html).toContain("0.0.2");
     expect(html).not.toContain("0.0.1");
+  });
+
+  it('renders every version when the count is unbounded (the modal\'s "Show more")', () => {
+    const html = renderChangelogHtml(CHANGELOG, Infinity);
+    expect(html).toContain("0.0.3");
+    expect(html).toContain("0.0.2");
+    expect(html).toContain("0.0.1");
   });
 
   it("defaults to the latest 3 versions", () => {
@@ -84,5 +91,15 @@ describe("renderChangelogHtml", () => {
   it("keeps consecutive list items within a single <ul>", () => {
     const html = renderChangelogHtml("## 0.0.1\n\n- item one\n- item two\n", 1);
     expect(html).toContain("<ul><li>item one</li><li>item two</li></ul>");
+  });
+});
+
+describe("countChangelogVersions", () => {
+  it("counts the version sections", () => {
+    expect(countChangelogVersions(CHANGELOG)).toBe(3);
+  });
+
+  it("returns 0 for a document with no version headings", () => {
+    expect(countChangelogVersions("# Changelog\n\nnothing here yet\n")).toBe(0);
   });
 });

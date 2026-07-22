@@ -1,5 +1,6 @@
-import { describe, expect, it } from "vitest";
-import { configProblems, resolveConfig } from "../../src/lib/settings";
+// @vitest-environment jsdom
+import { beforeEach, describe, expect, it } from "vitest";
+import { configProblems, resolveConfig, loadStoredTheme, saveStoredTheme, THEME_KEY } from "../../src/lib/settings";
 
 describe("resolveConfig", () => {
   it("resolves the EMBER-DANDI API/web URLs and the dandiset id", () => {
@@ -49,5 +50,25 @@ describe("configProblems", () => {
       dandisetId: "",
     });
     expect(problems).toEqual(["No dataset selected."]);
+  });
+});
+
+describe("theme preference storage", () => {
+  beforeEach(() => localStorage.clear());
+
+  it("returns null when nothing has been stored", () => {
+    expect(loadStoredTheme()).toBe(null);
+  });
+
+  it("round-trips a saved preference", () => {
+    saveStoredTheme("dark");
+    expect(loadStoredTheme()).toBe("dark");
+    saveStoredTheme("light");
+    expect(loadStoredTheme()).toBe("light");
+  });
+
+  it("ignores a corrupted stored value", () => {
+    localStorage.setItem(THEME_KEY, "sepia");
+    expect(loadStoredTheme()).toBe(null);
   });
 });

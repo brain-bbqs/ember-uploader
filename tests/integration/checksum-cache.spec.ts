@@ -55,7 +55,7 @@ test("re-dropping an unchanged file after a reload hashes only one verification 
   await dropFile(page, bigPath);
 
   // First drop: a full scan, fanning the two parts out across two pool workers.
-  await expect(page.locator("#progress-hash-text .stat-files")).toHaveText("1/1 files", { timeout: 60_000 });
+  await expect(page.locator("#progress-hash-files")).toHaveText("1/1 files", { timeout: 60_000 });
   await expect.poll(() => workerUrls.length).toBe(2);
 
   // Both part digests must be persisted (write-through settles just after the scan finishes)
@@ -71,6 +71,6 @@ test("re-dropping an unchanged file after a reload hashes only one verification 
   // Second drop: every part comes from the cache, so the pool only re-hashes the single
   // verification part — observable as exactly one worker (of a pool that fans a full scan of
   // this file out to two) ever spawning in the fresh page.
-  await expect(page.locator("#progress-hash-text .stat-files")).toHaveText("1/1 files", { timeout: 60_000 });
+  await expect(page.locator("#progress-hash-files")).toHaveText("1/1 files", { timeout: 60_000 });
   await expect.poll(() => workerUrls.length).toBe(1);
 });

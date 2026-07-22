@@ -5,7 +5,12 @@ function buildDatasetCard(mode: "signed-out" | "dropdown" | "single"): HTMLEleme
   card.className = "card";
   card.id = "config-card";
   card.innerHTML = `
-    <h2>Dataset</h2>
+    <div class="card-heading">
+      <h2>Dataset</h2>
+      <a class="view-dataset-link" target="_blank" rel="noopener"${
+        mode === "signed-out" ? " hidden" : ""
+      }>View dataset ↗</a>
+    </div>
     <form id="config-form">
       <div class="grid">
         <select${mode === "dropdown" ? "" : " hidden"}>
@@ -17,7 +22,6 @@ function buildDatasetCard(mode: "signed-out" | "dropdown" | "single"): HTMLEleme
         }>Please sign in to see your incoming datasets.</p>
         <p class="dandiset-single"${mode === "single" ? "" : " hidden"}>
           <span>Uploading directly to EMBER Dandiset <code>000475</code>, "Incoming: Throughput test"</span>
-          <a class="dandiset-single-link" target="_blank" rel="noopener">View in archive ↗</a>
         </p>
       </div>
     </form>
