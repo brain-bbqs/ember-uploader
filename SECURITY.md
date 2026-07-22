@@ -1,6 +1,6 @@
 # Security notes
 
-ember-uploader is a fully static, backend-free page (see `package.json`'s
+bbqs-uploader is a fully static, backend-free page (see `package.json`'s
 description) — there is no server to hold a session, set an `httpOnly`
 cookie, or otherwise keep a credential out of client-side JavaScript. Any
 credential used to call the DANDI API (the pasted API key before this PR, the
@@ -64,10 +64,10 @@ Also keep an eye on:
    too, so client-side encryption of a client-held secret is not a real
    mitigation, just a false sense of one.
 
-**Precedent:** [PR #16](https://github.com/brain-bbqs/ember-uploader/pull/16)
+**Precedent:** [PR #16](https://github.com/brain-bbqs/bbqs-uploader/pull/16)
 proposed dropping persistence entirely for the pasted API key (in-memory /
 re-enter-each-session, option 2's strictest form above) rather than dismissing
-its alert. [PR #19](https://github.com/brain-bbqs/ember-uploader/pull/19)
+its alert. [PR #19](https://github.com/brain-bbqs/bbqs-uploader/pull/19)
 replaced that key with OAuth tokens persisted in `localStorage` — decide the
 same question for those tokens using the checklist above rather than assuming
 the OAuth migration made #16's alert moot; it's the same sink, just renamed.

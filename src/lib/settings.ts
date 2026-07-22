@@ -41,7 +41,7 @@ export function saveStoredSettings(settings: StoredSettings | null): void {
     localStorage.removeItem(STORAGE_KEY);
     return;
   }
-  // codeql[js/clear-text-storage-of-sensitive-data]: ember-uploader is a fully static,
+  // codeql[js/clear-text-storage-of-sensitive-data]: bbqs-uploader is a fully static,
   // backend-free page (no server to hold a session), so client storage is the only place
   // to persist the OAuth token between page loads; the pasted API key was stored the same way.
   localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));

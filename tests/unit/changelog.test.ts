@@ -7,13 +7,13 @@ const CHANGELOG = `# Changelog
 
 #### 🚀 Enhancement
 
-- Added \`thing\` ([#3](https://github.com/brain-bbqs/ember-uploader/pull/3))
+- Added \`thing\` ([#3](https://github.com/brain-bbqs/bbqs-uploader/pull/3))
 
 ## 0.0.2
 
 #### 🐛 Bug Fix
 
-- Fixed **something** ([#2](https://github.com/brain-bbqs/ember-uploader/pull/2))
+- Fixed **something** ([#2](https://github.com/brain-bbqs/bbqs-uploader/pull/2))
 
 ## 0.0.1
 
@@ -55,7 +55,7 @@ describe("renderChangelogHtml", () => {
     const html = renderChangelogHtml(CHANGELOG, 2);
     expect(html).toContain("<code>thing</code>");
     expect(html).toContain("<strong>something</strong>");
-    expect(html).toContain('<a href="https://github.com/brain-bbqs/ember-uploader/pull/3"');
+    expect(html).toContain('<a href="https://github.com/brain-bbqs/bbqs-uploader/pull/3"');
   });
 
   it("escapes HTML in the source text", () => {

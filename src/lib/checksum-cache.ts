@@ -10,7 +10,7 @@ import type { FilePart } from "./types";
 // SECURITY.md checklist's credential-storage concerns don't apply; kept as a hand-rolled wrapper
 // so no runtime dependency is added.
 
-const DB_NAME = "ember-uploader.checksum-cache";
+const DB_NAME = "bbqs-uploader.checksum-cache";
 const DB_VERSION = 1;
 const STORE = "files";
 const LAST_USED_INDEX = "lastUsed";

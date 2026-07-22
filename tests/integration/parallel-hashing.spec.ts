@@ -59,7 +59,7 @@ test("fans a single multi-part file out across workers and cancels hashing via C
 
   // 64MB + 10 bytes plans exactly two parts, so one file alone exercises multi-worker fan-out.
   // Written to disk because Playwright rejects in-memory setFiles buffers this large.
-  const bigPath = join(mkdtempSync(join(tmpdir(), "ember-hash-")), "big.bin");
+  const bigPath = join(mkdtempSync(join(tmpdir(), "bbqs-hash-")), "big.bin");
   writeFileSync(bigPath, Buffer.alloc(64 * 1024 * 1024 + 10));
 
   const fileChooserPromise = page.waitForEvent("filechooser");
