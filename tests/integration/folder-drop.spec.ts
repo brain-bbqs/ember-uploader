@@ -27,6 +27,20 @@ test("recursive folder selection derives sourcedata/raw paths and skips .git", a
   await expect(page.locator("#expand-depth-ticks .tick-label")).toHaveCount(2);
 });
 
+test("recursive folder selection skips device-specific hidden files like .DS_Store", async ({ page }) => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "bbqs-upload-"));
+  fs.mkdirSync(path.join(dir, "session1"));
+  fs.writeFileSync(path.join(dir, "session1", "a.txt"), "a");
+  fs.writeFileSync(path.join(dir, "session1", ".DS_Store"), "junk");
+  fs.writeFileSync(path.join(dir, "Thumbs.db"), "junk");
+
+  await page.goto("/");
+  await page.locator("#folder-input").setInputFiles(dir);
+
+  // Only a.txt should surface — the .DS_Store and Thumbs.db files must be filtered out.
+  await expect(page.locator("#file-list .file-item")).toHaveCount(1);
+});
+
 test("the dropzone browse links open the file and folder pickers respectively", async ({ page }) => {
   await page.goto("/");
 

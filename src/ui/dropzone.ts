@@ -1,7 +1,31 @@
 import type { UploaderElements } from "./elements";
 import type { DroppedFile } from "../lib/fileTree";
 
-const IGNORED_NAMES = new Set([".git", ".datalad", ".git-annex"]);
+const IGNORED_NAMES = new Set([
+  ".git",
+  ".datalad",
+  ".git-annex",
+  // Device-specific / OS-generated files and folders that shouldn't be uploaded.
+  ".DS_Store",
+  "Thumbs.db",
+  "desktop.ini",
+  ".Spotlight-V100",
+  ".Trashes",
+  ".fseventsd",
+  ".TemporaryItems",
+  ".apdisk",
+  ".VolumeIcon.icns",
+  ".com.apple.timemachine.donotpresent",
+  ".AppleDouble",
+  ".AppleDB",
+  "$RECYCLE.BIN",
+  "System Volume Information",
+]);
+const IGNORED_NAME_PATTERNS = [/^\._/, /^\.Trash-/];
+
+function isIgnoredName(name: string): boolean {
+  return IGNORED_NAMES.has(name) || IGNORED_NAME_PATTERNS.some((pattern) => pattern.test(name));
+}
 
 interface FileSystemEntryLike {
   name: string;
@@ -41,7 +65,7 @@ function readAllEntries(reader: FileSystemDirectoryReaderLike): Promise<FileSyst
 }
 
 async function walkEntry(entry: FileSystemEntryLike, relativeDir: string, out: DroppedFile[]): Promise<void> {
-  if (IGNORED_NAMES.has(entry.name)) return;
+  if (isIgnoredName(entry.name)) return;
   if (entry.isFile) {
     const file = await new Promise<File>((resolve, reject) => (entry as FileSystemFileEntryLike).file(resolve, reject));
     out.push({ file, relativePath: relativeDir });
@@ -79,7 +103,7 @@ function filesFromFileList(fileList: FileList): DroppedFile[] {
     const rel = (file as File & { webkitRelativePath?: string }).webkitRelativePath || "";
     const segments = rel.split("/");
     const dirSegments = segments.slice(0, -1);
-    if (dirSegments.some((s) => IGNORED_NAMES.has(s))) continue;
+    if (isIgnoredName(file.name) || dirSegments.some((s) => isIgnoredName(s))) continue;
     out.push({ file, relativePath: dirSegments.join("/") });
   }
   return out;
