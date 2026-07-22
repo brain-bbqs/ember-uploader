@@ -4,7 +4,6 @@ export type BadgeKind = "busy" | "ok" | "warn" | "err";
 
 export interface FileRow {
   el: HTMLLIElement;
-  status: HTMLSpanElement;
   setBadge(text: string, kind: BadgeKind): void;
   hideBadge(): void;
   setStatus(text: string, kind?: BadgeKind | ""): void;
@@ -33,7 +32,6 @@ export function createFileRow(fileList: HTMLUListElement, file: File, id: string
 
   return {
     el: li,
-    status,
     setBadge(text, kind) {
       badge.hidden = false;
       badge.textContent = text;

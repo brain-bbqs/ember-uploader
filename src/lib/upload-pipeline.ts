@@ -1,6 +1,7 @@
 import type { Asset, CompletedPart, FilePart, UploadInitResponse, UploaderConfig } from "./types";
 import { apiFetch } from "./api";
 import { ApiError } from "./errors";
+import { runQueue } from "./queue";
 import { uploadPartWithRetry } from "./s3-upload";
 
 const PARALLEL_PARTS = 3;
@@ -54,32 +55,25 @@ export async function uploadBlob(
     const sent = partBytes.reduce((a, b) => a + b, 0);
     onProgress(Math.min(sent / file.size, 0.999));
   };
-  let nextIndex = 0;
-  async function worker(): Promise<void> {
-    for (;;) {
-      const i = nextIndex++;
-      if (i >= serverParts.length) return;
-      const sp = serverParts[i];
-      const local = parts[sp.part_number - 1];
-      if (!local || local.size !== sp.size) {
-        throw new Error(`Part ${sp.part_number} size mismatch between client and server.`);
-      }
-      const blobSlice = file.slice(local.offset, local.offset + local.size);
-      const serverEtag = await uploadPartWithRetry(
-        sp.upload_url,
-        blobSlice,
-        (loaded) => {
-          partBytes[i] = loaded;
-          reportProgress();
-        },
-        signal,
-      );
-      partBytes[i] = local.size;
-      reportProgress();
-      results[i] = { part_number: sp.part_number, size: sp.size, etag: serverEtag };
+  await runQueue(serverParts, PARALLEL_PARTS, async (sp, i) => {
+    const local = parts[sp.part_number - 1];
+    if (!local || local.size !== sp.size) {
+      throw new Error(`Part ${sp.part_number} size mismatch between client and server.`);
     }
-  }
-  await Promise.all(Array.from({ length: Math.min(PARALLEL_PARTS, serverParts.length) }, worker));
+    const blobSlice = file.slice(local.offset, local.offset + local.size);
+    const serverEtag = await uploadPartWithRetry(
+      sp.upload_url,
+      blobSlice,
+      (loaded) => {
+        partBytes[i] = loaded;
+        reportProgress();
+      },
+      signal,
+    );
+    partBytes[i] = local.size;
+    reportProgress();
+    results[i] = { part_number: sp.part_number, size: sp.size, etag: serverEtag };
+  });
 
   // Finish the multipart upload on S3, then let the API validate the etag.
   const completion = (await apiFetch<{ complete_url: string; body: string }>(cfg, `/uploads/${uploadId}/complete/`, {

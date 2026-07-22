@@ -1,5 +1,6 @@
 import { test, expect } from "@playwright/test";
 import { seedSignedIn } from "../helpers/auth";
+import { seedTheme } from "../helpers/theme";
 
 // Exercises the "?test&num_datasets=0" live test injection documented in docs/README.md, in both
 // color themes -- previews the no-datasets-found state for an otherwise-signed-in user, without
@@ -7,7 +8,7 @@ import { seedSignedIn } from "../helpers/auth";
 for (const theme of ["light", "dark"] as const) {
   test.describe(`?test&num_datasets=0 (${theme} mode)`, () => {
     test.beforeEach(async ({ page }) => {
-      await page.addInitScript((t) => localStorage.setItem("dandi-mp4-uploader.theme", t), theme);
+      await seedTheme(page, theme);
       await seedSignedIn(page);
     });
 

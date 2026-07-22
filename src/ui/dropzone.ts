@@ -55,7 +55,7 @@ async function walkEntry(entry: FileSystemEntryLike, relativeDir: string, out: D
   }
 }
 
-export async function collectDroppedFiles(dataTransfer: DataTransfer): Promise<DroppedFile[]> {
+async function collectDroppedFiles(dataTransfer: DataTransfer): Promise<DroppedFile[]> {
   const items = Array.from(dataTransfer.items || []);
   const entries = items
     .map((item) => (item.kind === "file" ? (item.webkitGetAsEntry?.() as FileSystemEntryLike | null) : null))

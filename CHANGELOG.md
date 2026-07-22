@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.1.4
+
+#### 🐛 Bug Fix
+
+- Dandiset id resolution now rejects digit runs preceded by a hyphen, so the negative fake identifiers used by the `?test&num_datasets=N` injection (e.g. `-000001`) can no longer resolve to a plausible real dandiset id ([#36](https://github.com/brain-bbqs/bbqs-uploader/pull/36))
+
+#### 🏠 Internal
+
+- Pre-production cleanup pass: removed dead code left over from earlier iterations (the unused `VideoProbeResult` type, the never-called `HashPool.terminate()`, the test-only `directEntryCount`/`maxDirectEntries` tree helpers, the unused `ApiError.body` field and `apiFetch` `expectJson` option, and unused CSS rules for `label`s, text inputs, `button.hint`, `.help`, `.sr-only`, and `button:disabled` from the pre-OAuth form era) ([#36](https://github.com/brain-bbqs/bbqs-uploader/pull/36))
+- Renamed the `localStorage`/`sessionStorage` keys from the pre-rename `dandi-mp4-uploader.*` prefix to `bbqs-uploader.*`, matching the IndexedDB name; existing visitors are signed out once and lose their stored theme choice ([#36](https://github.com/brain-bbqs/bbqs-uploader/pull/36))
+- Linting and formatting now run exclusively through pre-commit in isolated environments: added an eslint hook (`mirrors-eslint`, typescript-eslint recommended, config at `configs/eslint.config.cjs`), and removed the broken `lint` script, the `format`/`format:check` scripts, and the eslint/prettier devDependencies; pre-commit.ci enforces the hooks on PRs ([#36](https://github.com/brain-bbqs/bbqs-uploader/pull/36))
+- Deduplicated repeated logic: one shared bounded-concurrency `runQueue` (previously implemented separately in `main.ts` and the part-upload pool), one shared scaffold for real/mock hashing setup, `yieldToMain` defined once, mock-animation helpers moved next to the other mock-upload code, one shared Playwright config base, and shared integration-test helpers for dropping files, seeding the theme, and mocking the upload API ([#36](https://github.com/brain-bbqs/bbqs-uploader/pull/36))
+- Bumped the pre-commit prettier hook from 3.1.0 to 3.9.5, extended typecheck to cover the Chromatic and Storybook configs, and ignored `storybook-static/` ([#36](https://github.com/brain-bbqs/bbqs-uploader/pull/36))
+
 ## 0.1.2
 
 #### 🚀 Enhancement

@@ -13,12 +13,4 @@ module.exports = {
   trailingComma: "all",
   useTabs: false,
   vueIndentScriptAndStyle: false,
-  overrides: [
-    {
-      files: ["../.pre-commit-config.yaml"],
-      options: {
-        tabWidth: 2,
-      },
-    },
-  ],
 };

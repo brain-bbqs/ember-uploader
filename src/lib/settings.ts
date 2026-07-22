@@ -1,9 +1,9 @@
 import type { StoredSettings, UploaderConfig } from "./types";
 import { EMBER_INSTANCE } from "./instances";
 
-export const STORAGE_KEY = "dandi-mp4-uploader.settings.v1";
+export const STORAGE_KEY = "bbqs-uploader.settings.v1";
 // Also read by the inline pre-paint script in index.html — keep the two literals in sync.
-export const THEME_KEY = "dandi-mp4-uploader.theme";
+export const THEME_KEY = "bbqs-uploader.theme";
 
 export type ThemePreference = "light" | "dark";
 
@@ -49,12 +49,14 @@ export function saveStoredSettings(settings: StoredSettings | null): void {
 
 export function resolveConfig(input: { dandisetId: string; oauthAccessToken?: string }): UploaderConfig {
   const rawId = input.dandisetId.trim();
-  const idMatch = rawId.match(/(\d{6,})/);
+  // A digit run preceded by a hyphen is rejected so the "?test&num_datasets=N" injection's
+  // negative fake identifiers (e.g. "-000001") never resolve to a plausible real dandiset id.
+  const idMatch = rawId.match(/(^|[^-\d])(\d{6,})/);
   return {
     api: EMBER_INSTANCE.api,
     web: EMBER_INSTANCE.web,
     accessToken: input.oauthAccessToken ?? "",
-    dandisetId: idMatch ? idMatch[1] : "",
+    dandisetId: idMatch ? idMatch[2] : "",
   };
 }
 

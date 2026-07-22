@@ -80,20 +80,3 @@ export function combineDigests(partDigests: Uint8Array, partCount: number): stri
   finalSpark.append(partDigests.buffer as ArrayBuffer);
   return `${finalSpark.end()}-${partCount}`;
 }
-
-export async function computeDandiEtag(
-  file: Blob,
-  parts: FilePart[],
-  onProgress: (fraction: number) => void,
-): Promise<string> {
-  const partDigests = new Uint8Array(parts.length * 16);
-  let bytesBefore = 0;
-  for (const part of parts) {
-    const digest = await hashPart(file, part, (bytesDoneInPart) => {
-      onProgress((bytesBefore + bytesDoneInPart) / file.size);
-    });
-    partDigests.set(digest, (part.number - 1) * 16);
-    bytesBefore += part.size;
-  }
-  return combineDigests(partDigests, parts.length);
-}

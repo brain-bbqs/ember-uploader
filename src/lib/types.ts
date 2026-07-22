@@ -1,12 +1,12 @@
 export interface DandiInstance {
   api: string;
-  web: string | null;
+  web: string;
   oauth: string;
 }
 
 export interface UploaderConfig {
   api: string;
-  web: string | null;
+  web: string;
   accessToken: string;
   dandisetId: string;
 }
@@ -49,12 +49,4 @@ export interface CompletedPart {
 export interface Asset {
   asset_id: string;
   path: string;
-}
-
-export interface VideoProbeResult {
-  ok: boolean;
-  duration?: number;
-  width?: number;
-  height?: number;
-  reason?: string;
 }

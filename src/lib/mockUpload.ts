@@ -63,3 +63,55 @@ export function generateMockDroppedFiles(count: number): DroppedFile[] {
     relativePath: randomRelativePath(),
   }));
 }
+
+// Bounds for a mock phase's animation length: wide enough that a batch of small and huge fake
+// files still looks staggered, short enough that even a 100 GB file "finishes" in a couple of
+// seconds -- the upload phase additionally runs through the same concurrency-limited queue a
+// real batch would, so a large mock_upload count still finishes in waves rather than all at once.
+const MOCK_PHASE_MIN_MS = 600;
+const MOCK_PHASE_MAX_MS = 3000;
+
+// Compresses the 10 MB-100 GB mock size range above into a watchable animation: duration grows
+// with log2(size) rather than size itself, so scanning/uploading a fake 100 GB file doesn't take
+// literal hours.
+export function mockPhaseDurationMs(sizeBytes: number): number {
+  const mb = sizeBytes / (1024 * 1024);
+  const scaled = MOCK_PHASE_MIN_MS + Math.log2(Math.max(1, mb)) * 200;
+  return Math.min(MOCK_PHASE_MAX_MS, Math.max(MOCK_PHASE_MIN_MS, scaled));
+}
+
+// Ticks `onProgress(bytesDone)` once per animation frame until `totalBytes` worth of (fake)
+// progress has been reported, over roughly `durationMs` of real time. Rejects with the same
+// AbortError shape a real cancelled fetch/hash would, so callers can share their cancellation
+// handling with the real hashing/upload paths.
+export function simulateProgress(
+  totalBytes: number,
+  durationMs: number,
+  signal: AbortSignal,
+  onProgress: (bytesDone: number) => void,
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (signal.aborted) {
+      reject(new DOMException("Aborted", "AbortError"));
+      return;
+    }
+    const start = performance.now();
+    let frame: number;
+    const onAbort = () => {
+      cancelAnimationFrame(frame);
+      reject(new DOMException("Aborted", "AbortError"));
+    };
+    signal.addEventListener("abort", onAbort, { once: true });
+    const tick = () => {
+      const fraction = Math.min(1, (performance.now() - start) / durationMs);
+      onProgress(totalBytes * fraction);
+      if (fraction >= 1) {
+        signal.removeEventListener("abort", onAbort);
+        resolve();
+        return;
+      }
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+  });
+}

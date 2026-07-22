@@ -1,4 +1,5 @@
 import { test, expect } from "@playwright/test";
+import { dropFile } from "./helpers/drop";
 
 test.describe("BBQS uploader shell", () => {
   test("renders branding, version, and the connection form", async ({ page }) => {
@@ -15,14 +16,7 @@ test.describe("BBQS uploader shell", () => {
 
   test("blocks an uploaded file until the connection is configured", async ({ page }) => {
     await page.goto("/");
-    const fileChooserPromise = page.waitForEvent("filechooser");
-    await page.locator("#dropzone").click();
-    const fileChooser = await fileChooserPromise;
-    await fileChooser.setFiles({
-      name: "clip.mp4",
-      mimeType: "video/mp4",
-      buffer: Buffer.alloc(32),
-    });
+    await dropFile(page, { name: "clip.mp4", mimeType: "video/mp4", buffer: Buffer.alloc(32) });
 
     const row = page.locator("#file-list .file-item").first();
     await expect(row.locator('[data-role="badge"]')).toBeHidden();
@@ -33,14 +27,7 @@ test.describe("BBQS uploader shell", () => {
 
   test("accepts non-mp4 files (queued, not rejected, once configured)", async ({ page }) => {
     await page.goto("/");
-    const fileChooserPromise = page.waitForEvent("filechooser");
-    await page.locator("#dropzone").click();
-    const fileChooser = await fileChooserPromise;
-    await fileChooser.setFiles({
-      name: "notes.txt",
-      mimeType: "text/plain",
-      buffer: Buffer.from("hello"),
-    });
+    await dropFile(page, { name: "notes.txt", mimeType: "text/plain", buffer: Buffer.from("hello") });
 
     const row = page.locator("#file-list .file-item").first();
     await expect(row.locator('[data-role="badge"]')).toBeHidden();

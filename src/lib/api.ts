@@ -4,13 +4,12 @@ import { ApiError } from "./errors";
 export interface ApiFetchOptions {
   method?: string;
   json?: unknown;
-  expectJson?: boolean;
 }
 
 export async function apiFetch<T = unknown>(
   cfg: UploaderConfig,
   path: string,
-  { method = "GET", json, expectJson = true }: ApiFetchOptions = {},
+  { method = "GET", json }: ApiFetchOptions = {},
 ): Promise<T | null> {
   const headers: Record<string, string> = { Authorization: `Bearer ${cfg.accessToken}` };
   let body: string | undefined;
@@ -39,10 +38,9 @@ export async function apiFetch<T = unknown>(
     throw new ApiError(
       `${method} ${path} failed with HTTP ${resp.status}${detail ? `: ${detail.slice(0, 500)}` : ""}`,
       resp.status,
-      detail,
     );
   }
-  if (!expectJson || resp.status === 204) return null;
+  if (resp.status === 204) return null;
   return (await resp.json()) as T;
 }
 

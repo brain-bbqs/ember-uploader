@@ -1,7 +1,7 @@
 import type { OAuthTokenSet } from "./types";
 import { EMBER_INSTANCE, OAUTH_CLIENT_ID } from "./instances";
 
-const VERIFIER_STORAGE_KEY = "dandi-mp4-uploader.oauth-pkce.v1";
+const VERIFIER_STORAGE_KEY = "bbqs-uploader.oauth-pkce.v1";
 
 // Wherever this page is actually being served from (production root, a PR preview, local dev) —
 // must be registered as a valid redirect URI on the archive side for that specific location.

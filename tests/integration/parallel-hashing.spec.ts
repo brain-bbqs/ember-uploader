@@ -2,23 +2,15 @@ import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test, expect, type Route } from "@playwright/test";
-import { seedSignedIn } from "./helpers/auth";
-
-const API = "https://api-dandi.emberarchive.org/api";
+import { API, seedSignedIn } from "./helpers/auth";
+import { mockUploadApi } from "./helpers/api-mock";
+import { dropFile } from "./helpers/drop";
 
 test("hashes concurrently-uploading files on separate workers, not the main thread", async ({ page }) => {
   const workerUrls: string[] = [];
   page.on("worker", (w) => workerUrls.push(w.url()));
 
-  await page.route(`${API}/users/me/`, (route: Route) =>
-    route.fulfill({ json: { username: "test-user", name: "Test User" } }),
-  );
-  await page.route(`${API}/dandisets/000123/`, (route: Route) =>
-    route.fulfill({ json: { draft_version: { name: "Test dandiset" } } }),
-  );
-  await page.route(`${API}/dandisets/000123/versions/draft/assets/?path=*`, (route: Route) =>
-    route.fulfill({ json: { results: [], next: null } }),
-  );
+  await mockUploadApi(page);
   // Stall briefly before failing, so files stay parked mid-flight long enough to observe worker
   // creation without leaving requests hanging indefinitely (which slows down test teardown).
   await page.route(`${API}/uploads/initialize/`, async (route: Route) => {
@@ -30,10 +22,7 @@ test("hashes concurrently-uploading files on separate workers, not the main thre
   await page.goto("/");
   await expect(page.locator("#dandiset-single")).toBeVisible();
 
-  const fileChooserPromise = page.waitForEvent("filechooser");
-  await page.locator("#dropzone").click();
-  const fileChooser = await fileChooserPromise;
-  await fileChooser.setFiles([
+  await dropFile(page, [
     { name: "a.bin", mimeType: "application/octet-stream", buffer: Buffer.alloc(6 * 1024 * 1024) },
     { name: "b.bin", mimeType: "application/octet-stream", buffer: Buffer.alloc(6 * 1024 * 1024) },
     { name: "c.bin", mimeType: "application/octet-stream", buffer: Buffer.alloc(6 * 1024 * 1024) },
@@ -62,10 +51,7 @@ test("fans a single multi-part file out across workers and cancels hashing via C
   const bigPath = join(mkdtempSync(join(tmpdir(), "bbqs-hash-")), "big.bin");
   writeFileSync(bigPath, Buffer.alloc(64 * 1024 * 1024 + 10));
 
-  const fileChooserPromise = page.waitForEvent("filechooser");
-  await page.locator("#dropzone").click();
-  const fileChooser = await fileChooserPromise;
-  await fileChooser.setFiles(bigPath);
+  await dropFile(page, bigPath);
 
   const badge = page.locator("[data-role='badge']").first();
   await expect(badge).toHaveText("Scanning", { timeout: 10000 });

@@ -1,7 +1,7 @@
 export function sanitizeSegment(segment: string, fallback: string): string {
   let s = segment.normalize("NFKD").replace(/[̀-ͯ]/g, "");
   s = s.replace(/[^A-Za-z0-9._-]+/g, "_");
-  s = s.replace(/_{2,}/g, "_").replace(/^[._\s-]+|[._\s-]+$/g, "");
+  s = s.replace(/_{2,}/g, "_").replace(/^[._-]+|[._-]+$/g, "");
   return s || fallback;
 }
 

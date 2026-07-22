@@ -9,7 +9,7 @@ export const DEFAULT_REVEAL_COUNT = 30;
 // RENDER_CHUNK_SIZE nodes lets the browser interleave a paint between chunks.
 const RENDER_CHUNK_SIZE = 300;
 
-function yieldToMain(): Promise<void> {
+export function yieldToMain(): Promise<void> {
   return new Promise((resolve) => requestAnimationFrame(() => resolve()));
 }
 

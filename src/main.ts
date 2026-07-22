@@ -4,15 +4,16 @@ import { initDropzone } from "./ui/dropzone";
 import { queueFileRow, uploadFile, type UploadOutcome, type HashJob } from "./ui/processFile";
 import { humanSize, friendlyEta } from "./lib/format";
 import { renderIdentity } from "./ui/connection";
-import { renderFileTree, setRevealCount, DEFAULT_REVEAL_COUNT } from "./ui/fileTree";
+import { renderFileTree, setRevealCount, yieldToMain, DEFAULT_REVEAL_COUNT } from "./ui/fileTree";
 import { createHashPool } from "./lib/etag-worker";
 import { openChecksumCache, checksumCacheKey } from "./lib/checksum-cache";
 import { planParts } from "./lib/etag";
+import { runQueue } from "./lib/queue";
 import { loadStoredSettings, saveStoredSettings, resolveConfig, saveStoredTheme } from "./lib/settings";
 import { startLogin, handleRedirectCallback, ensureFreshToken, revokeToken } from "./lib/oauth";
 import { listIncomingDandisets, type IncomingDandiset } from "./lib/dandisets";
-import { generateMockDroppedFiles } from "./lib/mockUpload";
-import type { UploaderConfig, OAuthTokenSet } from "./lib/types";
+import { generateMockDroppedFiles, mockPhaseDurationMs, simulateProgress } from "./lib/mockUpload";
+import type { FilePart, UploaderConfig, OAuthTokenSet } from "./lib/types";
 import type { DroppedFile } from "./lib/fileTree";
 import type { FileRow } from "./ui/fileRow";
 import { renderChangelogHtml, countChangelogVersions } from "./lib/changelog";
@@ -50,24 +51,20 @@ function updateCancelAllVisibility(): void {
 // Hashing starts the moment a file is dropped, not when "Upload" is clicked.
 const hashJobs = new Map<File, HashJob>();
 
-function startHashing(file: File, row: FileRow, relativePath: string): HashJob {
-  if (mockMode) return startMockHashing(file, row);
+// Shared scaffolding for the real and mock hashing paths: the "Scanning" badge, cancel
+// bookkeeping, and settle handling around whatever `start` actually runs.
+function registerHashJob(
+  file: File,
+  row: FileRow,
+  parts: FilePart[],
+  start: (signal: AbortSignal) => Promise<string>,
+): HashJob {
   ensureTicker();
-  const parts = planParts(file.size);
   row.setBadge("Scanning", "busy");
   const abort = new AbortController();
   activeHashes.add(abort);
   updateCancelAllVisibility();
-  const promise = hashPool.hash(
-    file,
-    parts,
-    (f) => {
-      row.setProgress(f * 0.999);
-      reportHashBytes(file, f * file.size);
-    },
-    abort.signal,
-    checksumCacheKey({ relativePath, name: file.name, size: file.size, lastModified: file.lastModified }),
-  );
+  const promise = start(abort.signal);
   promise
     .then(() => {
       hashedFiles++;
@@ -93,96 +90,32 @@ function startHashing(file: File, row: FileRow, relativePath: string): HashJob {
   return job;
 }
 
-// Bounds for a mock phase's animation length: wide enough that a batch of small and huge fake
-// files still looks staggered, short enough that even a 100 GB file "finishes" in a couple of
-// seconds -- the upload phase additionally runs through the same FILE_CONCURRENCY-lane queue a
-// real batch would, so a large mock_upload count still finishes in waves rather than all at once.
-const MOCK_PHASE_MIN_MS = 600;
-const MOCK_PHASE_MAX_MS = 3000;
-
-// Compresses the 10 MB-100 GB mock size range (see src/lib/mockUpload.ts) into a watchable
-// animation: duration grows with log2(size) rather than size itself, so scanning/uploading a fake
-// 100 GB file doesn't take literal hours.
-function mockPhaseDurationMs(sizeBytes: number): number {
-  const mb = sizeBytes / (1024 * 1024);
-  const scaled = MOCK_PHASE_MIN_MS + Math.log2(Math.max(1, mb)) * 200;
-  return Math.min(MOCK_PHASE_MAX_MS, Math.max(MOCK_PHASE_MIN_MS, scaled));
-}
-
-// Ticks `onProgress(bytesDone)` once per animation frame until `totalBytes` worth of (fake)
-// progress has been reported, over roughly `durationMs` of real time. Rejects with the same
-// AbortError shape a real cancelled fetch/hash would, so callers can share their cancellation
-// handling with the real hashing/upload paths.
-function simulateProgress(
-  totalBytes: number,
-  durationMs: number,
-  signal: AbortSignal,
-  onProgress: (bytesDone: number) => void,
-): Promise<void> {
-  return new Promise((resolve, reject) => {
-    if (signal.aborted) {
-      reject(new DOMException("Aborted", "AbortError"));
-      return;
-    }
-    const start = performance.now();
-    let frame: number;
-    const onAbort = () => {
-      cancelAnimationFrame(frame);
-      reject(new DOMException("Aborted", "AbortError"));
-    };
-    signal.addEventListener("abort", onAbort, { once: true });
-    const tick = () => {
-      const fraction = Math.min(1, (performance.now() - start) / durationMs);
-      onProgress(totalBytes * fraction);
-      if (fraction >= 1) {
-        signal.removeEventListener("abort", onAbort);
-        resolve();
-        return;
-      }
-      frame = requestAnimationFrame(tick);
-    };
-    frame = requestAnimationFrame(tick);
-  });
+function startHashing(file: File, row: FileRow, relativePath: string): HashJob {
+  if (mockMode) return startMockHashing(file, row);
+  const parts = planParts(file.size);
+  return registerHashJob(file, row, parts, (signal) =>
+    hashPool.hash(
+      file,
+      parts,
+      (f) => {
+        row.setProgress(f * 0.999);
+        reportHashBytes(file, f * file.size);
+      },
+      signal,
+      checksumCacheKey({ relativePath, name: file.name, size: file.size, lastModified: file.lastModified }),
+    ),
+  );
 }
 
 // Mock counterpart to startHashing(): animates the "Scanning" phase for a fake (or, in mock mode,
 // a genuinely dropped) file instead of running it through the real hash pool.
 function startMockHashing(file: File, row: FileRow): HashJob {
-  ensureTicker();
-  row.setBadge("Scanning", "busy");
-  const abort = new AbortController();
-  activeHashes.add(abort);
-  updateCancelAllVisibility();
-  const promise: Promise<string> = simulateProgress(
-    file.size,
-    mockPhaseDurationMs(file.size),
-    abort.signal,
-    (bytesDone) => {
+  return registerHashJob(file, row, [], (signal) =>
+    simulateProgress(file.size, mockPhaseDurationMs(file.size), signal, (bytesDone) => {
       row.setProgress(Math.min(0.999, file.size > 0 ? bytesDone / file.size : 1));
       reportHashBytes(file, bytesDone);
-    },
-  ).then(() => "mock-etag");
-  promise
-    .then(() => {
-      hashedFiles++;
-      reportHashBytes(file, file.size);
-      row.hideBadge();
-    })
-    .catch((e: unknown) => {
-      if (e instanceof DOMException && e.name === "AbortError") {
-        row.setBadge("Cancelled", "warn");
-      } else {
-        row.hideBadge();
-      }
-    })
-    .finally(() => {
-      row.setProgress(0);
-      activeHashes.delete(abort);
-      updateCancelAllVisibility();
-    });
-  const job: HashJob = { parts: [], promise };
-  hashJobs.set(file, job);
-  return job;
+    }).then(() => "mock-etag"),
+  );
 }
 
 // Mock counterpart to uploadFile(): animates the "Uploading" phase instead of hitting the real
@@ -190,7 +123,6 @@ function startMockHashing(file: File, row: FileRow): HashJob {
 async function mockUploadFile(
   row: FileRow,
   file: File,
-  activeUploads: Set<AbortController>,
   hashJob: HashJob,
   onUploadProgress?: (bytesDone: number) => void,
 ): Promise<UploadOutcome> {
@@ -449,9 +381,7 @@ function updateExpandBubble(): void {
   els.expandDepthBubble.style.left = `calc(8px + (100% - 16px) * ${fraction})`;
 }
 
-if (els.versionIndicator) {
-  els.versionIndicator.textContent = `v${__APP_VERSION__}`;
-}
+els.versionIndicator.textContent = `v${__APP_VERSION__}`;
 
 // The modal opens on the latest few versions; "Show more" swaps in the entire changelog for
 // anyone curious enough to keep reading.
@@ -493,13 +423,12 @@ function readTestSignedOutOverride(): boolean {
 }
 const forceSignedOut = readTestSignedOutOverride();
 
-function loadSettings(): boolean {
+function loadSettings(): void {
   const s = loadStoredSettings();
   if (s) {
     if (s.dandisetId) storedDandisetId = s.dandisetId;
     if (s.oauth) oauthTokens = s.oauth;
   }
-  return s !== null;
 }
 
 function saveSettings(): void {
@@ -638,12 +567,12 @@ async function refreshDandisetOptions(): Promise<void> {
     setDandisetPlaceholder("Could not load your datasets");
   }
   saveSettings();
-  runConnectionCheck();
+  updateViewDatasetLink();
 }
 
 function updateViewDatasetLink(): void {
   const cfg = currentConfig();
-  if (cfg.web && cfg.dandisetId) {
+  if (cfg.dandisetId) {
     els.viewDatasetLink.href = `${cfg.web}/dandiset/${cfg.dandisetId}/draft/files`;
     els.viewDatasetLink.hidden = false;
   } else {
@@ -661,10 +590,6 @@ function updateUploadBar(): void {
 // entire large folder in one synchronous loop would block the browser from painting until it's
 // done, on top of the tree render itself.
 const ADD_FILES_CHUNK_SIZE = 200;
-
-function yieldToMain(): Promise<void> {
-  return new Promise((resolve) => requestAnimationFrame(() => resolve()));
-}
 
 async function addFiles(entries: DroppedFile[]): Promise<void> {
   const isFirstBatch = totalFiles === 0;
@@ -694,19 +619,6 @@ async function addFiles(entries: DroppedFile[]): Promise<void> {
   els.progressSummary.hidden = !hasFiles;
   updateProgressSummary();
   updateUploadBar();
-  updateViewDatasetLink();
-}
-
-async function runQueue<T>(items: T[], worker: (item: T, lane: number) => Promise<void>): Promise<void> {
-  let next = 0;
-  async function run(lane: number): Promise<void> {
-    for (;;) {
-      const i = next++;
-      if (i >= items.length) return;
-      await worker(items[i], lane);
-    }
-  }
-  await Promise.all(Array.from({ length: Math.min(FILE_CONCURRENCY, items.length) }, (_, lane) => run(lane)));
 }
 
 async function startUpload(): Promise<void> {
@@ -717,10 +629,10 @@ async function startUpload(): Promise<void> {
   updateCancelAllVisibility();
   const cfg = currentConfig();
 
-  await runQueue(batch, async ({ file, row, path }) => {
+  await runQueue(batch, FILE_CONCURRENCY, async ({ file, row, path }) => {
     const job = hashJobs.get(file)!;
     const outcome = mockMode
-      ? await mockUploadFile(row, file, activeUploads, job, (bytesDone) => reportUploadBytes(file, bytesDone))
+      ? await mockUploadFile(row, file, job, (bytesDone) => reportUploadBytes(file, bytesDone))
       : await uploadFile(row, file, path, cfg, activeUploads, job, (bytesDone) => reportUploadBytes(file, bytesDone));
     counts[outcome]++;
     updateProgressSummary();
@@ -767,7 +679,7 @@ if (mockUploadCount !== null) {
   void addFiles(generateMockDroppedFiles(mockUploadCount));
 }
 els.dandisetId.addEventListener("change", runConnectionCheck);
-document.getElementById("config-form")!.addEventListener("submit", (e) => e.preventDefault());
+els.configForm.addEventListener("submit", (e) => e.preventDefault());
 els.oauthSigninBtn.addEventListener("click", () => void startLogin());
 els.oauthSignoutBtn.addEventListener("click", () => {
   const tokens = oauthTokens;

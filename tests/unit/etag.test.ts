@@ -1,7 +1,27 @@
 import { describe, expect, it } from "vitest";
-import { planParts, computeDandiEtag, hashPart, combineDigests } from "../../src/lib/etag";
+import { planParts, hashPart, combineDigests } from "../../src/lib/etag";
+import type { FilePart } from "../../src/lib/types";
 
 const MB = 2 ** 20;
+
+/** Sequential reference implementation of the dandi-etag, used as the oracle the production
+ * worker-pool path (hashPart per part + combineDigests) is checked against. */
+async function computeDandiEtag(
+  file: Blob,
+  parts: FilePart[],
+  onProgress: (fraction: number) => void,
+): Promise<string> {
+  const partDigests = new Uint8Array(parts.length * 16);
+  let bytesBefore = 0;
+  for (const part of parts) {
+    const digest = await hashPart(file, part, (bytesDoneInPart) => {
+      onProgress((bytesBefore + bytesDoneInPart) / file.size);
+    });
+    partDigests.set(digest, (part.number - 1) * 16);
+    bytesBefore += part.size;
+  }
+  return combineDigests(partDigests, parts.length);
+}
 
 describe("planParts", () => {
   it("rejects empty files", () => {

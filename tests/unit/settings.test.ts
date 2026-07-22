@@ -14,8 +14,13 @@ describe("resolveConfig", () => {
     expect(cfg.dandisetId).toBe("000123");
   });
 
-  it("extracts a numeric dandiset id from surrounding text", () => {
+  it("resolves to an empty id when the input contains no numeric dandiset id", () => {
     const cfg = resolveConfig({ dandisetId: "not-a-real-id" });
+    expect(cfg.dandisetId).toBe("");
+  });
+
+  it("rejects the negative fake identifiers used by the ?test&num_datasets injection", () => {
+    const cfg = resolveConfig({ dandisetId: "-000001" });
     expect(cfg.dandisetId).toBe("");
   });
 
@@ -27,7 +32,7 @@ describe("resolveConfig", () => {
 
 describe("configProblems", () => {
   it("flags a missing API URL and not being signed in (dandiset id is secondary while signed out)", () => {
-    const problems = configProblems({ api: "", web: null, accessToken: "", dandisetId: "" });
+    const problems = configProblems({ api: "", web: "", accessToken: "", dandisetId: "" });
     expect(problems).toHaveLength(2);
     expect(problems).toContain("Not signed in.");
   });
@@ -45,7 +50,7 @@ describe("configProblems", () => {
   it("reports 'No dataset selected.' when signed in but no dandiset is chosen", () => {
     const problems = configProblems({
       api: "https://api-dandi.emberarchive.org/api",
-      web: null,
+      web: "",
       accessToken: "abc",
       dandisetId: "",
     });

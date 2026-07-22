@@ -6,7 +6,8 @@
   --border: #dde1ec;
   --accent: #4f46e5;
   --accent-soft: #eef0ff;
-  /* EMBER's flame red, matched from the logo mark — used for the archive sign-in button only. */
+  /* EMBER's flame red, matched from the logo mark — used for the archive sign-in button and the
+     signed-in avatar/sign-out accents. */
   --ember-red: #c81a24;
   --ember-red-hover: #a8151d;
   --ok: #15803d;
@@ -184,24 +185,6 @@ code {
   gap: 0.9rem 1.25rem;
 }
 
-label {
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-  font-size: 0.9rem;
-}
-label > span {
-  font-weight: 600;
-}
-label em {
-  font-weight: 400;
-  color: var(--muted);
-  font-style: normal;
-}
-
-input[type="text"],
-input[type="password"],
-input[type="url"],
 select {
   font: inherit;
   padding: 0.5rem 0.65rem;
@@ -246,38 +229,6 @@ button.primary {
 }
 #oauth-signin-btn:focus-visible {
   outline-color: var(--ember-red);
-}
-
-button:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
-button.hint {
-  border-radius: 50%;
-  width: 1.3rem;
-  height: 1.3rem;
-  padding: 0;
-  font-size: 0.75rem;
-  line-height: 1;
-  color: var(--muted);
-}
-
-.help {
-  color: var(--muted);
-  font-size: 0.85rem;
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
 }
 
 .dandiset-single {
@@ -484,7 +435,8 @@ button.hint {
 .dir-toggle[aria-expanded="true"] .dir-chevron {
   transform: rotate(90deg);
 }
-.dir-name {
+.dir-name,
+.file-name {
   font-weight: 600;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -614,12 +566,6 @@ button.hint {
   background: var(--accent-soft);
 }
 
-.file-name {
-  font-weight: 600;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
 .file-size {
   color: var(--muted);
   font-size: 0.78rem;

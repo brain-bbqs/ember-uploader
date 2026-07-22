@@ -1,4 +1,3 @@
-// @vitest-environment jsdom
 import { describe, expect, it, vi } from "vitest";
 import { listIncomingDandisets } from "../../src/lib/dandisets";
 import type { UploaderConfig } from "../../src/lib/types";

@@ -1,17 +1,11 @@
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { test, expect, type Page } from "@playwright/test";
+import { test, expect } from "@playwright/test";
+import { dropFile } from "./helpers/drop";
 
 const DB_NAME = "bbqs-uploader.checksum-cache";
 const STORE = "files";
-
-async function dropFile(page: Page, path: string): Promise<void> {
-  const fileChooserPromise = page.waitForEvent("filechooser");
-  await page.locator("#dropzone").click();
-  const fileChooser = await fileChooserPromise;
-  await fileChooser.setFiles(path);
-}
 
 /** Runs in the page: how many parts the cache record for the single stored file marks present. */
 function storedPresentParts([dbName, store]: [string, string]): Promise<number> {

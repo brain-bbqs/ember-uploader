@@ -1,54 +1,13 @@
 import { test, expect, type Route } from "@playwright/test";
-import { seedSignedIn } from "./helpers/auth";
-
-const API = "https://api-dandi.emberarchive.org/api";
+import { API, seedSignedIn } from "./helpers/auth";
+import { mockUploadApi, S3 } from "./helpers/api-mock";
+import { dropFile } from "./helpers/drop";
 
 test("full upload pipeline against a mocked DANDI API", async ({ page }) => {
   const createdAssets: unknown[] = [];
 
-  await page.route(`${API}/users/me/`, (route: Route) =>
-    route.fulfill({ json: { username: "test-user", name: "Test User" } }),
-  );
-  await page.route(`${API}/dandisets/000123/`, (route: Route) =>
-    route.fulfill({ json: { draft_version: { name: "Test dandiset" } } }),
-  );
-  await page.route(`${API}/dandisets/000123/versions/draft/assets/?path=*`, (route: Route) =>
-    route.fulfill({ json: { results: [], next: null } }),
-  );
-  await page.route(`${API}/uploads/initialize/`, (route: Route) =>
-    route.fulfill({
-      json: {
-        upload_id: "upload-1",
-        parts: [
-          {
-            part_number: 1,
-            size: 32,
-            upload_url: "https://mock-s3.test/part-1",
-          },
-        ],
-      },
-    }),
-  );
-  await page.route("https://mock-s3.test/part-1", (route: Route) =>
-    route.fulfill({
-      status: 200,
-      headers: {
-        ETag: '"abc123"',
-        "Access-Control-Expose-Headers": "ETag",
-        "Access-Control-Allow-Origin": "*",
-      },
-      body: "",
-    }),
-  );
-  await page.route(`${API}/uploads/upload-1/complete/`, (route: Route) =>
-    route.fulfill({
-      json: { complete_url: "https://mock-s3.test/complete", body: "<complete/>" },
-    }),
-  );
-  await page.route("https://mock-s3.test/complete", (route: Route) => route.fulfill({ status: 200, body: "<ok/>" }));
-  await page.route(`${API}/uploads/upload-1/validate/`, (route: Route) =>
-    route.fulfill({ json: { blob_id: "blob-1" } }),
-  );
+  await mockUploadApi(page);
+  // Override the baseline asset-creation mock to also capture each POSTed payload.
   await page.route(`${API}/dandisets/000123/versions/draft/assets/`, (route: Route) => {
     if (route.request().method() === "POST") {
       createdAssets.push(route.request().postDataJSON());
@@ -66,10 +25,7 @@ test("full upload pipeline against a mocked DANDI API", async ({ page }) => {
   await expect(page.locator("#oauth-avatar")).toHaveText("TU");
   await expect(page.locator("#oauth-username")).toHaveText("test-user");
 
-  const fileChooserPromise = page.waitForEvent("filechooser");
-  await page.locator("#dropzone").click();
-  const fileChooser = await fileChooserPromise;
-  await fileChooser.setFiles({ name: "clip.mp4", mimeType: "video/mp4", buffer: Buffer.alloc(32) });
+  await dropFile(page, { name: "clip.mp4", mimeType: "video/mp4", buffer: Buffer.alloc(32) });
 
   const row = page.locator("#file-list .file-item").first();
   await expect(row.locator('[data-role="badge"]')).toBeHidden();
@@ -94,38 +50,11 @@ test("replaces the existing asset (PUT) when one exists at the path and the cont
   let assetCreated = false;
   const replacedAssets: unknown[] = [];
 
-  await page.route(`${API}/users/me/`, (route: Route) =>
-    route.fulfill({ json: { username: "test-user", name: "Test User" } }),
-  );
-  await page.route(`${API}/dandisets/000123/`, (route: Route) =>
-    route.fulfill({ json: { draft_version: { name: "Test dandiset" } } }),
-  );
+  await mockUploadApi(page);
+  // An asset already sits at the path, so registration must go through PUT, not POST.
   await page.route(`${API}/dandisets/000123/versions/draft/assets/?path=*`, (route: Route) =>
     route.fulfill({ json: { results: [{ asset_id: "existing-1", path: "sourcedata/raw/clip.mp4" }], next: null } }),
   );
-  await page.route(`${API}/uploads/initialize/`, (route: Route) =>
-    route.fulfill({
-      json: {
-        upload_id: "upload-1",
-        parts: [{ part_number: 1, size: 32, upload_url: "https://mock-s3.test/part-1" }],
-      },
-    }),
-  );
-  await page.route("https://mock-s3.test/part-1", (route: Route) =>
-    route.fulfill({
-      status: 200,
-      headers: {
-        ETag: '"abc123"',
-        "Access-Control-Expose-Headers": "ETag",
-        "Access-Control-Allow-Origin": "*",
-      },
-      body: "",
-    }),
-  );
-  await page.route(`${API}/uploads/upload-1/complete/`, (route: Route) =>
-    route.fulfill({ json: { complete_url: "https://mock-s3.test/complete", body: "<complete/>" } }),
-  );
-  await page.route("https://mock-s3.test/complete", (route: Route) => route.fulfill({ status: 200, body: "<ok/>" }));
   await page.route(`${API}/uploads/upload-1/validate/`, (route: Route) =>
     route.fulfill({ json: { blob_id: "blob-2" } }),
   );
@@ -148,10 +77,7 @@ test("replaces the existing asset (PUT) when one exists at the path and the cont
   await page.goto("/");
   await expect(page.locator("#dandiset-single")).toBeVisible();
 
-  const fileChooserPromise = page.waitForEvent("filechooser");
-  await page.locator("#dropzone").click();
-  const fileChooser = await fileChooserPromise;
-  await fileChooser.setFiles({ name: "clip.mp4", mimeType: "video/mp4", buffer: Buffer.alloc(32) });
+  await dropFile(page, { name: "clip.mp4", mimeType: "video/mp4", buffer: Buffer.alloc(32) });
 
   const row = page.locator("#file-list .file-item").first();
   await page.locator("#upload-all-btn").click();
@@ -169,19 +95,14 @@ test("replaces via the server digest fast-path (409) without re-transferring byt
   let bytesUploaded = false;
   const replacedAssets: unknown[] = [];
 
-  await page.route(`${API}/users/me/`, (route: Route) =>
-    route.fulfill({ json: { username: "test-user", name: "Test User" } }),
-  );
-  await page.route(`${API}/dandisets/000123/`, (route: Route) =>
-    route.fulfill({ json: { draft_version: { name: "Test dandiset" } } }),
-  );
+  await mockUploadApi(page);
   await page.route(`${API}/dandisets/000123/versions/draft/assets/?path=*`, (route: Route) =>
     route.fulfill({ json: { results: [{ asset_id: "existing-1", path: "sourcedata/raw/clip.mp4" }], next: null } }),
   );
   // 409 = the server already holds a blob with this digest; no S3 traffic should follow.
   await page.route(`${API}/uploads/initialize/`, (route: Route) => route.fulfill({ status: 409, body: "blob exists" }));
   await page.route(`${API}/blobs/digest/`, (route: Route) => route.fulfill({ json: { blob_id: "blob-1" } }));
-  await page.route("https://mock-s3.test/**", (route: Route) => {
+  await page.route(`${S3}/**`, (route: Route) => {
     bytesUploaded = true;
     return route.fulfill({ status: 500, body: "" });
   });
@@ -204,10 +125,7 @@ test("replaces via the server digest fast-path (409) without re-transferring byt
   await page.goto("/");
   await expect(page.locator("#dandiset-single")).toBeVisible();
 
-  const fileChooserPromise = page.waitForEvent("filechooser");
-  await page.locator("#dropzone").click();
-  const fileChooser = await fileChooserPromise;
-  await fileChooser.setFiles({ name: "clip.mp4", mimeType: "video/mp4", buffer: Buffer.alloc(32) });
+  await dropFile(page, { name: "clip.mp4", mimeType: "video/mp4", buffer: Buffer.alloc(32) });
 
   const row = page.locator("#file-list .file-item").first();
   await page.locator("#upload-all-btn").click();

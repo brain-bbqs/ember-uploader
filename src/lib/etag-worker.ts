@@ -3,8 +3,7 @@ import type { ChecksumCache } from "./checksum-cache";
 import type { FilePart } from "./types";
 
 export type HashWorkerRequest =
-  | { type: "hash-part"; requestId: number; file: File; part: FilePart }
-  | { type: "cancel"; requestId: number };
+  { type: "hash-part"; requestId: number; file: File; part: FilePart } | { type: "cancel"; requestId: number };
 
 export type HashWorkerResponse =
   | { type: "progress"; requestId: number; bytesDone: number }
@@ -20,7 +19,6 @@ export interface HashPool {
     signal?: AbortSignal,
     cacheKey?: string,
   ): Promise<string>;
-  terminate(): void;
 }
 
 /** A file being hashed: its claimed/finished part bookkeeping plus the promise's settle hooks. */
@@ -264,13 +262,6 @@ export function createHashPool(size: number, cache?: ChecksumCache): HashPool {
           startJob(job, null);
         }
       });
-    },
-    terminate() {
-      for (const worker of workers) worker.terminate();
-      workers.length = 0;
-      idle.length = 0;
-      inFlight.clear();
-      jobs.length = 0;
     },
   };
 }

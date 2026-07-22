@@ -23,12 +23,13 @@ function renderNode(node: TreeNode, container: HTMLUListElement, rows: FileRow[]
     li.innerHTML = `
       <button type="button" class="dir-toggle" aria-expanded="true">
         <span class="dir-chevron" aria-hidden="true">▸</span>
-        <span class="dir-name">${child.name}/</span>
+        <span class="dir-name"></span>
         <span class="dir-count">${count} item${count === 1 ? "" : "s"}</span>
         <span class="dir-size">${humanSize(size)}</span>
       </button>
       <ul class="dir-children"></ul>
     `;
+    li.querySelector(".dir-name")!.textContent = `${child.name}/`;
     container.appendChild(li);
     renderNode(child, li.querySelector<HTMLUListElement>(".dir-children")!, rows);
   }

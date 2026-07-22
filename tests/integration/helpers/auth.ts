@@ -1,7 +1,8 @@
 import type { Page, Route } from "@playwright/test";
+import { STORAGE_KEY } from "../../../src/lib/settings";
+import { EMBER_INSTANCE } from "../../../src/lib/instances";
 
-const API = "https://api-dandi.emberarchive.org/api";
-const STORAGE_KEY = "dandi-mp4-uploader.settings.v1";
+export const API = EMBER_INSTANCE.api;
 
 /**
  * Seeds an already-signed-in OAuth session (localStorage) before the page's own script runs, and

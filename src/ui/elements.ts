@@ -6,6 +6,7 @@ function required<T extends Element>(id: string): T {
 
 export function getElements() {
   return {
+    configForm: required<HTMLFormElement>("config-form"),
     dandisetId: required<HTMLSelectElement>("dandiset-id"),
     oauthSigninBtn: required<HTMLButtonElement>("oauth-signin-btn"),
     oauthSignedIn: required<HTMLDivElement>("oauth-signed-in"),
@@ -45,7 +46,7 @@ export function getElements() {
     uploadAllBtn: required<HTMLButtonElement>("upload-all-btn"),
     cancelAllBtn: required<HTMLButtonElement>("cancel-all-btn"),
     viewDatasetLink: required<HTMLAnchorElement>("view-dataset-link"),
-    versionIndicator: document.getElementById("version-indicator"),
+    versionIndicator: required<HTMLAnchorElement>("version-indicator"),
     themeToggle: required<HTMLButtonElement>("theme-toggle"),
     whatsNewButton: required<HTMLButtonElement>("whats-new-button"),
     whatsNewModal: required<HTMLDialogElement>("whats-new-modal"),

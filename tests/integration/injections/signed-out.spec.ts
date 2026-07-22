@@ -1,5 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { seedSignedIn } from "../helpers/auth";
+import { dropFile } from "../helpers/drop";
+import { seedTheme } from "../helpers/theme";
 
 // Exercises the "?test&signed_out" live test injection documented in docs/README.md, in both
 // color themes -- it should force the signed-out UI even over a real (mocked) session, proving
@@ -7,7 +9,7 @@ import { seedSignedIn } from "../helpers/auth";
 for (const theme of ["light", "dark"] as const) {
   test.describe(`?test&signed_out (${theme} mode)`, () => {
     test.beforeEach(async ({ page }) => {
-      await page.addInitScript((t) => localStorage.setItem("dandi-mp4-uploader.theme", t), theme);
+      await seedTheme(page, theme);
       await seedSignedIn(page);
     });
 
@@ -22,10 +24,7 @@ for (const theme of ["light", "dark"] as const) {
 
     test("blocks an uploaded file as not signed in", async ({ page }) => {
       await page.goto("/?test&signed_out");
-      const fileChooserPromise = page.waitForEvent("filechooser");
-      await page.locator("#dropzone").click();
-      const fileChooser = await fileChooserPromise;
-      await fileChooser.setFiles({ name: "clip.mp4", mimeType: "video/mp4", buffer: Buffer.alloc(32) });
+      await dropFile(page, { name: "clip.mp4", mimeType: "video/mp4", buffer: Buffer.alloc(32) });
 
       await page.locator("#upload-all-btn").click();
       const row = page.locator("#file-list .file-item").first();

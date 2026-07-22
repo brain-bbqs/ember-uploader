@@ -1,4 +1,4 @@
-export function uploadPartToS3(
+function uploadPartToS3(
   url: string,
   blob: Blob,
   onProgress: (loaded: number) => void,

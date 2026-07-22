@@ -52,17 +52,3 @@ export function sumSize(node: TreeNode): number {
   }
   return total;
 }
-
-/** Number of files and subfolders directly inside this node (not counting anything nested deeper). */
-export function directEntryCount(node: TreeNode): number {
-  return node.files.length + node.dirs.size;
-}
-
-/** Largest `directEntryCount` found on any single directory node in this subtree (including the node itself). */
-export function maxDirectEntries(node: TreeNode): number {
-  let max = directEntryCount(node);
-  for (const child of node.dirs.values()) {
-    max = Math.max(max, maxDirectEntries(child));
-  }
-  return max;
-}
