@@ -9,3 +9,13 @@ export function withCard(element: HTMLElement): HTMLDivElement {
   wrapper.appendChild(element);
   return wrapper;
 }
+
+/**
+ * Forces the app's data-theme attribute to `theme` before building a story, so it renders
+ * deterministically regardless of the previewing browser's OS color-scheme preference or
+ * whatever the previously-viewed story left `document.documentElement` set to.
+ */
+export function withTheme<T extends HTMLElement>(theme: "light" | "dark", build: () => T): T {
+  document.documentElement.dataset.theme = theme;
+  return build();
+}

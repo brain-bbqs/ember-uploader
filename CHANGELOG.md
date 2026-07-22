@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.0
+
+#### 🚀 Enhancement
+
+- Added two live test injections for previewing states that are otherwise hard to reach on demand: `?test&mock_upload=N` queues a random nested batch of `N` fake files (10 MB-100 GB each) and animates the Scanning/Uploading bars against them without touching the network, and `?test&signed_out` forces the signed-out UI (header, Dataset card, upload blocking) regardless of the real sign-in state. Neither touches `localStorage` or real sign-in state, so both are safe to try at any time ([#31](https://github.com/brain-bbqs/ember-uploader/pull/31))
+- Added isolated Storybook stories (`stories/injections/`) and Playwright coverage (`tests/integration/injections/`) for both injections, each in light and dark mode ([#31](https://github.com/brain-bbqs/ember-uploader/pull/31))
+
 ## 0.0.20
 
 #### 🚀 Enhancement

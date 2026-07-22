@@ -11,6 +11,7 @@ import { planParts } from "./lib/etag";
 import { loadStoredSettings, saveStoredSettings, resolveConfig, saveStoredTheme } from "./lib/settings";
 import { startLogin, handleRedirectCallback, ensureFreshToken, revokeToken } from "./lib/oauth";
 import { listIncomingDandisets, type IncomingDandiset } from "./lib/dandisets";
+import { generateMockDroppedFiles } from "./lib/mockUpload";
 import type { UploaderConfig, OAuthTokenSet } from "./lib/types";
 import type { DroppedFile } from "./lib/fileTree";
 import type { FileRow } from "./ui/fileRow";
@@ -34,6 +35,11 @@ const activeUploads = new Set<AbortController>();
 const activeHashes = new Set<AbortController>();
 const pending: { file: File; row: FileRow; path: string }[] = [];
 let uploadBatchActive = false;
+// Set once at startup by "?test&mock_upload=N" (see readTestMockUploadCount()); while true, every
+// file — mock or genuinely dropped — is scanned/uploaded by the simulated timers below instead of
+// the real hash pool and network, since this mode exists purely to showcase the UI. Not meant to
+// be combined with a real upload.
+let mockMode = false;
 
 // "Cancel all" is offered whenever there's background work to stop: an upload batch in progress,
 // or files still hashing (which starts on drop, before "Upload" is ever clicked).
@@ -45,6 +51,7 @@ function updateCancelAllVisibility(): void {
 const hashJobs = new Map<File, HashJob>();
 
 function startHashing(file: File, row: FileRow, relativePath: string): HashJob {
+  if (mockMode) return startMockHashing(file, row);
   ensureTicker();
   const parts = planParts(file.size);
   row.setBadge("Scanning", "busy");
@@ -84,6 +91,137 @@ function startHashing(file: File, row: FileRow, relativePath: string): HashJob {
   const job: HashJob = { parts, promise };
   hashJobs.set(file, job);
   return job;
+}
+
+// Bounds for a mock phase's animation length: wide enough that a batch of small and huge fake
+// files still looks staggered, short enough that even a 100 GB file "finishes" in a couple of
+// seconds -- the upload phase additionally runs through the same FILE_CONCURRENCY-lane queue a
+// real batch would, so a large mock_upload count still finishes in waves rather than all at once.
+const MOCK_PHASE_MIN_MS = 600;
+const MOCK_PHASE_MAX_MS = 3000;
+
+// Compresses the 10 MB-100 GB mock size range (see src/lib/mockUpload.ts) into a watchable
+// animation: duration grows with log2(size) rather than size itself, so scanning/uploading a fake
+// 100 GB file doesn't take literal hours.
+function mockPhaseDurationMs(sizeBytes: number): number {
+  const mb = sizeBytes / (1024 * 1024);
+  const scaled = MOCK_PHASE_MIN_MS + Math.log2(Math.max(1, mb)) * 200;
+  return Math.min(MOCK_PHASE_MAX_MS, Math.max(MOCK_PHASE_MIN_MS, scaled));
+}
+
+// Ticks `onProgress(bytesDone)` once per animation frame until `totalBytes` worth of (fake)
+// progress has been reported, over roughly `durationMs` of real time. Rejects with the same
+// AbortError shape a real cancelled fetch/hash would, so callers can share their cancellation
+// handling with the real hashing/upload paths.
+function simulateProgress(
+  totalBytes: number,
+  durationMs: number,
+  signal: AbortSignal,
+  onProgress: (bytesDone: number) => void,
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (signal.aborted) {
+      reject(new DOMException("Aborted", "AbortError"));
+      return;
+    }
+    const start = performance.now();
+    let frame: number;
+    const onAbort = () => {
+      cancelAnimationFrame(frame);
+      reject(new DOMException("Aborted", "AbortError"));
+    };
+    signal.addEventListener("abort", onAbort, { once: true });
+    const tick = () => {
+      const fraction = Math.min(1, (performance.now() - start) / durationMs);
+      onProgress(totalBytes * fraction);
+      if (fraction >= 1) {
+        signal.removeEventListener("abort", onAbort);
+        resolve();
+        return;
+      }
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+  });
+}
+
+// Mock counterpart to startHashing(): animates the "Scanning" phase for a fake (or, in mock mode,
+// a genuinely dropped) file instead of running it through the real hash pool.
+function startMockHashing(file: File, row: FileRow): HashJob {
+  ensureTicker();
+  row.setBadge("Scanning", "busy");
+  const abort = new AbortController();
+  activeHashes.add(abort);
+  updateCancelAllVisibility();
+  const promise: Promise<string> = simulateProgress(
+    file.size,
+    mockPhaseDurationMs(file.size),
+    abort.signal,
+    (bytesDone) => {
+      row.setProgress(Math.min(0.999, file.size > 0 ? bytesDone / file.size : 1));
+      reportHashBytes(file, bytesDone);
+    },
+  ).then(() => "mock-etag");
+  promise
+    .then(() => {
+      hashedFiles++;
+      reportHashBytes(file, file.size);
+      row.hideBadge();
+    })
+    .catch((e: unknown) => {
+      if (e instanceof DOMException && e.name === "AbortError") {
+        row.setBadge("Cancelled", "warn");
+      } else {
+        row.hideBadge();
+      }
+    })
+    .finally(() => {
+      row.setProgress(0);
+      activeHashes.delete(abort);
+      updateCancelAllVisibility();
+    });
+  const job: HashJob = { parts: [], promise };
+  hashJobs.set(file, job);
+  return job;
+}
+
+// Mock counterpart to uploadFile(): animates the "Uploading" phase instead of hitting the real
+// API, always finishing as "Done" unless cancelled — there's no real network to fail against.
+async function mockUploadFile(
+  row: FileRow,
+  file: File,
+  activeUploads: Set<AbortController>,
+  hashJob: HashJob,
+  onUploadProgress?: (bytesDone: number) => void,
+): Promise<UploadOutcome> {
+  const abort = new AbortController();
+  activeUploads.add(abort);
+  try {
+    await hashJob.promise;
+    row.setProgress(0);
+    row.setBadge("Uploading", "busy");
+    await simulateProgress(file.size, mockPhaseDurationMs(file.size), abort.signal, (bytesDone) => {
+      const fraction = file.size > 0 ? bytesDone / file.size : 1;
+      row.setProgress(fraction);
+      row.setStatus(`${(fraction * 100).toFixed(0)}%`);
+      onUploadProgress?.(bytesDone);
+    });
+    row.setBadge("Done", "ok");
+    row.setStatus("", "ok");
+    row.setProgress(1, true);
+    onUploadProgress?.(file.size);
+    return "done";
+  } catch (e) {
+    onUploadProgress?.(file.size);
+    if (abort.signal.aborted || (e instanceof DOMException && e.name === "AbortError")) {
+      row.setBadge("Cancelled", "warn");
+      return "cancelled";
+    }
+    row.setBadge("Error", "err");
+    return "error";
+  } finally {
+    activeUploads.delete(abort);
+  }
 }
 
 // Cumulative progress tracker covering every file added this session (across all "Upload"
@@ -346,6 +484,15 @@ let oauthTokens: OAuthTokenSet | null = null;
 // the signed-in user's incoming datasets (a <select> can't hold a value before its options exist).
 let storedDandisetId = "";
 
+// Debug-only escape hatch for previewing the signed-out UI regardless of the real sign-in state:
+// "?test&signed_out" forces every auth-dependent render to behave as if oauthTokens were null,
+// without ever touching it (or localStorage) — see docs/README.md.
+function readTestSignedOutOverride(): boolean {
+  const params = new URLSearchParams(window.location.search);
+  return params.has("test") && params.has("signed_out");
+}
+const forceSignedOut = readTestSignedOutOverride();
+
 function loadSettings(): boolean {
   const s = loadStoredSettings();
   if (s) {
@@ -365,12 +512,12 @@ function saveSettings(): void {
 function currentConfig(): UploaderConfig {
   return resolveConfig({
     dandisetId: els.dandisetId.value,
-    oauthAccessToken: oauthTokens?.accessToken,
+    oauthAccessToken: forceSignedOut ? undefined : oauthTokens?.accessToken,
   });
 }
 
 function renderAuthUI(): void {
-  const signedIn = !!oauthTokens;
+  const signedIn = !forceSignedOut && !!oauthTokens;
   els.oauthSigninBtn.hidden = signedIn;
   els.oauthSignedIn.hidden = !signedIn;
 }
@@ -459,6 +606,11 @@ function readTestDatasetOverride(): IncomingDandiset[] | null {
 // Populates the "Incoming dataset" dropdown from the signed-in user's owned dandisets, since
 // there's no longer a free-text Dandiset ID field to type into.
 async function refreshDandisetOptions(): Promise<void> {
+  if (forceSignedOut) {
+    setDandisetPlaceholder("Please sign in to see your incoming datasets.");
+    updateViewDatasetLink();
+    return;
+  }
   const testDatasets = readTestDatasetOverride();
   if (testDatasets) {
     // Only the dataset list is faked; sign-in state (and thus the header avatar) still reflects
@@ -567,9 +719,9 @@ async function startUpload(): Promise<void> {
 
   await runQueue(batch, async ({ file, row, path }) => {
     const job = hashJobs.get(file)!;
-    const outcome = await uploadFile(row, file, path, cfg, activeUploads, job, (bytesDone) =>
-      reportUploadBytes(file, bytesDone),
-    );
+    const outcome = mockMode
+      ? await mockUploadFile(row, file, activeUploads, job, (bytesDone) => reportUploadBytes(file, bytesDone))
+      : await uploadFile(row, file, path, cfg, activeUploads, job, (bytesDone) => reportUploadBytes(file, bytesDone));
     counts[outcome]++;
     updateProgressSummary();
   });
@@ -586,6 +738,18 @@ function runConnectionCheck(): void {
   })();
 }
 
+// Debug-only escape hatch that previews the scanning/uploading UI against a fake nested batch of
+// files, without touching the network or reading real bytes: "?test&mock_upload=25" queues 25
+// fake files. Returns null (a no-op) unless explicitly parameterized with a positive integer —
+// see docs/README.md.
+function readTestMockUploadCount(): number | null {
+  const params = new URLSearchParams(window.location.search);
+  const raw = params.get("mock_upload");
+  if (!params.has("test") || raw === null) return null;
+  const count = Math.floor(Number(raw) || 0);
+  return count > 0 ? count : null;
+}
+
 const callbackTokens = await handleRedirectCallback().catch((e) => {
   console.warn("OAuth sign-in callback failed:", e);
   return null;
@@ -597,6 +761,11 @@ if (callbackTokens) {
 }
 renderAuthUI();
 initDropzone(els, addFiles);
+const mockUploadCount = readTestMockUploadCount();
+if (mockUploadCount !== null) {
+  mockMode = true;
+  void addFiles(generateMockDroppedFiles(mockUploadCount));
+}
 els.dandisetId.addEventListener("change", runConnectionCheck);
 document.getElementById("config-form")!.addEventListener("submit", (e) => e.preventDefault());
 els.oauthSigninBtn.addEventListener("click", () => void startLogin());
