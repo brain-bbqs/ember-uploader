@@ -6,6 +6,7 @@ import { humanSize, formatDuration } from "./lib/format";
 import { renderIdentity } from "./ui/connection";
 import { renderFileTree, setRevealCount, DEFAULT_REVEAL_COUNT } from "./ui/fileTree";
 import { createHashPool } from "./lib/etag-worker";
+import { openChecksumCache, checksumCacheKey } from "./lib/checksum-cache";
 import { planParts } from "./lib/etag";
 import { loadStoredSettings, saveStoredSettings, resolveConfig } from "./lib/settings";
 import { startLogin, handleRedirectCallback, ensureFreshToken, revokeToken } from "./lib/oauth";
@@ -23,7 +24,10 @@ declare const __APP_VERSION__: string;
 // across all cores instead of serializing on one worker, while the worker count stays bounded no
 // matter how many files are in flight. Workers are spawned lazily, not eagerly at page load.
 const FILE_CONCURRENCY = Math.max(1, Math.min(navigator.hardwareConcurrency || 4, 8));
-const hashPool = createHashPool(FILE_CONCURRENCY);
+// Part digests persist in IndexedDB across reloads and re-drops, so re-adding an unchanged file
+// skips re-hashing it (stores only file names/paths and MD5 digests — see SECURITY.md).
+const checksumCache = openChecksumCache();
+const hashPool = createHashPool(FILE_CONCURRENCY, checksumCache);
 
 const els = getElements();
 const activeUploads = new Set<AbortController>();
@@ -40,7 +44,7 @@ function updateCancelAllVisibility(): void {
 // Hashing starts the moment a file is dropped, not when "Upload" is clicked.
 const hashJobs = new Map<File, HashJob>();
 
-function startHashing(file: File, row: FileRow): HashJob {
+function startHashing(file: File, row: FileRow, relativePath: string): HashJob {
   ensureScanTimerStarted();
   const parts = planParts(file.size);
   row.setBadge("Scanning", "busy");
@@ -55,6 +59,7 @@ function startHashing(file: File, row: FileRow): HashJob {
       reportHashBytes(file, f * file.size);
     },
     abort.signal,
+    checksumCacheKey({ relativePath, name: file.name, size: file.size, lastModified: file.lastModified }),
   );
   promise
     .then(() => {
@@ -451,7 +456,7 @@ async function addFiles(entries: DroppedFile[]): Promise<void> {
     row.el.hidden = true;
     pending.push({ file: entry.file, row, path });
     totalBytes += entry.file.size;
-    startHashing(entry.file, row);
+    startHashing(entry.file, row, entry.relativePath);
     if ((i + 1) % ADD_FILES_CHUNK_SIZE === 0) await yieldToMain();
   }
   setRevealCount(els.fileList, Number(els.expandDepthInput.value));

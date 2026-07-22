@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.0.17
+
+#### 🚀 Enhancement
+
+- Added a persistent per-part checksum cache (IndexedDB): part digests are written through as hashing completes, so re-dropping an unchanged file — across page reloads or after a cancelled/interrupted scan — resumes from its already-hashed parts instead of re-hashing from scratch. Files are keyed by relative path + name + size + mtime (the strongest identity a browser exposes); since that is a heuristic, a fully cached file re-hashes one randomly chosen part and compares it against the cached digest before its etag is trusted, discarding the record and re-hashing everything on mismatch. Records are evicted least-recently-used past a ~10MB budget ([#26](https://github.com/brain-bbqs/ember-uploader/pull/26))
+
 ## 0.0.16
 
 #### 🚀 Enhancement
