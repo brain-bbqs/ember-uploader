@@ -65,10 +65,15 @@ test("tracks overall progress and per-outcome counts across a mixed batch", asyn
   await expect(page.locator("#progress-footer-right")).toContainText("0/2 files");
   await expect(page.locator("#progress-hash-text")).toContainText("32 B");
   await expect(page.locator("#progress-upload-text")).toContainText("32 B");
+  // Scanning finishes (in the background) well before Upload is even clicked, so its own file
+  // counter should reach 2/2 independently of the upload counter, which is still at 0/2.
+  await expect(page.locator("#progress-hash-text")).toContainText("2/2 files");
+  await expect(page.locator("#progress-upload-text")).toContainText("0/2 files");
 
   await page.locator("#upload-all-btn").click();
 
   await expect(page.locator("#progress-footer-right")).toContainText("2/2 files", { timeout: 15000 });
+  await expect(page.locator("#progress-upload-text")).toContainText("2/2 files");
   await expect(page.locator("#progress-footer-left")).toContainText("1 done");
   await expect(page.locator("#progress-footer-mid")).toContainText("1 skipped");
   const hashWidth = await page.locator("#progress-hash-fill").evaluate((el) => el.style.width);

@@ -4,11 +4,11 @@ import { initDropzone } from "./ui/dropzone";
 import { queueFileRow, uploadFile, type UploadOutcome, type HashJob } from "./ui/processFile";
 import { humanSize, formatDuration } from "./lib/format";
 import { renderIdentity } from "./ui/connection";
-import { renderFileTree, setExpandDepth, DEFAULT_EXPAND_DEPTH } from "./ui/fileTree";
+import { renderFileTree, setExpandCount, DEFAULT_MAX_ENTRIES } from "./ui/fileTree";
 import { createEtagWorker } from "./lib/etag-worker";
 import { planParts } from "./lib/etag";
 import { loadStoredSettings, saveStoredSettings, resolveConfig } from "./lib/settings";
-import { maxDepth, buildTree } from "./lib/fileTree";
+import { maxDirectEntries, buildTree } from "./lib/fileTree";
 import { startLogin, handleRedirectCallback, ensureFreshToken, revokeToken } from "./lib/oauth";
 import { listIncomingDandisets, type IncomingDandiset } from "./lib/dandisets";
 import type { UploaderConfig, OAuthTokenSet } from "./lib/types";
@@ -58,7 +58,10 @@ function startHashing(file: File, row: FileRow): HashJob {
     }),
   );
   promise
-    .then(() => reportHashBytes(file, file.size))
+    .then(() => {
+      hashedFiles++;
+      reportHashBytes(file, file.size);
+    })
     .catch(() => {
       /* surfaced again (and handled) once uploadFile awaits this same promise */
     })
@@ -76,11 +79,12 @@ function startHashing(file: File, row: FileRow): HashJob {
 let totalBytes = 0;
 let hashDoneBytes = 0;
 let uploadDoneBytes = 0;
+let hashedFiles = 0;
 let totalFiles = 0;
 const counts: Record<UploadOutcome, number> = { done: 0, skipped: 0, error: 0, cancelled: 0, blocked: 0 };
 const lastHashBytes = new Map<File, number>();
 const lastUploadBytes = new Map<File, number>();
-let treeMaxDepth = 0;
+let treeMaxEntries = 0;
 let scanStart: number | null = null;
 let uploadStart: number | null = null;
 let tickerRunning = false;
@@ -105,24 +109,38 @@ function elapsedMsSince(start: number | null): number {
   return start !== null ? performance.now() - start : 0;
 }
 
+// Hash/upload progress arrives in a flood of worker messages (one per 16MB chunk, across up to
+// 8 concurrent lanes). Coalescing them into at most one DOM update per animation frame keeps the
+// main thread from being swamped by redundant layout-invalidating writes.
+let progressUpdateScheduled = false;
+function scheduleProgressUpdate(): void {
+  if (progressUpdateScheduled) return;
+  progressUpdateScheduled = true;
+  requestAnimationFrame(() => {
+    progressUpdateScheduled = false;
+    updateProgressSummary();
+  });
+}
+
 function reportHashBytes(file: File, bytesDone: number): void {
   const prev = lastHashBytes.get(file) ?? 0;
   hashDoneBytes += bytesDone - prev;
   lastHashBytes.set(file, bytesDone);
-  updateProgressSummary();
+  scheduleProgressUpdate();
 }
 
 function reportUploadBytes(file: File, bytesDone: number): void {
   const prev = lastUploadBytes.get(file) ?? 0;
   uploadDoneBytes += bytesDone - prev;
   lastUploadBytes.set(file, bytesDone);
-  updateProgressSummary();
+  scheduleProgressUpdate();
 }
 
 function renderPhaseBar(
   fillEl: HTMLDivElement,
   textEl: HTMLSpanElement,
   phaseDoneBytes: number,
+  phaseDoneFiles: number,
   elapsedSec: number,
 ): void {
   const pct = totalBytes > 0 ? Math.min(100, Math.round((phaseDoneBytes / totalBytes) * 100)) : 0;
@@ -135,11 +153,15 @@ function renderPhaseBar(
   pctSpan.className = "stat-pct";
   pctSpan.textContent = `${pct}%`;
 
+  const filesSpan = document.createElement("span");
+  filesSpan.className = "stat-files";
+  filesSpan.textContent = `${phaseDoneFiles}/${totalFiles} files`;
+
   const bytesSpan = document.createElement("span");
   bytesSpan.className = "stat-bytes";
   bytesSpan.textContent = `(${humanSize(phaseDoneBytes)} / ${humanSize(totalBytes)})`;
 
-  const nodes: Node[] = [pctSpan, bytesSpan];
+  const nodes: Node[] = [pctSpan, filesSpan, bytesSpan];
   if (elapsedSec > 0) {
     const timingSpan = document.createElement("span");
     timingSpan.className = "stat-timing";
@@ -153,10 +175,22 @@ function renderPhaseBar(
 }
 
 function updateProgressSummary(): void {
-  renderPhaseBar(els.progressHashFill, els.progressHashText, hashDoneBytes, elapsedMsSince(scanStart) / 1000);
-  renderPhaseBar(els.progressUploadFill, els.progressUploadText, uploadDoneBytes, elapsedMsSince(uploadStart) / 1000);
-
   const finished = counts.done + counts.skipped + counts.error + counts.cancelled + counts.blocked;
+  renderPhaseBar(
+    els.progressHashFill,
+    els.progressHashText,
+    hashDoneBytes,
+    hashedFiles,
+    elapsedMsSince(scanStart) / 1000,
+  );
+  renderPhaseBar(
+    els.progressUploadFill,
+    els.progressUploadText,
+    uploadDoneBytes,
+    finished,
+    elapsedMsSince(uploadStart) / 1000,
+  );
+
   const leftParts: string[] = [];
   if (counts.done) leftParts.push(`${counts.done} done`);
   if (counts.error) leftParts.push(`${counts.error} error${counts.error === 1 ? "" : "s"}`);
@@ -164,15 +198,23 @@ function updateProgressSummary(): void {
   if (counts.blocked) leftParts.push(`${counts.blocked} blocked`);
   els.progressFooterLeft.textContent = leftParts.join(", ");
   els.progressFooterMid.textContent = counts.skipped ? `${counts.skipped} skipped` : "";
-  els.progressFooterRight.textContent = `${finished}/${totalFiles} files`;
+  els.progressFooterRight.textContent = `${finished}/${totalFiles} files done`;
 }
 
+// A tick per possible value would mean thousands of <option> elements for a folder with a
+// thousands-wide fanout — the same kind of unbounded DOM growth this file's other perf fixes
+// avoid — so cap it at a fixed number of evenly spaced ticks instead.
+const MAX_EXPAND_TICKS = 10;
+
 function updateExpandDepthRange(): void {
-  els.expandDepthInput.max = String(treeMaxDepth);
+  els.expandDepthInput.max = String(treeMaxEntries);
+  const tickCount = Math.min(MAX_EXPAND_TICKS, treeMaxEntries);
+  const step = tickCount > 0 ? treeMaxEntries / tickCount : 0;
+  const values = new Set(Array.from({ length: tickCount + 1 }, (_, i) => Math.round(i * step)));
   els.expandDepthTicks.replaceChildren(
-    ...Array.from({ length: treeMaxDepth + 1 }, (_, i) => {
+    ...Array.from(values, (v) => {
       const opt = document.createElement("option");
-      opt.value = String(i);
+      opt.value = String(v);
       return opt;
     }),
   );
@@ -355,22 +397,33 @@ function updateUploadBar(): void {
   els.uploadAllBtn.textContent = `Upload ${pending.length} file${pending.length === 1 ? "" : "s"}`;
 }
 
-function addFiles(entries: DroppedFile[]): void {
+// How many files to queue (create a row + start hashing) per animation frame. Doing this for an
+// entire large folder in one synchronous loop would block the browser from painting until it's
+// done, on top of the tree render itself.
+const ADD_FILES_CHUNK_SIZE = 200;
+
+function yieldToMain(): Promise<void> {
+  return new Promise((resolve) => requestAnimationFrame(() => resolve()));
+}
+
+async function addFiles(entries: DroppedFile[]): Promise<void> {
   const isFirstBatch = totalFiles === 0;
-  treeMaxDepth = Math.max(treeMaxDepth, maxDepth(buildTree(entries)));
+  treeMaxEntries = Math.max(treeMaxEntries, maxDirectEntries(buildTree(entries)));
   updateExpandDepthRange();
   if (isFirstBatch) {
-    els.expandDepthInput.value = String(Math.min(DEFAULT_EXPAND_DEPTH, treeMaxDepth));
+    els.expandDepthInput.value = String(Math.min(DEFAULT_MAX_ENTRIES, treeMaxEntries));
     els.expandDepthValue.textContent = els.expandDepthInput.value;
   }
 
-  const targets = renderFileTree(els.fileList, entries, Number(els.expandDepthInput.value));
-  for (const entry of entries) {
+  const targets = await renderFileTree(els.fileList, entries, Number(els.expandDepthInput.value));
+  for (let i = 0; i < entries.length; i++) {
+    const entry = entries[i];
     const container = targets.get(entry.file) ?? els.fileList;
     const { row, path } = queueFileRow(container, entry.file, entry.relativePath);
     pending.push({ file: entry.file, row, path });
     totalBytes += entry.file.size;
     startHashing(entry.file, row);
+    if ((i + 1) % ADD_FILES_CHUNK_SIZE === 0) await yieldToMain();
   }
   totalFiles += entries.length;
 
@@ -451,10 +504,18 @@ els.oauthSignoutBtn.addEventListener("click", () => {
   void refreshDandisetOptions();
 });
 void refreshDandisetOptions();
+// A range input fires "input" continuously while dragging (many events per second).
+// setExpandCount() walks every directory toggle in the tree, so coalescing to at most once per
+// animation frame keeps a drag from becoming an unresponsive flood of full-tree traversals.
+let expandDepthUpdateScheduled = false;
 els.expandDepthInput.addEventListener("input", () => {
-  const depth = Number(els.expandDepthInput.value);
-  els.expandDepthValue.textContent = String(depth);
-  setExpandDepth(els.fileList, depth);
+  els.expandDepthValue.textContent = els.expandDepthInput.value;
+  if (expandDepthUpdateScheduled) return;
+  expandDepthUpdateScheduled = true;
+  requestAnimationFrame(() => {
+    expandDepthUpdateScheduled = false;
+    setExpandCount(els.fileList, Number(els.expandDepthInput.value));
+  });
 });
 els.uploadAllBtn.addEventListener("click", () => void startUpload());
 els.cancelAllBtn.addEventListener("click", () => {

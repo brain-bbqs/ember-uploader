@@ -281,13 +281,13 @@ button.hint {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.85rem;
-  height: 1.85rem;
+  width: 2.44rem;
+  height: 2.44rem;
   border-radius: 50%;
   background: var(--card);
   border: 2px solid var(--ember-red);
   color: var(--ember-red);
-  font-size: 0.72rem;
+  font-size: 0.95rem;
   font-weight: 700;
   letter-spacing: 0.02em;
   flex-shrink: 0;
@@ -559,7 +559,7 @@ button.hint {
 
 .progress-phase-stats {
   flex-shrink: 0;
-  min-width: 27ch;
+  min-width: 36ch;
   font-size: 0.76rem;
   white-space: nowrap;
   text-align: right;
@@ -567,6 +567,10 @@ button.hint {
 .stat-pct {
   font-weight: 700;
   color: var(--accent);
+}
+.stat-files {
+  margin-left: 0.35rem;
+  color: var(--muted);
 }
 .stat-bytes {
   margin-left: 0.35rem;

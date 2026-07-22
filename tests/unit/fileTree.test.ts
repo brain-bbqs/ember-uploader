@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { buildTree, countDescendants, maxDepth, sumSize, type DroppedFile } from "../../src/lib/fileTree";
+import {
+  buildTree,
+  countDescendants,
+  directEntryCount,
+  maxDirectEntries,
+  sumSize,
+  type DroppedFile,
+} from "../../src/lib/fileTree";
 
 function fakeFile(name: string, size = 1): File {
   return new File([new Uint8Array(size)], name);
@@ -66,22 +73,46 @@ describe("sumSize", () => {
   });
 });
 
-describe("maxDepth", () => {
-  it("is zero for a node with only top-level files, no subfolders", () => {
-    const tree = buildTree([{ file: fakeFile("a.txt"), relativePath: "" }]);
-    expect(maxDepth(tree)).toBe(0);
+describe("directEntryCount", () => {
+  it("counts only immediate files and subfolders, not anything nested deeper", () => {
+    const entries: DroppedFile[] = [
+      { file: fakeFile("a.txt"), relativePath: "top" },
+      { file: fakeFile("b.txt"), relativePath: "top" },
+      { file: fakeFile("c.txt"), relativePath: "top/sub" },
+      { file: fakeFile("d.txt"), relativePath: "top/sub" },
+    ];
+    const tree = buildTree(entries);
+    const top = tree.dirs.get("top")!;
+    // top directly holds: a.txt, b.txt, and the "sub" folder itself = 3, regardless of what's inside "sub".
+    expect(directEntryCount(top)).toBe(3);
   });
 
-  it("counts the deepest nested chain of folders", () => {
-    const tree = buildTree([{ file: fakeFile("a.txt"), relativePath: "l1/l2/l3" }]);
-    expect(maxDepth(tree)).toBe(3);
+  it("is zero for an empty node", () => {
+    const tree = buildTree([]);
+    expect(directEntryCount(tree)).toBe(0);
   });
+});
 
-  it("takes the deepest of multiple branches", () => {
+describe("maxDirectEntries", () => {
+  it("is the root's own direct entry count when there are no subfolders", () => {
     const tree = buildTree([
-      { file: fakeFile("a.txt"), relativePath: "shallow" },
-      { file: fakeFile("b.txt"), relativePath: "deep/deeper/deepest" },
+      { file: fakeFile("a.txt"), relativePath: "" },
+      { file: fakeFile("b.txt"), relativePath: "" },
     ]);
-    expect(maxDepth(tree)).toBe(3);
+    expect(maxDirectEntries(tree)).toBe(2);
+  });
+
+  it("takes the folder with the most direct entries anywhere, not the one with the most nested descendants", () => {
+    const tree = buildTree([
+      // "wide" holds 5 files directly.
+      ...Array.from({ length: 5 }, (_, i) => ({ file: fakeFile(`w${i}.txt`), relativePath: "wide" })),
+      // "deep" spreads its files across two nesting levels, so no single node along that chain
+      // holds more than 4 direct entries — even though the full subtree (deep/nested1/nested2/*)
+      // ends up with more total descendants than "wide" has.
+      { file: fakeFile("n1.txt"), relativePath: "deep/nested1" },
+      ...Array.from({ length: 4 }, (_, i) => ({ file: fakeFile(`n2-${i}.txt`), relativePath: "deep/nested1/nested2" })),
+    ]);
+    expect(countDescendants(tree.dirs.get("deep")!)).toBeGreaterThan(countDescendants(tree.dirs.get("wide")!));
+    expect(maxDirectEntries(tree)).toBe(5);
   });
 });

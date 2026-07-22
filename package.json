@@ -1,6 +1,6 @@
 {
   "name": "ember-uploader",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "description": "A fully static, backend-free web page for uploading files to an existing dandiset on the EMBER Archive.",
   "type": "module",
   "license": "MIT",
