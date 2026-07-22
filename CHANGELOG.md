@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.5
+
+#### 🐛 Bug Fix
+
+- The "Incoming dataset" dropdown now always ranks its options by descending integer dandiset id (newest first), instead of the archive's title order ([#37](https://github.com/brain-bbqs/bbqs-uploader/pull/37))
+
 ## 0.1.4
 
 #### 🐛 Bug Fix
