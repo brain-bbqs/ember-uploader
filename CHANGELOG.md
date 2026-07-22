@@ -5,7 +5,7 @@
 #### 🚀 Enhancement
 
 - Redesigned the summary progress readout from tqdm-style text (`42% (1.4 GB / 3.4 GB) [01:23<02:45, 15 MB/s]`) into labeled stat chips: each phase now shows a headline percentage above a full-width bar, with captioned Scanned/Uploaded, Speed, Time left, and Files figures beneath it, set in the app font (with tabular numerals) instead of monospace ([#30](https://github.com/brain-bbqs/ember-uploader/pull/30))
-- Time-left estimates now read in plain words ("~3 minutes", "a few seconds") and round more coarsely as they grow, and the Speed figure is smoothed with a ~3s exponential moving average instead of the lifetime average, so both track current throughput without flickering ([#30](https://github.com/brain-bbqs/ember-uploader/pull/30))
+- Time-left estimates now read in plain words ("~3 minutes", "a few seconds") and round more coarsely as they grow, and the Speed figure is smoothed with a ~3s exponential moving average instead of the lifetime average, so both track current throughput without flickering; the Time left chip additionally shows "estimating…" during a phase's first 30 seconds of activity (counted from that phase's own first byte of progress), since instant checksum-cache hits at the start of a scan otherwise skew the early estimate far too low ([#30](https://github.com/brain-bbqs/ember-uploader/pull/30))
 - The summary bars now carry `role="progressbar"` with live `aria-valuenow`, so overall progress is announced to screen readers ([#30](https://github.com/brain-bbqs/ember-uploader/pull/30))
 
 #### 🐛 Bug Fix

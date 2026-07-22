@@ -112,14 +112,22 @@ function ensureTicker(): void {
 const RATE_WINDOW_SEC = 3;
 const RATE_SAMPLE_MIN_SEC = 0.25;
 
+// A phase's first ETA_WARMUP_SEC of activity shows "estimating…" instead of a time-left figure:
+// checksum-cache hits complete whole files instantly at the start of a scan, and those bursts
+// make the early estimate wildly optimistic (seconds shown for work that takes minutes). The
+// clock starts at the phase's own first byte of progress, not when the summary appears, so the
+// upload phase idling before "Upload" is clicked doesn't burn its warm-up on inactivity.
+const ETA_WARMUP_SEC = 30;
+
 interface RateTracker {
   lastSampleTime: number | null;
   lastSampleBytes: number;
   bytesPerSec: number;
+  firstProgressTime: number | null;
 }
 
-const hashRate: RateTracker = { lastSampleTime: null, lastSampleBytes: 0, bytesPerSec: 0 };
-const uploadRate: RateTracker = { lastSampleTime: null, lastSampleBytes: 0, bytesPerSec: 0 };
+const hashRate: RateTracker = { lastSampleTime: null, lastSampleBytes: 0, bytesPerSec: 0, firstProgressTime: null };
+const uploadRate: RateTracker = { lastSampleTime: null, lastSampleBytes: 0, bytesPerSec: 0, firstProgressTime: null };
 
 function sampleRate(tracker: RateTracker, doneBytes: number): number {
   const now = performance.now();
@@ -205,10 +213,22 @@ function renderPhaseBar(
   }
   const remaining = Math.max(0, totalBytes - phaseDoneBytes);
 
+  if (phaseDoneBytes > 0 && tracker.firstProgressTime === null) {
+    tracker.firstProgressTime = performance.now();
+  }
+  const warmingUp =
+    tracker.firstProgressTime === null || (performance.now() - tracker.firstProgressTime) / 1000 < ETA_WARMUP_SEC;
+
   chipEls.pct.textContent = `${pct}%`;
   setChipValue(chipEls.done, humanSize(phaseDoneBytes), `of ${humanSize(totalBytes)}`);
   chipEls.rate.textContent = rate > 0 ? `${humanSize(rate)}/s` : "—";
-  chipEls.eta.textContent = finished ? "done" : rate > 0 ? friendlyEta(remaining / rate) : "—";
+  chipEls.eta.textContent = finished
+    ? "done"
+    : rate <= 0
+      ? "—"
+      : warmingUp
+        ? "estimating…"
+        : friendlyEta(remaining / rate);
   setChipValue(chipEls.files, String(phaseDoneFiles), `of ${totalFiles}`);
 }
 
