@@ -13,8 +13,8 @@
         if (storedTheme === "light" || storedTheme === "dark") document.documentElement.dataset.theme = storedTheme;
       } catch (e) {}
     </script>
-    <script type="module" crossorigin src="./assets/index-D4Jy9BS6.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-BQjr09RF.css">
+    <script type="module" crossorigin src="./assets/index-D83Pzxx9.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-DIkLIkIi.css">
   </head>
   <body>
     <main>
@@ -192,19 +192,19 @@
             <span></span>
           </div>
         </div>
-        <div
-          id="dropzone"
-          tabindex="0"
-          role="button"
-          aria-label="Drop your research contents here, or click to browse."
-        >
+        <div id="dropzone">
           <div class="dz-inner">
             <div class="dz-icon">
               <span>🎥</span>
               <span>🔬</span>
               <span>📄</span>
             </div>
-            <p>Drop your research contents here, or click to browse.</p>
+            <p>
+              Drop your research contents here, or click to browse
+              <button type="button" id="browse-files-btn" class="dz-browse">files</button>
+              or select an entire
+              <button type="button" id="browse-folder-btn" class="dz-browse">folder</button>.
+            </p>
           </div>
           <input type="file" id="file-input" multiple hidden />
           <input type="file" id="folder-input" webkitdirectory multiple hidden />
