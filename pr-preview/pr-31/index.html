@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>BBQS Uploader</title>
+    <link rel="icon" href="./favicon.ico" />
+    <script>
+      // Applies the stored theme override before first paint so a saved dark/light choice doesn't
+      // flash the OS-preferred theme first. Key kept in sync with THEME_KEY in src/lib/settings.ts.
+      try {
+        var storedTheme = localStorage.getItem("dandi-mp4-uploader.theme");
+        if (storedTheme === "light" || storedTheme === "dark") document.documentElement.dataset.theme = storedTheme;
+      } catch (e) {}
+    </script>
+    <script type="module" crossorigin src="./assets/index-D4Jy9BS6.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-BQjr09RF.css">
+  </head>
+  <body>
+    <main>
+      <header class="site-header">
+        <img class="brand-logo" src="./assets/bbqs-logo-DsiqigcO.png" alt="BBQS" />
+        <h1>BBQS Uploader</h1>
+        <div id="oauth-row" class="oauth-row">
+          <button
+            type="button"
+            id="theme-toggle"
+            class="theme-toggle"
+            aria-label="Toggle light/dark mode"
+            title="Toggle light/dark mode"
+          >
+            <svg
+              class="theme-toggle-moon"
+              viewBox="0 0 24 24"
+              width="20"
+              height="20"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+            </svg>
+            <svg
+              class="theme-toggle-sun"
+              viewBox="0 0 24 24"
+              width="20"
+              height="20"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="12" r="5" />
+              <line x1="12" y1="1" x2="12" y2="3" />
+              <line x1="12" y1="21" x2="12" y2="23" />
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
+              <line x1="1" y1="12" x2="3" y2="12" />
+              <line x1="21" y1="12" x2="23" y2="12" />
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
+            </svg>
+          </button>
+          <button type="button" id="oauth-signin-btn" class="primary">Sign in with EMBER</button>
+          <div id="oauth-signed-in" class="oauth-signed-in" hidden>
+            <span id="oauth-avatar" class="oauth-avatar" tabindex="0" aria-label="Account menu"></span>
+            <div class="oauth-popover" role="menu">
+              <p class="oauth-popover-greeting">You are logged in as <strong id="oauth-username"></strong>.</p>
+              <hr class="oauth-popover-divider" />
+              <button type="button" id="oauth-signout-btn" class="oauth-popover-signout" role="menuitem">
+                <span>Sign out</span>
+                <svg
+                  class="oauth-popover-signout-icon"
+                  viewBox="0 0 24 24"
+                  width="14"
+                  height="14"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                  <polyline points="16 17 21 12 16 7" />
+                  <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <p class="site-subtitle">
+        <img class="site-subtitle-logo" src="./assets/ember-logo-BRFrWvat.png" alt="" />
+        <span>Your direct upload link to the EMBER-DANDI Archive</span>
+        <img class="site-subtitle-logo" src="./assets/ember-logo-BRFrWvat.png" alt="" />
+      </p>
+
+      <section class="card" id="config-card">
+        <div class="card-heading">
+          <h2>Dataset</h2>
+          <a id="view-dataset-link" class="view-dataset-link" target="_blank" rel="noopener" hidden>View dataset ↗</a>
+        </div>
+        <form id="config-form">
+          <div class="grid">
+            <select id="dandiset-id" hidden></select>
+            <p id="dandiset-message" class="dandiset-single">Please sign in to see your incoming datasets.</p>
+            <p id="dandiset-single" class="dandiset-single" hidden>
+              <span id="dandiset-single-text"></span>
+            </p>
+          </div>
+        </form>
+      </section>
+
+      <section class="card" id="drop-card">
+        <div id="progress-summary" class="progress-summary" hidden>
+          <div class="progress-phase">
+            <div class="progress-phase-head">
+              <span class="progress-phase-label">Scanning</span>
+              <span id="progress-hash-pct" class="progress-phase-pct"></span>
+            </div>
+            <div
+              class="progress-summary-bar"
+              role="progressbar"
+              aria-label="Scanning progress"
+              aria-valuemin="0"
+              aria-valuemax="100"
+            >
+              <div id="progress-hash-fill"></div>
+            </div>
+            <div class="progress-chips">
+              <div class="progress-chip">
+                <span class="progress-chip-label">Scanned</span>
+                <span id="progress-hash-done" class="progress-chip-value"></span>
+              </div>
+              <div class="progress-chip">
+                <span class="progress-chip-label">Speed</span>
+                <span id="progress-hash-rate" class="progress-chip-value"></span>
+              </div>
+              <div class="progress-chip">
+                <span class="progress-chip-label">Time left</span>
+                <span id="progress-hash-eta" class="progress-chip-value"></span>
+              </div>
+              <div class="progress-chip">
+                <span class="progress-chip-label">Files</span>
+                <span id="progress-hash-files" class="progress-chip-value"></span>
+              </div>
+            </div>
+          </div>
+          <div class="progress-phase">
+            <div class="progress-phase-head">
+              <span class="progress-phase-label">Uploading</span>
+              <span id="progress-upload-pct" class="progress-phase-pct"></span>
+            </div>
+            <div
+              class="progress-summary-bar"
+              role="progressbar"
+              aria-label="Upload progress"
+              aria-valuemin="0"
+              aria-valuemax="100"
+            >
+              <div id="progress-upload-fill"></div>
+            </div>
+            <div class="progress-chips">
+              <div class="progress-chip">
+                <span class="progress-chip-label">Uploaded</span>
+                <span id="progress-upload-done" class="progress-chip-value"></span>
+              </div>
+              <div class="progress-chip">
+                <span class="progress-chip-label">Speed</span>
+                <span id="progress-upload-rate" class="progress-chip-value"></span>
+              </div>
+              <div class="progress-chip">
+                <span class="progress-chip-label">Time left</span>
+                <span id="progress-upload-eta" class="progress-chip-value"></span>
+              </div>
+              <div class="progress-chip">
+                <span class="progress-chip-label">Files</span>
+                <span id="progress-upload-files" class="progress-chip-value"></span>
+              </div>
+            </div>
+          </div>
+          <div class="progress-summary-footer">
+            <span id="progress-footer-left"></span>
+            <span id="progress-footer-mid"></span>
+            <span></span>
+          </div>
+        </div>
+        <div
+          id="dropzone"
+          tabindex="0"
+          role="button"
+          aria-label="Drop your research contents here, or click to browse."
+        >
+          <div class="dz-inner">
+            <div class="dz-icon">
+              <span>🎥</span>
+              <span>🔬</span>
+              <span>📄</span>
+            </div>
+            <p>Drop your research contents here, or click to browse.</p>
+          </div>
+          <input type="file" id="file-input" multiple hidden />
+          <input type="file" id="folder-input" webkitdirectory multiple hidden />
+        </div>
+        <div id="upload-bar" class="upload-bar" hidden>
+          <button type="button" id="upload-all-btn" class="primary">Upload</button>
+          <button type="button" id="cancel-all-btn" hidden>Cancel</button>
+        </div>
+        <div id="dest-root" class="dest-root" hidden>
+          <code>sourcedata/raw/</code>
+          <span class="expand-control">
+            <span class="expand-slider">
+              <span class="expand-bubble" id="expand-depth-bubble"><span id="expand-depth-value">0</span> files</span>
+              <input type="range" id="expand-depth" min="0" max="0" value="0" step="1" aria-label="Files shown" />
+              <span class="expand-ruler" id="expand-depth-ticks" aria-hidden="true"></span>
+            </span>
+          </span>
+        </div>
+        <ul id="file-list"></ul>
+      </section>
+    </main>
+
+    <div class="page-footer-bar">
+      <div class="footer-left">
+        <a
+          id="version-indicator"
+          class="version-link"
+          href="https://github.com/brain-bbqs/ember-uploader"
+          target="_blank"
+          rel="noopener"
+          title="View source on GitHub"
+        ></a>
+        <button id="whats-new-button" class="whats-new-link" type="button">What's New</button>
+      </div>
+      <a
+        class="con-brand-link"
+        href="https://centerforopenneuroscience.org"
+        target="_blank"
+        rel="noopener"
+        aria-label="Center for Open Neuroscience"
+        title="Center for Open Neuroscience"
+      >
+        <img src="./assets/con-logo-F8_OuRqh.png" alt="Center for Open Neuroscience" />
+      </a>
+    </div>
+
+    <dialog id="whats-new-modal" class="whats-new-modal">
+      <div class="whats-new-modal-header">
+        <h2>What's New</h2>
+        <button id="whats-new-close" class="whats-new-close" type="button" aria-label="Close">&times;</button>
+      </div>
+      <div id="whats-new-content" class="whats-new-content"></div>
+      <button id="whats-new-show-more" class="whats-new-show-more" type="button" hidden>Show more</button>
+    </dialog>
+
+  </body>
+</html>
