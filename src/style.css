@@ -273,15 +273,6 @@ button.hint {
   align-items: center;
   gap: 0.75rem;
 }
-.auto-hash-toggle {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.8rem;
-  color: var(--muted);
-  cursor: pointer;
-  white-space: nowrap;
-}
 .oauth-signed-in {
   position: relative;
   display: inline-flex;

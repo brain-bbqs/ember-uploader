@@ -4,7 +4,6 @@
 
 #### 🚀 Enhancement
 
-- Added an "Auto-checksum on drop" toggle, top-right in the header; unchecked, a file's checksum is only computed once its upload reaches it instead of starting the moment it's dropped ([#23](https://github.com/brain-bbqs/ember-uploader/pull/23))
 - Made the signed-in avatar icon about a third larger ([#23](https://github.com/brain-bbqs/ember-uploader/pull/23))
 - Reworded the upload progress footer count from "X/Y files" to "X/Y files done", and added a separate "done/total files" counter to each of the Scanning and Uploading progress bars individually ([#23](https://github.com/brain-bbqs/ember-uploader/pull/23))
 

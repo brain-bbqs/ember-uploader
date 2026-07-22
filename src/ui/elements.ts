@@ -12,7 +12,6 @@ export function getElements() {
     oauthAvatar: required<HTMLSpanElement>("oauth-avatar"),
     oauthUsername: required<HTMLSpanElement>("oauth-username"),
     oauthSignoutBtn: required<HTMLButtonElement>("oauth-signout-btn"),
-    autoHashToggle: required<HTMLInputElement>("auto-hash-toggle"),
     dandisetMessage: required<HTMLParagraphElement>("dandiset-message"),
     dandisetSingle: required<HTMLParagraphElement>("dandiset-single"),
     dandisetSingleText: required<HTMLSpanElement>("dandiset-single-text"),

@@ -46,16 +46,6 @@ function runOnLane(lane: number, task: () => Promise<string>): Promise<string> {
   return next;
 }
 
-// Off by default, hashing starts the moment a file is dropped rather than waiting for "Upload".
-// Toggled off, a file's checksum is only computed once its upload actually reaches it — useful
-// both to defer the CPU/main-thread work and to check whether background hashing is behind a
-// given responsiveness problem.
-let autoHashEnabled = true;
-
-function getOrStartHashing(file: File, row: FileRow): HashJob {
-  return hashJobs.get(file) ?? startHashing(file, row);
-}
-
 function startHashing(file: File, row: FileRow): HashJob {
   ensureScanTimerStarted();
   const parts = planParts(file.size);
@@ -432,7 +422,7 @@ async function addFiles(entries: DroppedFile[]): Promise<void> {
     const { row, path } = queueFileRow(container, entry.file, entry.relativePath);
     pending.push({ file: entry.file, row, path });
     totalBytes += entry.file.size;
-    if (autoHashEnabled) startHashing(entry.file, row);
+    startHashing(entry.file, row);
     if ((i + 1) % ADD_FILES_CHUNK_SIZE === 0) await yieldToMain();
   }
   totalFiles += entries.length;
@@ -465,7 +455,7 @@ async function startUpload(): Promise<void> {
   const cfg = currentConfig();
 
   await runQueue(batch, async ({ file, row, path }) => {
-    const job = getOrStartHashing(file, row);
+    const job = hashJobs.get(file)!;
     const outcome = await uploadFile(
       row,
       file,
@@ -514,9 +504,6 @@ els.oauthSignoutBtn.addEventListener("click", () => {
   void refreshDandisetOptions();
 });
 void refreshDandisetOptions();
-els.autoHashToggle.addEventListener("change", () => {
-  autoHashEnabled = els.autoHashToggle.checked;
-});
 // A range input fires "input" continuously while dragging (many events per second).
 // setExpandCount() walks every directory toggle in the tree, so coalescing to at most once per
 // animation frame keeps a drag from becoming an unresponsive flood of full-tree traversals.
