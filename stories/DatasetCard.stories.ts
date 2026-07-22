@@ -37,9 +37,14 @@ export default {
   title: "Components/DatasetCard",
 };
 
-export const SignedOut = {
-  name: "Signed out",
-  render: () => buildDatasetCard("signed-out"),
+export const SignedOutLight = {
+  name: "Signed out (light)",
+  render: () => withTheme("light", () => buildDatasetCard("signed-out")),
+};
+
+export const SignedOutDark = {
+  name: "Signed out (dark)",
+  render: () => withTheme("dark", () => buildDatasetCard("signed-out")),
 };
 
 export const ZeroDatasetsLight = {
@@ -52,12 +57,22 @@ export const ZeroDatasetsDark = {
   render: () => withTheme("dark", () => buildDatasetCard("zero")),
 };
 
-export const MultipleDatasets = {
-  name: "Multiple datasets",
-  render: () => buildDatasetCard("dropdown"),
+export const MultipleDatasetsLight = {
+  name: "Multiple datasets (light)",
+  render: () => withTheme("light", () => buildDatasetCard("dropdown")),
 };
 
-export const SingleDataset = {
-  name: "Single dataset",
-  render: () => buildDatasetCard("single"),
+export const MultipleDatasetsDark = {
+  name: "Multiple datasets (dark)",
+  render: () => withTheme("dark", () => buildDatasetCard("dropdown")),
+};
+
+export const SingleDatasetLight = {
+  name: "Single dataset (light)",
+  render: () => withTheme("light", () => buildDatasetCard("single")),
+};
+
+export const SingleDatasetDark = {
+  name: "Single dataset (dark)",
+  render: () => withTheme("dark", () => buildDatasetCard("single")),
 };
