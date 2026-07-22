@@ -119,20 +119,75 @@
       <section class="card" id="drop-card">
         <div id="progress-summary" class="progress-summary" hidden>
           <div class="progress-phase">
-            <span class="progress-phase-label">Scanning</span>
-            <div class="progress-summary-bar"><div id="progress-hash-fill"></div></div>
-            <span id="progress-hash-text" class="progress-phase-stats progress-mono"></span>
+            <div class="progress-phase-head">
+              <span class="progress-phase-label">Scanning</span>
+              <span id="progress-hash-pct" class="progress-phase-pct"></span>
+            </div>
+            <div
+              class="progress-summary-bar"
+              role="progressbar"
+              aria-label="Scanning progress"
+              aria-valuemin="0"
+              aria-valuemax="100"
+            >
+              <div id="progress-hash-fill"></div>
+            </div>
+            <div class="progress-chips">
+              <div class="progress-chip">
+                <span class="progress-chip-label">Scanned</span>
+                <span id="progress-hash-done" class="progress-chip-value"></span>
+              </div>
+              <div class="progress-chip">
+                <span class="progress-chip-label">Speed</span>
+                <span id="progress-hash-rate" class="progress-chip-value"></span>
+              </div>
+              <div class="progress-chip">
+                <span class="progress-chip-label">Time left</span>
+                <span id="progress-hash-eta" class="progress-chip-value"></span>
+              </div>
+              <div class="progress-chip">
+                <span class="progress-chip-label">Files</span>
+                <span id="progress-hash-files" class="progress-chip-value"></span>
+              </div>
+            </div>
           </div>
-          <div class="progress-phase-files"><span id="progress-hash-files" class="progress-mono"></span></div>
           <div class="progress-phase">
-            <span class="progress-phase-label">Uploading</span>
-            <div class="progress-summary-bar"><div id="progress-upload-fill"></div></div>
-            <span id="progress-upload-text" class="progress-phase-stats progress-mono"></span>
+            <div class="progress-phase-head">
+              <span class="progress-phase-label">Uploading</span>
+              <span id="progress-upload-pct" class="progress-phase-pct"></span>
+            </div>
+            <div
+              class="progress-summary-bar"
+              role="progressbar"
+              aria-label="Upload progress"
+              aria-valuemin="0"
+              aria-valuemax="100"
+            >
+              <div id="progress-upload-fill"></div>
+            </div>
+            <div class="progress-chips">
+              <div class="progress-chip">
+                <span class="progress-chip-label">Uploaded</span>
+                <span id="progress-upload-done" class="progress-chip-value"></span>
+              </div>
+              <div class="progress-chip">
+                <span class="progress-chip-label">Speed</span>
+                <span id="progress-upload-rate" class="progress-chip-value"></span>
+              </div>
+              <div class="progress-chip">
+                <span class="progress-chip-label">Time left</span>
+                <span id="progress-upload-eta" class="progress-chip-value"></span>
+              </div>
+              <div class="progress-chip">
+                <span class="progress-chip-label">Files</span>
+                <span id="progress-upload-files" class="progress-chip-value"></span>
+              </div>
+            </div>
           </div>
           <div class="progress-summary-footer">
             <span id="progress-footer-left"></span>
             <span id="progress-footer-mid"></span>
-            <span id="progress-upload-files" class="progress-mono"></span>
+            <span></span>
           </div>
         </div>
         <div

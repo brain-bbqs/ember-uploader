@@ -2,7 +2,7 @@ import "./style.css";
 import { getElements } from "./ui/elements";
 import { initDropzone } from "./ui/dropzone";
 import { queueFileRow, uploadFile, type UploadOutcome, type HashJob } from "./ui/processFile";
-import { humanSize, formatDuration } from "./lib/format";
+import { humanSize, friendlyEta } from "./lib/format";
 import { renderIdentity } from "./ui/connection";
 import { renderFileTree, setRevealCount, DEFAULT_REVEAL_COUNT } from "./ui/fileTree";
 import { createHashPool } from "./lib/etag-worker";
@@ -45,7 +45,7 @@ function updateCancelAllVisibility(): void {
 const hashJobs = new Map<File, HashJob>();
 
 function startHashing(file: File, row: FileRow, relativePath: string): HashJob {
-  ensureScanTimerStarted();
+  ensureTicker();
   const parts = planParts(file.size);
   row.setBadge("Scanning", "busy");
   const abort = new AbortController();
@@ -96,8 +96,6 @@ let totalFiles = 0;
 const counts: Record<UploadOutcome, number> = { done: 0, replaced: 0, error: 0, cancelled: 0, blocked: 0 };
 const lastHashBytes = new Map<File, number>();
 const lastUploadBytes = new Map<File, number>();
-let scanStart: number | null = null;
-let uploadStart: number | null = null;
 let tickerRunning = false;
 
 function ensureTicker(): void {
@@ -106,18 +104,38 @@ function ensureTicker(): void {
   window.setInterval(updateProgressSummary, 500);
 }
 
-function ensureScanTimerStarted(): void {
-  ensureTicker();
-  scanStart ??= performance.now();
+// The "Speed" chips show an exponential moving average over roughly the last RATE_WINDOW_SEC of
+// samples rather than the lifetime average: the lifetime figure keeps misreporting for minutes
+// after a stall or a burst, while raw per-update deltas flicker. Samples closer together than
+// RATE_SAMPLE_MIN_SEC are folded into the next one, so the rAF-coalesced bursts of worker
+// messages don't feed near-zero dt into the average.
+const RATE_WINDOW_SEC = 3;
+const RATE_SAMPLE_MIN_SEC = 0.25;
+
+interface RateTracker {
+  lastSampleTime: number | null;
+  lastSampleBytes: number;
+  bytesPerSec: number;
 }
 
-function ensureUploadTimerStarted(): void {
-  ensureTicker();
-  uploadStart ??= performance.now();
-}
+const hashRate: RateTracker = { lastSampleTime: null, lastSampleBytes: 0, bytesPerSec: 0 };
+const uploadRate: RateTracker = { lastSampleTime: null, lastSampleBytes: 0, bytesPerSec: 0 };
 
-function elapsedMsSince(start: number | null): number {
-  return start !== null ? performance.now() - start : 0;
+function sampleRate(tracker: RateTracker, doneBytes: number): number {
+  const now = performance.now();
+  if (tracker.lastSampleTime === null) {
+    tracker.lastSampleTime = now;
+    tracker.lastSampleBytes = doneBytes;
+    return tracker.bytesPerSec;
+  }
+  const dt = (now - tracker.lastSampleTime) / 1000;
+  if (dt < RATE_SAMPLE_MIN_SEC) return tracker.bytesPerSec;
+  const instantaneous = (doneBytes - tracker.lastSampleBytes) / dt;
+  const alpha = 1 - Math.exp(-dt / RATE_WINDOW_SEC);
+  tracker.bytesPerSec += alpha * (instantaneous - tracker.bytesPerSec);
+  tracker.lastSampleTime = now;
+  tracker.lastSampleBytes = doneBytes;
+  return tracker.bytesPerSec;
 }
 
 // Hash/upload progress arrives in a flood of worker messages (one per 16MB chunk, across up to
@@ -147,62 +165,80 @@ function reportUploadBytes(file: File, bytesDone: number): void {
   scheduleProgressUpdate();
 }
 
+interface PhaseChipEls {
+  fill: HTMLDivElement;
+  pct: HTMLSpanElement;
+  done: HTMLSpanElement;
+  rate: HTMLSpanElement;
+  eta: HTMLSpanElement;
+  files: HTMLSpanElement;
+}
+
+// Chip values pair a primary figure with a quieter suffix ("1.4 GB" + "of 3.4 GB"), composed
+// from text nodes rather than markup strings.
+function setChipValue(el: HTMLSpanElement, main: string, sub: string): void {
+  const subSpan = document.createElement("span");
+  subSpan.className = "progress-chip-sub";
+  subSpan.textContent = ` ${sub}`;
+  el.replaceChildren(document.createTextNode(main), subSpan);
+}
+
 function renderPhaseBar(
-  fillEl: HTMLDivElement,
-  textEl: HTMLSpanElement,
-  filesEl: HTMLSpanElement,
+  chipEls: PhaseChipEls,
+  tracker: RateTracker,
   phaseDoneBytes: number,
   phaseDoneFiles: number,
-  elapsedSec: number,
 ): void {
   const pct = totalBytes > 0 ? Math.min(100, Math.round((phaseDoneBytes / totalBytes) * 100)) : 0;
-  fillEl.style.width = `${pct}%`;
-  const rate = elapsedSec > 0 ? phaseDoneBytes / elapsedSec : 0;
-  const remaining = Math.max(0, totalBytes - phaseDoneBytes);
-  const etaSec = rate > 0 ? remaining / rate : NaN;
+  chipEls.fill.style.width = `${pct}%`;
+  chipEls.fill.parentElement?.setAttribute("aria-valuenow", String(pct));
 
-  // The simple bold file counter lives below and to the right of the bar, not in the byte-level
-  // stats line beside it.
-  filesEl.textContent = `${phaseDoneFiles}/${totalFiles} files`;
-
-  const pctSpan = document.createElement("span");
-  pctSpan.className = "stat-pct";
-  pctSpan.textContent = `${pct}%`;
-
-  const bytesSpan = document.createElement("span");
-  bytesSpan.className = "stat-bytes";
-  bytesSpan.textContent = `(${humanSize(phaseDoneBytes)} / ${humanSize(totalBytes)})`;
-
-  const nodes: Node[] = [pctSpan, bytesSpan];
-  if (elapsedSec > 0) {
-    const timingSpan = document.createElement("span");
-    timingSpan.className = "stat-timing";
-    timingSpan.textContent =
-      rate > 0
-        ? `[${formatDuration(elapsedSec)}<${formatDuration(etaSec)}, ${humanSize(rate)}/s]`
-        : `[${formatDuration(elapsedSec)}]`;
-    nodes.push(timingSpan);
+  const finished = totalBytes > 0 && phaseDoneBytes >= totalBytes;
+  // Freeze the smoothed rate once the phase completes (re-baselining for any later batch),
+  // instead of letting further zero-delta samples decay the final figure toward 0 on screen.
+  let rate: number;
+  if (finished) {
+    rate = tracker.bytesPerSec;
+    tracker.lastSampleTime = null;
+  } else {
+    rate = sampleRate(tracker, phaseDoneBytes);
   }
-  textEl.replaceChildren(...nodes);
+  const remaining = Math.max(0, totalBytes - phaseDoneBytes);
+
+  chipEls.pct.textContent = `${pct}%`;
+  setChipValue(chipEls.done, humanSize(phaseDoneBytes), `of ${humanSize(totalBytes)}`);
+  chipEls.rate.textContent = rate > 0 ? `${humanSize(rate)}/s` : "—";
+  chipEls.eta.textContent = finished ? "done" : rate > 0 ? friendlyEta(remaining / rate) : "—";
+  setChipValue(chipEls.files, String(phaseDoneFiles), `of ${totalFiles}`);
 }
 
 function updateProgressSummary(): void {
   const finished = counts.done + counts.replaced + counts.error + counts.cancelled + counts.blocked;
   renderPhaseBar(
-    els.progressHashFill,
-    els.progressHashText,
-    els.progressHashFiles,
+    {
+      fill: els.progressHashFill,
+      pct: els.progressHashPct,
+      done: els.progressHashDone,
+      rate: els.progressHashRate,
+      eta: els.progressHashEta,
+      files: els.progressHashFiles,
+    },
+    hashRate,
     hashDoneBytes,
     hashedFiles,
-    elapsedMsSince(scanStart) / 1000,
   );
   renderPhaseBar(
-    els.progressUploadFill,
-    els.progressUploadText,
-    els.progressUploadFiles,
+    {
+      fill: els.progressUploadFill,
+      pct: els.progressUploadPct,
+      done: els.progressUploadDone,
+      rate: els.progressUploadRate,
+      eta: els.progressUploadEta,
+      files: els.progressUploadFiles,
+    },
+    uploadRate,
     uploadDoneBytes,
     finished,
-    elapsedMsSince(uploadStart) / 1000,
   );
 
   const leftParts: string[] = [];
@@ -511,15 +547,8 @@ async function startUpload(): Promise<void> {
 
   await runQueue(batch, async ({ file, row, path }) => {
     const job = hashJobs.get(file)!;
-    const outcome = await uploadFile(
-      row,
-      file,
-      path,
-      cfg,
-      activeUploads,
-      job,
-      (bytesDone) => reportUploadBytes(file, bytesDone),
-      ensureUploadTimerStarted,
+    const outcome = await uploadFile(row, file, path, cfg, activeUploads, job, (bytesDone) =>
+      reportUploadBytes(file, bytesDone),
     );
     counts[outcome]++;
     updateProgressSummary();

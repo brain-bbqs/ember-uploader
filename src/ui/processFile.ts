@@ -38,8 +38,6 @@ export async function uploadFile(
   hashJob: HashJob,
   // Reports bytes uploaded so far for this file (0..file.size), for an aggregate progress bar.
   onUploadProgress?: (bytesDone: number) => void,
-  // Fires once, right before the first real byte leaves for S3 (not on blocked/error).
-  onUploadStart?: () => void,
 ): Promise<UploadOutcome> {
   const problems = configProblems(cfg);
   if (problems.length) {
@@ -66,7 +64,6 @@ export async function uploadFile(
     const existing = await findExistingAsset(cfg, path);
 
     // --- 3. Blob upload --------------------------------------------------
-    onUploadStart?.();
     const { blobId, reused } = await uploadBlob(
       cfg,
       file,

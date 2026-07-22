@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatDuration, humanSize, initialsFrom } from "../../src/lib/format";
+import { friendlyEta, humanSize, initialsFrom } from "../../src/lib/format";
 
 describe("humanSize", () => {
   it("formats bytes with the right unit", () => {
@@ -9,22 +9,33 @@ describe("humanSize", () => {
   });
 });
 
-describe("formatDuration", () => {
-  it("formats seconds as mm:ss", () => {
-    expect(formatDuration(5)).toBe("00:05");
-    expect(formatDuration(65)).toBe("01:05");
-    expect(formatDuration(3599)).toBe("59:59");
+describe("friendlyEta", () => {
+  it("keeps very short estimates vague", () => {
+    expect(friendlyEta(0)).toBe("a few sec");
+    expect(friendlyEta(9)).toBe("a few sec");
   });
 
-  it("formats past an hour as h:mm:ss", () => {
-    expect(formatDuration(3600)).toBe("1:00:00");
-    expect(formatDuration(3661)).toBe("1:01:01");
+  it("rounds sub-minute estimates to 5 seconds", () => {
+    expect(friendlyEta(12)).toBe("~10 sec");
+    expect(friendlyEta(42)).toBe("~40 sec");
+  });
+
+  it("promotes near-minute and sub-hour estimates to minutes", () => {
+    expect(friendlyEta(58)).toBe("~1 min");
+    expect(friendlyEta(170)).toBe("~3 min");
+    expect(friendlyEta(59.4 * 60)).toBe("~59 min");
+  });
+
+  it("formats hour-scale estimates as hours and minutes", () => {
+    expect(friendlyEta(59.5 * 60)).toBe("~1 hr");
+    expect(friendlyEta(3650)).toBe("~1 hr 1 min");
+    expect(friendlyEta(2 * 3600)).toBe("~2 hr");
   });
 
   it("falls back to a placeholder for non-finite or negative input", () => {
-    expect(formatDuration(NaN)).toBe("--:--");
-    expect(formatDuration(Infinity)).toBe("--:--");
-    expect(formatDuration(-5)).toBe("--:--");
+    expect(friendlyEta(NaN)).toBe("—");
+    expect(friendlyEta(Infinity)).toBe("—");
+    expect(friendlyEta(-5)).toBe("—");
   });
 });
 

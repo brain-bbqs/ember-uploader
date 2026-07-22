@@ -646,25 +646,31 @@ button.hint {
 }
 
 .progress-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
   margin-bottom: 1rem;
 }
-/* Each bar hugs its own "N/M files" counter line (small margin below), while the counter's
-   larger bottom margin separates the Scanning group from the Uploading group. */
-.progress-phase {
+/* Phase name on the left, headline percentage on the right, sitting directly above the bar. */
+.progress-phase-head {
   display: flex;
-  align-items: center;
+  align-items: baseline;
+  justify-content: space-between;
   gap: 0.5rem;
-  margin-bottom: 0.05rem;
+  margin-bottom: 0.3rem;
 }
 /* Styled exactly like .file-name, so the bar titles read like the per-file rows' names. */
 .progress-phase-label {
-  flex-shrink: 0;
-  width: 4.4rem;
   font-size: 0.85rem;
   font-weight: 600;
 }
+.progress-phase-pct {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
 .progress-summary-bar {
-  flex: 1;
   height: 8px;
   border-radius: 4px;
   background: var(--border);
@@ -678,42 +684,34 @@ button.hint {
   transition: width 0.15s linear;
 }
 
-.progress-mono {
-  font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+/* Every live figure gets its own captioned chip below the bar, so no number needs decoding. */
+.progress-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.6rem;
+  margin-top: 0.45rem;
+}
+.progress-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+}
+.progress-chip-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.progress-chip-value {
+  font-size: 0.82rem;
+  font-weight: 600;
   font-variant-numeric: tabular-nums;
 }
-
-.progress-phase-stats {
-  flex-shrink: 0;
-  min-width: 28ch;
-  font-size: 0.76rem;
-  white-space: nowrap;
-  text-align: right;
-}
-.stat-pct {
-  font-weight: 700;
-  color: var(--accent);
-}
-.stat-bytes {
-  margin-left: 0.35rem;
-  color: var(--text);
-  opacity: 0.72;
-}
-.stat-timing {
-  margin-left: 0.45rem;
+.progress-chip-sub {
+  font-size: 0.74rem;
+  font-weight: 500;
   color: var(--muted);
-}
-
-/* The per-bar file counters sit below and to the right of their bar, styled like the footer's
-   original bold count (the Uploading one lives in the footer's right cell, which is exactly
-   that position). */
-.progress-phase-files {
-  margin-bottom: 0.75rem;
-  font-size: 0.78rem;
-  font-weight: 600;
-  line-height: 1.2;
-  color: var(--muted);
-  text-align: right;
 }
 
 .progress-summary-footer {
