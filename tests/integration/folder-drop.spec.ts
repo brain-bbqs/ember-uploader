@@ -19,15 +19,17 @@ test("recursive folder selection derives sourcedata/raw paths and skips .git", a
   await expect(page.locator("#file-list .file-item")).toHaveCount(1);
   await expect(row).toHaveAttribute("title", `sourcedata/raw/${dirName}/session1/a.txt`);
 
-  // Both dirName/ and session1/ directly hold only 1 entry each (a subfolder, then a.txt) — the
-  // slider's range should match that exactly, and default to showing both expanded since 1 is
-  // within the default (30).
+  // The slider now ranges over the total number of dropped files (1 here), and defaults to
+  // revealing everything since 1 is within the default reveal count (30). The ruler's quarter
+  // labels dedupe down to just "0" and "1" for a single-file drop.
   await expect(page.locator("#expand-depth")).toHaveAttribute("max", "1");
   expect(await page.locator("#expand-depth").inputValue()).toBe("1");
-  await expect(page.locator("#expand-depth-ticks option")).toHaveCount(2);
+  await expect(page.locator("#expand-depth-ticks .tick-label")).toHaveCount(2);
 });
 
-test("a folder with more than 30 entries renders collapsed by default", async ({ page }) => {
+test("a folder with more than 30 files reveals the first 30 and truncates the rest with a placeholder", async ({
+  page,
+}) => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "ember-upload-big-"));
   const bigDir = path.join(dir, "bigfolder");
   fs.mkdirSync(bigDir);
@@ -38,16 +40,24 @@ test("a folder with more than 30 entries renders collapsed by default", async ({
   await page.goto("/");
   await page.locator("#folder-input").setInputFiles(dir);
 
-  // "bigfolder" itself holds the 35 files directly, so it's the one that starts collapsed — its
-  // wrapping parent folder (the selected directory) has no files of its own and stays expanded.
+  // Folder rows are always visible and expanded; the slider only governs file rows.
   const toggle = page.locator(".dir-toggle", { hasText: "bigfolder/" });
   await expect(toggle).toBeVisible();
-  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
 
-  const nestedChildren = toggle.locator("+ .dir-children");
-  await expect(nestedChildren).toBeHidden();
-  // The 35 file rows exist in the DOM (queued) but are hidden behind the collapsed folder.
+  // All 35 file rows are queued in the DOM, but only the default reveal count (30) is visible;
+  // the truncation is signposted by a free "… N more files" placeholder row.
+  await expect(page.locator("#expand-depth")).toHaveAttribute("max", "35");
+  expect(await page.locator("#expand-depth").inputValue()).toBe("30");
+  await expect(page.locator("#expand-depth-bubble")).toHaveText("30 files");
   await expect(page.locator("#file-list .file-item")).toHaveCount(35);
-  await expect(page.locator("#file-list .file-item").first()).toBeHidden();
-  // Click-to-expand itself is covered by the jsdom unit test in tests/unit/fileTree.dom.test.ts.
+  await expect(page.locator("#file-list .file-item:visible")).toHaveCount(30);
+  await expect(page.locator("#file-list .more-files")).toHaveText("… 5 more files");
+
+  // Dragging the slider to the max reveals every row, drops the placeholder, and the value
+  // bubble riding the thumb tracks the new count.
+  await page.locator("#expand-depth").fill("35");
+  await expect(page.locator("#expand-depth-bubble")).toHaveText("35 files");
+  await expect(page.locator("#file-list .file-item:visible")).toHaveCount(35);
+  await expect(page.locator("#file-list .more-files")).toHaveCount(0);
 });
