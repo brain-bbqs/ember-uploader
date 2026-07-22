@@ -14,7 +14,7 @@
     "test:integration": "playwright test --config configs/playwright.config.ts",
     "test:chromatic": "playwright test --config configs/playwright.chromatic.config.ts",
     "typecheck": "tsc --noEmit",
-    "lint": "eslint .",
+    "lint": "eslint --config configs/eslint.config.js .",
     "format": "prettier --config configs/prettier.config.cjs --write .",
     "format:check": "prettier --config configs/prettier.config.cjs --check .",
     "storybook": "storybook dev -p 6006 --config-dir configs/storybook",

@@ -21,6 +21,21 @@ repos:
           # Keep in sync with the prettier version locked in package-lock.json.
           - prettier@3.9.5
 
+  - repo: https://github.com/pre-commit/mirrors-eslint
+    rev: v9.39.1
+    hooks:
+      - id: eslint
+        # The upstream hook only targets .js (types: [javascript]); widen it to this
+        # repo's TypeScript and CommonJS config files too.
+        types: [file]
+        files: \.(js|cjs|mjs|ts|tsx)$
+        args: [--fix, --config, configs/eslint.config.js]
+        additional_dependencies:
+          - eslint@9.39.5
+          - "@eslint/js@9.39.5"
+          - typescript-eslint@8.64.0
+          - typescript@5.9.3
+
   - repo: https://github.com/codespell-project/codespell
     rev: v2.4.1
     hooks:
