@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.2
+
+#### 🚀 Enhancement
+
+- Added a few tips below the subtitle for achieving optimal transfer speeds (SSD storage, wired Ethernet, Fiber internet, and a link to check baseline upload speed) ([#34](https://github.com/brain-bbqs/ember-uploader/pull/34))
+
 ## 0.1.1
 
 #### 🚀 Enhancement
