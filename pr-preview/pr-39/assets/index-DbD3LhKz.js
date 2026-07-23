@@ -20,7 +20,7 @@ var e=Object.create,t=Object.defineProperty,n=Object.getOwnPropertyDescriptor,r=
 
 #### 🐛 Bug Fix
 
-- The "Incoming dataset" dropdown now always ranks its options by descending integer dandiset id (newest first), instead of the archive's title order ([#37](https://github.com/brain-bbqs/bbqs-uploader/pull/37))
+- The "Incoming dataset" dropdown now always ranks its options by descending integer dandiset id (newest first), instead of the archive's title order ([#39](https://github.com/brain-bbqs/bbqs-uploader/pull/39))
 
 ## 0.1.4
 
