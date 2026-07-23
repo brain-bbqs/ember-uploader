@@ -19,7 +19,7 @@ var e=Object.create,t=Object.defineProperty,n=Object.getOwnPropertyDescriptor,r=
 
 #### 🐛 Bug Fix
 
-- Hid the dropzone (drag-and-drop / browse files / browse folder) until the user is signed in, instead of letting a signed-out visitor drop files that could never actually upload ([#46](https://github.com/brain-bbqs/bbqs-uploader/pull/46))
+- Hid the dropzone (drag-and-drop / browse files / browse folder) until the user is signed in, instead of letting a signed-out visitor drop files that could never actually upload ([#47](https://github.com/brain-bbqs/bbqs-uploader/pull/47))
 
 ## 0.1.11
 
