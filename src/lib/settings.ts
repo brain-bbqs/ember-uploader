@@ -1,6 +1,7 @@
 import type { StoredSettings, UploaderConfig } from "./types";
 import { EMBER_INSTANCE } from "./instances";
 
+// Also read by the inline pre-paint script in index.html — keep the two literals in sync.
 export const STORAGE_KEY = "bbqs-uploader.settings.v1";
 // Also read by the inline pre-paint script in index.html — keep the two literals in sync.
 export const THEME_KEY = "bbqs-uploader.theme";

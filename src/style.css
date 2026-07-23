@@ -230,6 +230,12 @@ button.primary {
 #oauth-signin-btn:focus-visible {
   outline-color: var(--ember-red);
 }
+/* Set on <html> by index.html's pre-paint script when stored OAuth tokens exist, so a refresh
+   while already signed in doesn't flash this button before main.ts's renderAuthUI() determines
+   the real state and clears the attribute. */
+:root[data-signed-in="1"] #oauth-signin-btn {
+  display: none;
+}
 
 .dandiset-single {
   display: flex;

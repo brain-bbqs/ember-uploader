@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.8
+
+#### 🐛 Bug Fix
+
+- The "Sign in with EMBER" button no longer flashes on refresh for an already-signed-in visitor; a pre-paint script in `index.html` now hides it before first paint when stored OAuth tokens are found, matching the existing theme-flash fix ([#41](https://github.com/brain-bbqs/bbqs-uploader/pull/41))
+
 ## 0.1.7
 
 #### 🏠 Internal

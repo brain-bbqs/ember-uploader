@@ -1,6 +1,6 @@
 {
   "name": "bbqs-uploader",
-  "version": "0.1.7",
+  "version": "0.1.8",
   "description": "A fully static, backend-free web page for uploading files to an existing dandiset on the EMBER Archive.",
   "type": "module",
   "license": "MIT",
