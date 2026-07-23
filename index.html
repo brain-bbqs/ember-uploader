@@ -25,8 +25,8 @@
         }
       } catch (e) {}
     </script>
-    <script type="module" crossorigin src="./assets/index-CQLu73Fn.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-C5LH4z4X.css">
+    <script type="module" crossorigin src="./assets/index-dEZRxxVr.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-CGda37v6.css">
   </head>
   <body>
     <main>
@@ -243,6 +243,7 @@
         <div id="upload-bar" class="upload-bar" hidden>
           <button type="button" id="upload-all-btn" class="primary">Upload</button>
           <button type="button" id="cancel-all-btn" hidden>Cancel</button>
+          <button type="button" id="reset-all-btn" class="reset-all-btn">Reset</button>
         </div>
         <div id="dest-root" class="dest-root" hidden>
           <code>sourcedata/raw/</code>
@@ -268,7 +269,17 @@
           rel="noopener"
           title="View source on GitHub"
         ></a>
+        <span class="footer-dot" aria-hidden="true">&middot;</span>
         <button id="whats-new-button" class="whats-new-link" type="button">What's New</button>
+        <span class="footer-dot" aria-hidden="true">&middot;</span>
+        <button
+          id="clear-scan-cache-btn"
+          class="whats-new-link"
+          type="button"
+          title="Forget cached file scan digests, so the next drop of any file re-scans it from scratch"
+        >
+          Clear scan cache
+        </button>
       </div>
       <a
         class="con-brand-link"
