@@ -11,9 +11,13 @@ const API = EMBER_INSTANCE.api;
 test.describe("dataset dropdown ordering", () => {
   test.beforeEach(async ({ page }) => {
     await seedTheme(page, "light");
+    // Merges with (rather than clobbers) any settings already in localStorage, since this init
+    // script re-runs on every navigation including reload() -- overwriting unconditionally would
+    // wipe out a dandisetId the app had just saved before a reload-persistence test reloads.
     await page.addInitScript(
       ({ key, expiresAt }) => {
-        localStorage.setItem(key, JSON.stringify({ oauth: { accessToken: "test-token", expiresAt } }));
+        const existing = JSON.parse(localStorage.getItem(key) ?? "{}");
+        localStorage.setItem(key, JSON.stringify({ ...existing, oauth: { accessToken: "test-token", expiresAt } }));
       },
       { key: STORAGE_KEY, expiresAt: Date.now() + 3600_000 },
     );
@@ -41,5 +45,15 @@ test.describe("dataset dropdown ordering", () => {
     await expect(options.nth(0)).toHaveText("Incoming: Alpha Lab (000100)");
     await expect(options.nth(1)).toHaveText("Incoming: Beta Lab (000200)");
     await expect(options.nth(2)).toHaveText("Incoming: Gamma Lab (000300)");
+  });
+
+  test("persists a manually picked dataset across reloads", async ({ page }) => {
+    await page.goto("/");
+    await expect(page.locator("#dandiset-id")).toHaveValue("000100");
+
+    await page.locator("#dandiset-id").selectOption("000300");
+    await page.reload();
+
+    await expect(page.locator("#dandiset-id")).toHaveValue("000300");
   });
 });

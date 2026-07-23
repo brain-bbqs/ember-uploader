@@ -5,6 +5,7 @@
 #### 🐛 Bug Fix
 
 - The "Incoming dataset" dropdown now always ranks its options by ascending integer dandiset id (oldest first), instead of the archive's title order ([#39](https://github.com/brain-bbqs/bbqs-uploader/pull/39))
+- Manually picking a different dataset from the "Incoming dataset" dropdown now actually persists across reloads; the dropdown's `change` handler previously only refreshed the OAuth token and "View dataset" link without saving the new selection, so a reload always reverted to whichever dataset was auto-selected the first time the list loaded ([#39](https://github.com/brain-bbqs/bbqs-uploader/pull/39))
 
 ## 0.1.5
 

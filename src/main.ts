@@ -660,6 +660,7 @@ async function startUpload(): Promise<void> {
 }
 
 function runConnectionCheck(): void {
+  saveSettings();
   void (async () => {
     await ensureFreshOAuth();
     updateViewDatasetLink();
