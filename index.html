@@ -12,9 +12,21 @@
         var storedTheme = localStorage.getItem("bbqs-uploader.theme");
         if (storedTheme === "light" || storedTheme === "dark") document.documentElement.dataset.theme = storedTheme;
       } catch (e) {}
+      // Swaps the sign-in button for the (still-empty) signed-in avatar slot before first paint
+      // when a previous session's tokens are still in storage, so refreshing while already signed
+      // in neither flashes the sign-in button nor pops the avatar in afterwards and shifts the
+      // theme toggle sideways (the header's oauth-row is right-aligned). main.ts's renderAuthUI()
+      // clears this attribute once the real state is known. Key kept in sync with STORAGE_KEY in
+      // src/lib/settings.ts.
+      try {
+        var storedSettings = JSON.parse(localStorage.getItem("bbqs-uploader.settings.v1"));
+        if (storedSettings && storedSettings.oauth && storedSettings.oauth.accessToken) {
+          document.documentElement.dataset.signedIn = "1";
+        }
+      } catch (e) {}
     </script>
-    <script type="module" crossorigin src="./assets/index-DJjL5QTL.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-B5K2I74k.css">
+    <script type="module" crossorigin src="./assets/index-Cpuv4jbM.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-BCS8qpSx.css">
   </head>
   <body>
     <main>
