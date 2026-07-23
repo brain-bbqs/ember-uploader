@@ -507,6 +507,7 @@ function renderAuthUI(): void {
   const signedIn = !forceSignedOut && !!oauthTokens;
   els.oauthSigninBtn.hidden = signedIn;
   els.oauthSignedIn.hidden = !signedIn;
+  els.dropzone.hidden = !signedIn;
   // Once the real auth state is known, this element-level hidden state is authoritative; the
   // pre-paint script's stand-in attribute (see index.html) is no longer needed.
   delete document.documentElement.dataset.signedIn;

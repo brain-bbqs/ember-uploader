@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.12
+
+#### 🐛 Bug Fix
+
+- Hid the dropzone (drag-and-drop / browse files / browse folder) until the user is signed in, instead of letting a signed-out visitor drop files that could never actually upload ([#46](https://github.com/brain-bbqs/bbqs-uploader/pull/46))
+
 ## 0.1.11
 
 #### 🐛 Bug Fix
