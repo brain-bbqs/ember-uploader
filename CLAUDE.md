@@ -7,5 +7,5 @@
 - This project has no formal releases, so there is no `## Upcoming` staging section in `CHANGELOG.md`. Leave a short description of the change or addition directly under the top-most version heading (the same version just bumped in `package.json`; create the heading if it does not yet exist) under the appropriate subsection (`#### 🚀 Enhancement`, `#### 🐛 Bug Fix`, or `#### 🏠 Internal`); create the subsection if it does not yet exist; include the GitHub PR link at the end of each entry in the format `([#N](https://github.com/brain-bbqs/bbqs-uploader/pull/N))`
 - PR titles should be human-readable and in the past tense; they should NOT use conventional commit style
 - Keep PR descriptions short and to the point
-- Limit use of em-dashes in all text
+- Limit use of em-dashes in all text. Before committing any change to `CHANGELOG.md`, grep the newly added entries for `—` and rewrite any hits (commas, parentheses, or semicolons work well) before committing
 - Before storing any new credential/token client-side, adding/changing `innerHTML`/`outerHTML`/`insertAdjacentHTML` usage, or responding to a CodeQL "clear text storage of sensitive data" alert, read `SECURITY.md`
