@@ -48,6 +48,7 @@ export function getElements() {
     resetAllBtn: required<HTMLButtonElement>("reset-all-btn"),
     viewDatasetLink: required<HTMLAnchorElement>("view-dataset-link"),
     versionIndicator: required<HTMLAnchorElement>("version-indicator"),
+    clearScanCacheBtn: required<HTMLButtonElement>("clear-scan-cache-btn"),
     themeToggle: required<HTMLButtonElement>("theme-toggle"),
     whatsNewButton: required<HTMLButtonElement>("whats-new-button"),
     whatsNewModal: required<HTMLDialogElement>("whats-new-modal"),

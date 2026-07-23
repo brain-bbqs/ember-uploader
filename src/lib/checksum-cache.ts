@@ -54,6 +54,8 @@ export interface ChecksumCache {
   flush(key: string): Promise<void>;
   /** Drops the stored record and any buffered parts for this file (verification mismatch). */
   discard(key: string): Promise<void>;
+  /** Drops every stored record and any buffered parts (user-triggered "clear scan cache"). */
+  clear(): Promise<void>;
   close(): void;
 }
 
@@ -291,6 +293,17 @@ export function openChecksumCache(options: ChecksumCacheOptions = {}): ChecksumC
     discard(key) {
       pending.delete(key);
       return enqueue(key, (db) => deleteRecord(db, key));
+    },
+
+    async clear() {
+      pending.clear();
+      try {
+        const db = await openDb();
+        await requestToPromise(db.transaction(STORE, "readwrite").objectStore(STORE).clear());
+        totalBytes = 0;
+      } catch {
+        /* best-effort, same as the rest of this file's storage operations */
+      }
     },
 
     close() {

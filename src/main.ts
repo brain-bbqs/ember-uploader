@@ -67,6 +67,8 @@ function registerHashJob(
   const promise = start(abort.signal);
   promise
     .then(() => {
+      // Skip bookkeeping for a file resetUploader() already forgot about (Reset clicked mid-scan).
+      if (!hashJobs.has(file)) return;
       hashedFiles++;
       reportHashBytes(file, file.size);
       row.hideBadge();
@@ -267,6 +269,9 @@ function scheduleProgressUpdate(): void {
 }
 
 function reportHashBytes(file: File, bytesDone: number): void {
+  // A late progress tick from a scan resetUploader() already forgot about would otherwise
+  // re-seed lastHashBytes and skew the next batch's totals.
+  if (!hashJobs.has(file)) return;
   const prev = lastHashBytes.get(file) ?? 0;
   hashDoneBytes += bytesDone - prev;
   lastHashBytes.set(file, bytesDone);
@@ -274,6 +279,7 @@ function reportHashBytes(file: File, bytesDone: number): void {
 }
 
 function reportUploadBytes(file: File, bytesDone: number): void {
+  if (!hashJobs.has(file)) return;
   const prev = lastUploadBytes.get(file) ?? 0;
   uploadDoneBytes += bytesDone - prev;
   lastUploadBytes.set(file, bytesDone);
@@ -674,7 +680,10 @@ async function startUpload(): Promise<void> {
   const cfg = currentConfig();
 
   await runQueue(batch, FILE_CONCURRENCY, async ({ file, row, path }) => {
-    const job = hashJobs.get(file)!;
+    // A Reset clicked mid-batch drops every file's hash job out from under this still-running
+    // queue; treat a file resetUploader() already forgot about as a no-op rather than crashing.
+    const job = hashJobs.get(file);
+    if (!job) return;
     const outcome = mockMode
       ? await mockUploadFile(row, file, job, (bytesDone) => reportUploadBytes(file, bytesDone))
       : await uploadFile(row, file, path, cfg, activeUploads, job, (bytesDone) => reportUploadBytes(file, bytesDone));
@@ -794,6 +803,16 @@ els.cancelAllBtn.addEventListener("click", () => {
   for (const controller of activeUploads) controller.abort();
 });
 els.resetAllBtn.addEventListener("click", resetUploader);
+els.clearScanCacheBtn.addEventListener("click", () => {
+  void checksumCache.clear();
+  const original = els.clearScanCacheBtn.textContent;
+  els.clearScanCacheBtn.disabled = true;
+  els.clearScanCacheBtn.textContent = "Scan cache cleared";
+  window.setTimeout(() => {
+    els.clearScanCacheBtn.disabled = false;
+    els.clearScanCacheBtn.textContent = original;
+  }, 1500);
+});
 window.addEventListener("beforeunload", (e) => {
   if (activeUploads.size > 0) {
     e.preventDefault();

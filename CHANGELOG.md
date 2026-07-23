@@ -5,6 +5,11 @@
 #### 🚀 Enhancement
 
 - Added a "Reset" button to the far right of the upload bar that clears the file queue back to the empty state, cancelling any in-progress scanning or uploading first ([#44](https://github.com/brain-bbqs/bbqs-uploader/pull/44))
+- Added a "Clear scan cache" button next to the version/What's New links that forgets every cached file scan digest, so the next drop of any file re-scans it from scratch ([#44](https://github.com/brain-bbqs/bbqs-uploader/pull/44))
+
+#### 🐛 Bug Fix
+
+- Fixed a bug where clicking "Reset" while an upload batch was still running left the rest of that batch reading from bookkeeping Reset had already cleared, surfacing a spurious "Cannot read properties of undefined (reading 'promise')" error in the console for files that were mid-queue at the time ([#44](https://github.com/brain-bbqs/bbqs-uploader/pull/44))
 
 ## 0.1.9
 
