@@ -5,6 +5,7 @@
 #### 🐛 Bug Fix
 
 - Hitting "Cancel" no longer leaves the scanning/uploading summary bars' speed and time-left estimates climbing without bound: the rate tracker kept resampling a stalled byte count every tick once a cancelled phase stopped making progress, decaying the smoothed speed toward 0 and sending the "time left" estimate toward infinity. The summary bars now freeze in place — at whatever percentage cancellation actually landed on — instead of continuing to grow the estimate, or (for a cancellation specifically, as opposed to a real per-file error) jumping straight to 100%/"done" ([#45](https://github.com/brain-bbqs/bbqs-uploader/pull/45))
+- Uploading content that's already stored server-side under a different (or the same) path no longer provokes a console-logged 409 from `/uploads/initialize/`: the client now checks `/blobs/digest/` for a matching blob before ever attempting to initialize an upload, instead of relying on the 409 response to signal a match ([#45](https://github.com/brain-bbqs/bbqs-uploader/pull/45))
 
 ## 0.1.9
 

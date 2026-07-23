@@ -11,6 +11,20 @@ export interface UploadBlobResult {
   reused: boolean;
 }
 
+/** Looks up an already-uploaded blob by content digest, or null if none exists yet. */
+async function findBlobByDigest(cfg: UploaderConfig, etag: string): Promise<string | null> {
+  try {
+    const blob = (await apiFetch<{ blob_id: string }>(cfg, "/blobs/digest/", {
+      method: "POST",
+      json: { algorithm: "dandi:dandi-etag", value: etag },
+    }))!;
+    return blob.blob_id;
+  } catch (e) {
+    if (e instanceof ApiError && e.status === 404) return null;
+    throw e;
+  }
+}
+
 export async function uploadBlob(
   cfg: UploaderConfig,
   file: File,
@@ -19,7 +33,19 @@ export async function uploadBlob(
   onProgress: (fraction: number) => void,
   signal?: AbortSignal,
 ): Promise<UploadBlobResult> {
-  // Initialize; a 409 means an identical blob already exists server-side.
+  // Check for an already-uploaded blob with this exact digest before ever attempting to
+  // initialize a new upload. This is the common case for re-uploading unchanged content
+  // (checksum-cache hits, re-dropped folders): without this check, /uploads/initialize/ would
+  // reject it with a 409 to signal the same thing, which the browser logs to the console as a
+  // failed request regardless of the app catching and handling it.
+  const existingBlob = await findBlobByDigest(cfg, etag);
+  if (existingBlob) {
+    onProgress(1);
+    return { blobId: existingBlob, reused: true };
+  }
+
+  // Initialize; a 409 here means a blob with this digest appeared between the check above and
+  // this call (e.g. a concurrent uploader), rather than the common case the check above avoids.
   let init: UploadInitResponse;
   try {
     init = (await apiFetch<UploadInitResponse>(cfg, "/uploads/initialize/", {

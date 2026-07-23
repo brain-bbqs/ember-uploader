@@ -100,8 +100,17 @@ test("replaces via the server digest fast-path (409) without re-transferring byt
     route.fulfill({ json: { results: [{ asset_id: "existing-1", path: "sourcedata/raw/clip.mp4" }], next: null } }),
   );
   // 409 = the server already holds a blob with this digest; no S3 traffic should follow.
+  // The pre-upload digest check (which would otherwise short-circuit this before ever reaching
+  // /uploads/initialize/) misses it the first time, simulating a blob that appears concurrently
+  // between that check and this call — the fallback lookup after the 409 is what's under test.
+  let digestCalls = 0;
+  await page.route(`${API}/blobs/digest/`, (route: Route) => {
+    digestCalls++;
+    return digestCalls === 1
+      ? route.fulfill({ status: 404, body: "no blob with this digest" })
+      : route.fulfill({ json: { blob_id: "blob-1" } });
+  });
   await page.route(`${API}/uploads/initialize/`, (route: Route) => route.fulfill({ status: 409, body: "blob exists" }));
-  await page.route(`${API}/blobs/digest/`, (route: Route) => route.fulfill({ json: { blob_id: "blob-1" } }));
   await page.route(`${S3}/**`, (route: Route) => {
     bytesUploaded = true;
     return route.fulfill({ status: 500, body: "" });

@@ -26,6 +26,9 @@ export async function mockUploadApi(page: Page, { partSize = 32 }: MockUploadApi
   await page.route(`${API}/dandisets/000123/versions/draft/assets/?path=*`, (route: Route) =>
     route.fulfill({ json: { results: [], next: null } }),
   );
+  await page.route(`${API}/blobs/digest/`, (route: Route) =>
+    route.fulfill({ status: 404, body: "no blob with this digest" }),
+  );
   await page.route(`${API}/uploads/initialize/`, (route: Route) =>
     route.fulfill({
       json: {
