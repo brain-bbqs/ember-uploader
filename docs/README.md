@@ -4,13 +4,13 @@
 
 `npm test` runs unit tests, `npm run test:integration` runs Playwright. Paste one of these into the address bar:
 
-| URL                    | What it should look like                                                |
-| ---------------------- | ----------------------------------------------------------------------- |
-| `?test&num_datasets=0` | No-datasets-found message                                               |
-| `?test&num_datasets=1` | Single dataset, shown as plain text with an archive link                |
-| `?test&num_datasets=2` | Dropdown with 2 fake datasets                                           |
-| `?test&mock_upload=25` | A nested batch of 25 fake files, scanning then uploading                |
-| `?test&signed_out`     | The page as a signed-out visitor sees it, regardless of your real state |
+| URL                    | What it should look like                                                | Try it                                                                  |
+| ---------------------- | ----------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `?test&num_datasets=0` | No-datasets-found message                                               | [Open](https://brain-bbqs.github.io/bbqs-uploader/?test&num_datasets=0) |
+| `?test&num_datasets=1` | Single dataset, shown as plain text with an archive link                | [Open](https://brain-bbqs.github.io/bbqs-uploader/?test&num_datasets=1) |
+| `?test&num_datasets=2` | Dropdown with 2 fake datasets                                           | [Open](https://brain-bbqs.github.io/bbqs-uploader/?test&num_datasets=2) |
+| `?test&mock_upload=25` | A nested batch of 25 fake files, scanning then uploading                | [Open](https://brain-bbqs.github.io/bbqs-uploader/?test&mock_upload=25) |
+| `?test&signed_out`     | The page as a signed-out visitor sees it, regardless of your real state | [Open](https://brain-bbqs.github.io/bbqs-uploader/?test&signed_out)     |
 
 `?test` alone (without one of the above) is a no-op that never changes anything by itself.
 
