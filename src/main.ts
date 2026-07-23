@@ -507,16 +507,20 @@ function applyDatasetList(datasets: IncomingDandiset[]): void {
     );
     return;
   }
+  // Dropdown mode (more than one dataset) always ranks options by ascending integer id, oldest
+  // dandiset first, regardless of the order the archive returned them in.
+  const ordered =
+    datasets.length > 1 ? [...datasets].sort((a, b) => Number(a.identifier) - Number(b.identifier)) : datasets;
   els.dandisetId.replaceChildren(
-    ...datasets.map((d) => {
+    ...ordered.map((d) => {
       const opt = document.createElement("option");
       opt.value = d.identifier;
       opt.textContent = `${d.title} (${d.identifier})`;
       return opt;
     }),
   );
-  const match = datasets.find((d) => d.identifier === storedDandisetId);
-  const selected = match ?? datasets[0];
+  const match = ordered.find((d) => d.identifier === storedDandisetId);
+  const selected = match ?? ordered[0];
   // The select stays populated even when hidden (single-dataset view) so currentConfig() keeps
   // reading a real dandiset id from it.
   els.dandisetId.value = selected.identifier;
@@ -656,6 +660,7 @@ async function startUpload(): Promise<void> {
 }
 
 function runConnectionCheck(): void {
+  saveSettings();
   void (async () => {
     await ensureFreshOAuth();
     updateViewDatasetLink();
