@@ -58,6 +58,25 @@ test("recursive folder selection skips Python cache files and folders", async ({
   await expect(page.locator("#file-list .file-item")).toHaveCount(1);
 });
 
+test("a folder containing an empty file still reveals every other file and the expand slider", async ({ page }) => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "bbqs-upload-empty-"));
+  const bigDir = path.join(dir, "bigfolder");
+  fs.mkdirSync(bigDir);
+  for (let i = 0; i < 5; i++) {
+    fs.writeFileSync(path.join(bigDir, `file-${i}.txt`), String(i));
+  }
+  // An empty file used to throw synchronously out of the per-entry hashing loop, aborting the
+  // rest of the batch: every row after it stayed hidden and the expand slider never appeared.
+  fs.writeFileSync(path.join(bigDir, "empty.txt"), "");
+
+  await page.goto("/");
+  await page.locator("#folder-input").setInputFiles(dir);
+
+  await expect(page.locator("#file-list .file-item")).toHaveCount(6);
+  await expect(page.locator("#file-list .file-item:visible")).toHaveCount(6);
+  await expect(page.locator("#expand-depth")).toHaveAttribute("max", "6");
+});
+
 test("the dropzone browse links open the file and folder pickers respectively", async ({ page }) => {
   await page.goto("/");
 

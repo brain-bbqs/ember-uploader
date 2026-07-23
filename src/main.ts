@@ -92,7 +92,19 @@ function registerHashJob(
 
 function startHashing(file: File, row: FileRow, relativePath: string): HashJob {
   if (mockMode) return startMockHashing(file, row);
-  const parts = planParts(file.size);
+  // planParts() throws synchronously for files it can't plan (e.g. empty files, which DANDI
+  // rejects). Since startHashing runs inline inside addFiles()'s per-entry loop, an uncaught
+  // throw here would abort that loop partway through a drop, leaving the rest of the batch
+  // (and the reveal pass after the loop) never queued. Routing it through registerHashJob
+  // instead turns it into an ordinary rejected hash promise, so it surfaces later as a normal
+  // "Error" row when uploadFile awaits it, the same as any other hash failure.
+  let parts: FilePart[];
+  try {
+    parts = planParts(file.size);
+  } catch (e) {
+    const error = e instanceof Error ? e : new Error(String(e));
+    return registerHashJob(file, row, [], () => Promise.reject(error));
+  }
   return registerHashJob(file, row, parts, (signal) =>
     hashPool.hash(
       file,
