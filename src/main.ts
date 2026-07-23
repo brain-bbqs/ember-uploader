@@ -90,7 +90,32 @@ function registerHashJob(
   return job;
 }
 
+// Debug-only escape hatch that pins every scan at its just-started state: "?test&freeze_scan"
+// hands each dropped file a hash job that never settles (it still rejects on "Cancel all"), so
+// the "Scanning" badge, Cancel button, and 0% summary figures hold still indefinitely. The
+// Chromatic file-queued snapshot relies on this: a real scan of a tiny file finishes in
+// milliseconds, racing the end-of-test capture between the mid-scan and scan-finished states —
+// see docs/README.md.
+function readTestFreezeScanOverride(): boolean {
+  const params = new URLSearchParams(window.location.search);
+  return params.has("test") && params.has("freeze_scan");
+}
+const freezeScan = readTestFreezeScanOverride();
+
+function startFrozenHashing(file: File, row: FileRow): HashJob {
+  return registerHashJob(
+    file,
+    row,
+    [],
+    (signal) =>
+      new Promise<string>((_, reject) => {
+        signal.addEventListener("abort", () => reject(new DOMException("Aborted", "AbortError")), { once: true });
+      }),
+  );
+}
+
 function startHashing(file: File, row: FileRow, relativePath: string): HashJob {
+  if (freezeScan) return startFrozenHashing(file, row);
   if (mockMode) return startMockHashing(file, row);
   // planParts() throws synchronously for files it can't plan (e.g. empty files, which DANDI
   // rejects). Since startHashing runs inline inside addFiles()'s per-entry loop, an uncaught

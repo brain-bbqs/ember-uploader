@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.7
+
+#### 🏠 Internal
+
+- Fixed the flaky Chromatic "file queued" snapshot: the real scan of the test's tiny file finished in milliseconds, racing the end-of-test capture between the mid-scan and scan-finished appearances. A new `?test&freeze_scan` live test injection pins every dropped file at its just-started scanning state (badge, Cancel button, 0% figures; "Cancel all" still works), and the snapshot test now uses it plus asserts the pinned state before capture ([#40](https://github.com/brain-bbqs/bbqs-uploader/pull/40))
+
 ## 0.1.6
 
 #### 🐛 Bug Fix

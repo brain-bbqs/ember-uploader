@@ -11,6 +11,7 @@
 | `?test&num_datasets=2` | Dropdown with 2 fake datasets                                           | [Open](https://brain-bbqs.github.io/bbqs-uploader/?test&num_datasets=2) |
 | `?test&mock_upload=25` | A nested batch of 25 fake files, scanning then uploading                | [Open](https://brain-bbqs.github.io/bbqs-uploader/?test&mock_upload=25) |
 | `?test&signed_out`     | The page as a signed-out visitor sees it, regardless of your real state | [Open](https://brain-bbqs.github.io/bbqs-uploader/?test&signed_out)     |
+| `?test&freeze_scan`    | Every dropped file hangs mid-scan (badge, Cancel button, 0% figures)    | [Open](https://brain-bbqs.github.io/bbqs-uploader/?test&freeze_scan)    |
 
 `?test` alone (without one of the above) is a no-op that never changes anything by itself.
 
@@ -22,3 +23,5 @@ No bytes are read, hashed, or sent anywhere.
 While it's active, every file (including a genuinely dropped one) runs through the same simulated timers, so don't combine this with a real upload.
 
 `signed_out` forces every auth-dependent render (the header's sign-in control, the Dataset card, upload blocking) to behave as if signed out, without ever touching `oauthTokens` or `localStorage`, so it also works while genuinely signed in.
+
+`freeze_scan` gives every dropped file a scan that never finishes: the "Scanning" badge, Cancel button, and 0% summary figures hold still indefinitely (a real scan of a small file finishes in milliseconds, too fast to look at or screenshot). "Cancel all" still cancels the frozen scans. The Chromatic file-queued snapshot uses this to capture the mid-scan state deterministically.
