@@ -10,11 +10,12 @@ test("recursive folder selection derives sourcedata/raw paths and skips .git", a
   fs.writeFileSync(path.join(dir, "session1", "a.txt"), "a");
   fs.mkdirSync(path.join(dir, ".git"));
   fs.writeFileSync(path.join(dir, ".git", "config"), "ignored");
+  fs.writeFileSync(path.join(dir, ".noannex"), "ignored");
 
   await page.goto("/");
   await page.locator("#folder-input").setInputFiles(dir);
 
-  // Only a.txt should surface — the .git/config file must be filtered out.
+  // Only a.txt should surface — the .git/config file and top-level .noannex must be filtered out.
   const row = page.locator("#file-list .file-item").first();
   await expect(page.locator("#file-list .file-item")).toHaveCount(1);
   await expect(row).toHaveAttribute("title", `sourcedata/raw/${dirName}/session1/a.txt`);
@@ -25,6 +26,56 @@ test("recursive folder selection derives sourcedata/raw paths and skips .git", a
   await expect(page.locator("#expand-depth")).toHaveAttribute("max", "1");
   expect(await page.locator("#expand-depth").inputValue()).toBe("1");
   await expect(page.locator("#expand-depth-ticks .tick-label")).toHaveCount(2);
+});
+
+test("recursive folder selection skips device-specific hidden files like .DS_Store", async ({ page }) => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "bbqs-upload-"));
+  fs.mkdirSync(path.join(dir, "session1"));
+  fs.writeFileSync(path.join(dir, "session1", "a.txt"), "a");
+  fs.writeFileSync(path.join(dir, "session1", ".DS_Store"), "junk");
+  fs.writeFileSync(path.join(dir, "Thumbs.db"), "junk");
+
+  await page.goto("/");
+  await page.locator("#folder-input").setInputFiles(dir);
+
+  // Only a.txt should surface — the .DS_Store and Thumbs.db files must be filtered out.
+  await expect(page.locator("#file-list .file-item")).toHaveCount(1);
+});
+
+test("recursive folder selection skips Python cache files and folders", async ({ page }) => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "bbqs-upload-"));
+  fs.mkdirSync(path.join(dir, "session1"));
+  fs.writeFileSync(path.join(dir, "session1", "a.txt"), "a");
+  fs.mkdirSync(path.join(dir, "session1", "__pycache__"));
+  fs.writeFileSync(path.join(dir, "session1", "__pycache__", "analysis.cpython-312.pyc"), "junk");
+  fs.writeFileSync(path.join(dir, "session1", "analysis.pyc"), "junk");
+  fs.mkdirSync(path.join(dir, ".pytest_cache"));
+  fs.writeFileSync(path.join(dir, ".pytest_cache", "README.md"), "junk");
+
+  await page.goto("/");
+  await page.locator("#folder-input").setInputFiles(dir);
+
+  // Only a.txt should surface — the __pycache__/, *.pyc, and .pytest_cache/ entries must be filtered out.
+  await expect(page.locator("#file-list .file-item")).toHaveCount(1);
+});
+
+test("a folder containing an empty file still reveals every other file and the expand slider", async ({ page }) => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "bbqs-upload-empty-"));
+  const bigDir = path.join(dir, "bigfolder");
+  fs.mkdirSync(bigDir);
+  for (let i = 0; i < 5; i++) {
+    fs.writeFileSync(path.join(bigDir, `file-${i}.txt`), String(i));
+  }
+  // An empty file used to throw synchronously out of the per-entry hashing loop, aborting the
+  // rest of the batch: every row after it stayed hidden and the expand slider never appeared.
+  fs.writeFileSync(path.join(bigDir, "empty.txt"), "");
+
+  await page.goto("/");
+  await page.locator("#folder-input").setInputFiles(dir);
+
+  await expect(page.locator("#file-list .file-item")).toHaveCount(6);
+  await expect(page.locator("#file-list .file-item:visible")).toHaveCount(6);
+  await expect(page.locator("#expand-depth")).toHaveAttribute("max", "6");
 });
 
 test("the dropzone browse links open the file and folder pickers respectively", async ({ page }) => {

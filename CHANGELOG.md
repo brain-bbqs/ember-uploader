@@ -1,10 +1,19 @@
 # Changelog
 
-## 0.1.5
+## 0.1.6
 
 #### 🐛 Bug Fix
 
 - The "Incoming dataset" dropdown now always ranks its options by ascending integer dandiset id (oldest first), instead of the archive's title order ([#39](https://github.com/brain-bbqs/bbqs-uploader/pull/39))
+
+## 0.1.5
+
+#### 🐛 Bug Fix
+
+- Device-specific hidden files (`.DS_Store`, `Thumbs.db`, `desktop.ini`, AppleDouble `._*` sidecar files, `$RECYCLE.BIN`, etc.) dropped or selected as part of a folder are now filtered out before upload, instead of only VCS folders like `.git` ([#38](https://github.com/brain-bbqs/bbqs-uploader/pull/38))
+- `.noannex` is now also filtered out alongside `.git`, `.datalad`, and `.git-annex` ([#38](https://github.com/brain-bbqs/bbqs-uploader/pull/38))
+- Python cache/tooling artifacts (`__pycache__/`, `*.pyc`, `*.pyo`, `.pytest_cache/`, `.mypy_cache/`, `.ruff_cache/`, `.ipynb_checkpoints/`) dropped or selected as part of a folder are now filtered out before upload as well, since many uploaders work in Python environments ([#38](https://github.com/brain-bbqs/bbqs-uploader/pull/38))
+- Dropping a folder containing an empty (0-byte) file no longer breaks the batch: planning the upload parts for such a file used to throw synchronously mid-scan, silently aborting the rest of that drop so every subsequent file, and the expand-depth slider, never appeared ([#38](https://github.com/brain-bbqs/bbqs-uploader/pull/38))
 
 ## 0.1.4
 
