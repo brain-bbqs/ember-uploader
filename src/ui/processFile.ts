@@ -91,13 +91,17 @@ export async function uploadFile(
     onUploadProgress?.(file.size);
     return existing ? "replaced" : "done";
   } catch (e) {
-    onUploadProgress?.(file.size);
     // The AbortError check catches a hash cancelled via "Cancel all" before this upload's own
     // controller existed (hashJob.promise rejects with it when awaited above).
     if (abort.signal.aborted || (e instanceof DOMException && e.name === "AbortError")) {
+      // Bytes stay uncredited here (unlike the error path below): crediting a cancelled file's
+      // remaining bytes would jump the summary bar straight to "done" instead of freezing where
+      // the cancel actually landed. renderPhaseBar's `stopped` handling still stops the rate/ETA
+      // from climbing once nothing is left in flight.
       row.setBadge("Cancelled", "warn");
       return "cancelled";
     }
+    onUploadProgress?.(file.size);
     row.setBadge("Error", "err");
     let msg = friendlyError(e);
     if (e instanceof ApiError && e.status === 0) {

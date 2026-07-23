@@ -68,11 +68,16 @@ function registerHashJob(
   promise
     .then(() => {
       hashedFiles++;
+      reportHashBytes(file, file.size);
       row.hideBadge();
     })
     .catch((e: unknown) => {
       // Surfaced again (and handled) once uploadFile awaits this same promise; a cancelled scan
-      // keeps its badge so the row doesn't silently look untouched.
+      // keeps its badge so the row doesn't silently look untouched. Its bytes are deliberately
+      // left uncredited (unlike the success path above): crediting them would jump the summary
+      // bar straight to "done" instead of freezing where the cancel actually landed. See
+      // renderPhaseBar's `stopped` handling for how the rate/ETA still stop climbing once nothing
+      // is left in flight.
       if (e instanceof DOMException && e.name === "AbortError") {
         row.setBadge("Cancelled", "warn");
       } else {
@@ -80,11 +85,6 @@ function registerHashJob(
       }
     })
     .finally(() => {
-      // Always account for this file's full size once its hash settles, cancelled or not —
-      // otherwise a cancelled scan leaves its bytes permanently "pending", the hash phase never
-      // reaches 100%, and the rate tracker keeps resampling a stalled byte count forever, which
-      // decays the smoothed rate toward 0 and sends the ETA (remaining/rate) toward infinity.
-      reportHashBytes(file, file.size);
       row.setProgress(0);
       activeHashes.delete(abort);
       updateCancelAllVisibility();
@@ -185,11 +185,12 @@ async function mockUploadFile(
     onUploadProgress?.(file.size);
     return "done";
   } catch (e) {
-    onUploadProgress?.(file.size);
     if (abort.signal.aborted || (e instanceof DOMException && e.name === "AbortError")) {
+      // Bytes stay uncredited here, same as the real uploadFile() — see its catch block.
       row.setBadge("Cancelled", "warn");
       return "cancelled";
     }
+    onUploadProgress?.(file.size);
     row.setBadge("Error", "err");
     return "error";
   } finally {
@@ -307,16 +308,22 @@ function renderPhaseBar(
   tracker: RateTracker,
   phaseDoneBytes: number,
   phaseDoneFiles: number,
+  phaseActive: boolean,
 ): void {
   const pct = totalBytes > 0 ? Math.min(100, Math.round((phaseDoneBytes / totalBytes) * 100)) : 0;
   chipEls.fill.style.width = `${pct}%`;
   chipEls.fill.parentElement?.setAttribute("aria-valuenow", String(pct));
 
   const finished = totalBytes > 0 && phaseDoneBytes >= totalBytes;
-  // Freeze the smoothed rate once the phase completes (re-baselining for any later batch),
-  // instead of letting further zero-delta samples decay the final figure toward 0 on screen.
+  // Cancelling stops every in-flight hash/upload without finishing the phase's bytes, so
+  // `finished` alone can't be trusted to know when to stop moving the needle: once nothing is
+  // left active, freeze right there instead of letting the rate tracker keep resampling an
+  // unmoving byte count, which decays the smoothed rate toward 0 and sends the ETA toward
+  // infinity. `stopped` only fires once real progress had actually started, so a phase that
+  // simply hasn't begun yet (upload before "Upload" is clicked) still reads as "—", not frozen.
+  const stopped = !finished && !phaseActive && tracker.firstProgressTime !== null;
   let rate: number;
-  if (finished) {
+  if (finished || stopped) {
     rate = tracker.bytesPerSec;
     tracker.lastSampleTime = null;
   } else {
@@ -335,11 +342,13 @@ function renderPhaseBar(
   chipEls.rate.textContent = rate > 0 ? `${humanSize(rate)}/s` : "—";
   chipEls.eta.textContent = finished
     ? "done"
-    : rate <= 0
+    : stopped
       ? "—"
-      : warmingUp
-        ? "estimating…"
-        : friendlyEta(remaining / rate);
+      : rate <= 0
+        ? "—"
+        : warmingUp
+          ? "estimating…"
+          : friendlyEta(remaining / rate);
   setChipValue(chipEls.files, String(phaseDoneFiles), `of ${totalFiles}`);
 }
 
@@ -357,6 +366,7 @@ function updateProgressSummary(): void {
     hashRate,
     hashDoneBytes,
     hashedFiles,
+    activeHashes.size > 0,
   );
   renderPhaseBar(
     {
@@ -370,6 +380,7 @@ function updateProgressSummary(): void {
     uploadRate,
     uploadDoneBytes,
     finished,
+    uploadBatchActive,
   );
 
   const leftParts: string[] = [];
