@@ -1,10 +1,26 @@
 # Changelog
 
-## 0.1.5
+## 0.1.7
 
 #### 🏠 Internal
 
 - Fixed the flaky Chromatic "file queued" snapshot: the real scan of the test's tiny file finished in milliseconds, racing the end-of-test capture between the mid-scan and scan-finished appearances. A new `?test&freeze_scan` live test injection pins every dropped file at its just-started scanning state (badge, Cancel button, 0% figures; "Cancel all" still works), and the snapshot test now uses it plus asserts the pinned state before capture ([#40](https://github.com/brain-bbqs/bbqs-uploader/pull/40))
+
+## 0.1.6
+
+#### 🐛 Bug Fix
+
+- The "Incoming dataset" dropdown now always ranks its options by ascending integer dandiset id (oldest first), instead of the archive's title order ([#39](https://github.com/brain-bbqs/bbqs-uploader/pull/39))
+- Manually picking a different dataset from the "Incoming dataset" dropdown now actually persists across reloads; the dropdown's `change` handler previously only refreshed the OAuth token and "View dataset" link without saving the new selection, so a reload always reverted to whichever dataset was auto-selected the first time the list loaded ([#39](https://github.com/brain-bbqs/bbqs-uploader/pull/39))
+
+## 0.1.5
+
+#### 🐛 Bug Fix
+
+- Device-specific hidden files (`.DS_Store`, `Thumbs.db`, `desktop.ini`, AppleDouble `._*` sidecar files, `$RECYCLE.BIN`, etc.) dropped or selected as part of a folder are now filtered out before upload, instead of only VCS folders like `.git` ([#38](https://github.com/brain-bbqs/bbqs-uploader/pull/38))
+- `.noannex` is now also filtered out alongside `.git`, `.datalad`, and `.git-annex` ([#38](https://github.com/brain-bbqs/bbqs-uploader/pull/38))
+- Python cache/tooling artifacts (`__pycache__/`, `*.pyc`, `*.pyo`, `.pytest_cache/`, `.mypy_cache/`, `.ruff_cache/`, `.ipynb_checkpoints/`) dropped or selected as part of a folder are now filtered out before upload as well, since many uploaders work in Python environments ([#38](https://github.com/brain-bbqs/bbqs-uploader/pull/38))
+- Dropping a folder containing an empty (0-byte) file no longer breaks the batch: planning the upload parts for such a file used to throw synchronously mid-scan, silently aborting the rest of that drop so every subsequent file, and the expand-depth slider, never appeared ([#38](https://github.com/brain-bbqs/bbqs-uploader/pull/38))
 
 ## 0.1.4
 

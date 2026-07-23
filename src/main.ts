@@ -117,7 +117,19 @@ function startFrozenHashing(file: File, row: FileRow): HashJob {
 function startHashing(file: File, row: FileRow, relativePath: string): HashJob {
   if (freezeScan) return startFrozenHashing(file, row);
   if (mockMode) return startMockHashing(file, row);
-  const parts = planParts(file.size);
+  // planParts() throws synchronously for files it can't plan (e.g. empty files, which DANDI
+  // rejects). Since startHashing runs inline inside addFiles()'s per-entry loop, an uncaught
+  // throw here would abort that loop partway through a drop, leaving the rest of the batch
+  // (and the reveal pass after the loop) never queued. Routing it through registerHashJob
+  // instead turns it into an ordinary rejected hash promise, so it surfaces later as a normal
+  // "Error" row when uploadFile awaits it, the same as any other hash failure.
+  let parts: FilePart[];
+  try {
+    parts = planParts(file.size);
+  } catch (e) {
+    const error = e instanceof Error ? e : new Error(String(e));
+    return registerHashJob(file, row, [], () => Promise.reject(error));
+  }
   return registerHashJob(file, row, parts, (signal) =>
     hashPool.hash(
       file,
@@ -520,16 +532,20 @@ function applyDatasetList(datasets: IncomingDandiset[]): void {
     );
     return;
   }
+  // Dropdown mode (more than one dataset) always ranks options by ascending integer id, oldest
+  // dandiset first, regardless of the order the archive returned them in.
+  const ordered =
+    datasets.length > 1 ? [...datasets].sort((a, b) => Number(a.identifier) - Number(b.identifier)) : datasets;
   els.dandisetId.replaceChildren(
-    ...datasets.map((d) => {
+    ...ordered.map((d) => {
       const opt = document.createElement("option");
       opt.value = d.identifier;
       opt.textContent = `${d.title} (${d.identifier})`;
       return opt;
     }),
   );
-  const match = datasets.find((d) => d.identifier === storedDandisetId);
-  const selected = match ?? datasets[0];
+  const match = ordered.find((d) => d.identifier === storedDandisetId);
+  const selected = match ?? ordered[0];
   // The select stays populated even when hidden (single-dataset view) so currentConfig() keeps
   // reading a real dandiset id from it.
   els.dandisetId.value = selected.identifier;
@@ -669,6 +685,7 @@ async function startUpload(): Promise<void> {
 }
 
 function runConnectionCheck(): void {
+  saveSettings();
   void (async () => {
     await ensureFreshOAuth();
     updateViewDatasetLink();
