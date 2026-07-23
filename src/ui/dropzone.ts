@@ -20,8 +20,14 @@ const IGNORED_NAMES = new Set([
   ".AppleDB",
   "$RECYCLE.BIN",
   "System Volume Information",
+  // Python cache/tooling artifacts, common among the project's many Python-using uploaders.
+  "__pycache__",
+  ".pytest_cache",
+  ".mypy_cache",
+  ".ruff_cache",
+  ".ipynb_checkpoints",
 ]);
-const IGNORED_NAME_PATTERNS = [/^\._/, /^\.Trash-/];
+const IGNORED_NAME_PATTERNS = [/^\._/, /^\.Trash-/, /\.pyc$/, /\.pyo$/];
 
 function isIgnoredName(name: string): boolean {
   return IGNORED_NAMES.has(name) || IGNORED_NAME_PATTERNS.some((pattern) => pattern.test(name));

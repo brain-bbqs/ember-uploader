@@ -41,6 +41,23 @@ test("recursive folder selection skips device-specific hidden files like .DS_Sto
   await expect(page.locator("#file-list .file-item")).toHaveCount(1);
 });
 
+test("recursive folder selection skips Python cache files and folders", async ({ page }) => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "bbqs-upload-"));
+  fs.mkdirSync(path.join(dir, "session1"));
+  fs.writeFileSync(path.join(dir, "session1", "a.txt"), "a");
+  fs.mkdirSync(path.join(dir, "session1", "__pycache__"));
+  fs.writeFileSync(path.join(dir, "session1", "__pycache__", "analysis.cpython-312.pyc"), "junk");
+  fs.writeFileSync(path.join(dir, "session1", "analysis.pyc"), "junk");
+  fs.mkdirSync(path.join(dir, ".pytest_cache"));
+  fs.writeFileSync(path.join(dir, ".pytest_cache", "README.md"), "junk");
+
+  await page.goto("/");
+  await page.locator("#folder-input").setInputFiles(dir);
+
+  // Only a.txt should surface — the __pycache__/, *.pyc, and .pytest_cache/ entries must be filtered out.
+  await expect(page.locator("#file-list .file-item")).toHaveCount(1);
+});
+
 test("the dropzone browse links open the file and folder pickers respectively", async ({ page }) => {
   await page.goto("/");
 

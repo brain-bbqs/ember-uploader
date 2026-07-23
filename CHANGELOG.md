@@ -5,6 +5,7 @@
 #### 🐛 Bug Fix
 
 - Device-specific hidden files (`.DS_Store`, `Thumbs.db`, `desktop.ini`, AppleDouble `._*` sidecar files, `$RECYCLE.BIN`, etc.) dropped or selected as part of a folder are now filtered out before upload, instead of only VCS folders like `.git` ([#38](https://github.com/brain-bbqs/bbqs-uploader/pull/38))
+- Python cache/tooling artifacts (`__pycache__/`, `*.pyc`, `*.pyo`, `.pytest_cache/`, `.mypy_cache/`, `.ruff_cache/`, `.ipynb_checkpoints/`) dropped or selected as part of a folder are now filtered out before upload as well, since many uploaders work in Python environments ([#38](https://github.com/brain-bbqs/bbqs-uploader/pull/38))
 
 ## 0.1.4
 
