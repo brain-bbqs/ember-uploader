@@ -662,6 +662,10 @@ button.primary {
   font-size: 0.85rem;
 }
 
+.reset-all-btn {
+  margin-left: auto;
+}
+
 .progress-summary {
   display: flex;
   flex-direction: column;
@@ -831,6 +835,11 @@ button.primary {
   display: flex;
   align-items: baseline;
   gap: 0.75rem;
+}
+
+.footer-dot {
+  color: var(--muted);
+  font-size: 0.85rem;
 }
 
 .version-link {

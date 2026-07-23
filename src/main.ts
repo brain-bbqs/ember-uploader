@@ -67,6 +67,8 @@ function registerHashJob(
   const promise = start(abort.signal);
   promise
     .then(() => {
+      // Skip bookkeeping for a file resetUploader() already forgot about (Reset clicked mid-scan).
+      if (!hashJobs.has(file)) return;
       hashedFiles++;
       reportHashBytes(file, file.size);
       row.hideBadge();
@@ -267,6 +269,9 @@ function scheduleProgressUpdate(): void {
 }
 
 function reportHashBytes(file: File, bytesDone: number): void {
+  // A late progress tick from a scan resetUploader() already forgot about would otherwise
+  // re-seed lastHashBytes and skew the next batch's totals.
+  if (!hashJobs.has(file)) return;
   const prev = lastHashBytes.get(file) ?? 0;
   hashDoneBytes += bytesDone - prev;
   lastHashBytes.set(file, bytesDone);
@@ -274,6 +279,7 @@ function reportHashBytes(file: File, bytesDone: number): void {
 }
 
 function reportUploadBytes(file: File, bytesDone: number): void {
+  if (!hashJobs.has(file)) return;
   const prev = lastUploadBytes.get(file) ?? 0;
   uploadDoneBytes += bytesDone - prev;
   lastUploadBytes.set(file, bytesDone);
@@ -674,7 +680,10 @@ async function startUpload(): Promise<void> {
   const cfg = currentConfig();
 
   await runQueue(batch, FILE_CONCURRENCY, async ({ file, row, path }) => {
-    const job = hashJobs.get(file)!;
+    // A Reset clicked mid-batch drops every file's hash job out from under this still-running
+    // queue; treat a file resetUploader() already forgot about as a no-op rather than crashing.
+    const job = hashJobs.get(file);
+    if (!job) return;
     const outcome = mockMode
       ? await mockUploadFile(row, file, job, (bytesDone) => reportUploadBytes(file, bytesDone))
       : await uploadFile(row, file, path, cfg, activeUploads, job, (bytesDone) => reportUploadBytes(file, bytesDone));
@@ -685,6 +694,46 @@ async function startUpload(): Promise<void> {
   uploadBatchActive = false;
   updateCancelAllVisibility();
   updateUploadBar();
+}
+
+// Clears the uploader back to its just-loaded, no-files state: cancels any in-flight scanning or
+// uploading, drops the queued/hashed file bookkeeping, and hides the panels that only make sense
+// once files are present.
+function resetUploader(): void {
+  for (const controller of activeHashes) controller.abort();
+  for (const controller of activeUploads) controller.abort();
+  pending.length = 0;
+  hashJobs.clear();
+  lastHashBytes.clear();
+  lastUploadBytes.clear();
+  els.fileList.replaceChildren();
+
+  totalFiles = 0;
+  totalBytes = 0;
+  hashDoneBytes = 0;
+  uploadDoneBytes = 0;
+  hashedFiles = 0;
+  counts.done = 0;
+  counts.replaced = 0;
+  counts.error = 0;
+  counts.cancelled = 0;
+  counts.blocked = 0;
+
+  for (const tracker of [hashRate, uploadRate]) {
+    tracker.lastSampleTime = null;
+    tracker.lastSampleBytes = 0;
+    tracker.bytesPerSec = 0;
+    tracker.firstProgressTime = null;
+  }
+
+  uploadBatchActive = false;
+  els.destRoot.hidden = true;
+  els.progressSummary.hidden = true;
+  els.expandDepthInput.value = "0";
+  updateExpandDepthRange();
+  updateCancelAllVisibility();
+  updateUploadBar();
+  updateProgressSummary();
 }
 
 function runConnectionCheck(): void {
@@ -752,6 +801,17 @@ els.uploadAllBtn.addEventListener("click", () => void startUpload());
 els.cancelAllBtn.addEventListener("click", () => {
   for (const controller of activeHashes) controller.abort();
   for (const controller of activeUploads) controller.abort();
+});
+els.resetAllBtn.addEventListener("click", resetUploader);
+els.clearScanCacheBtn.addEventListener("click", () => {
+  void checksumCache.clear();
+  const original = els.clearScanCacheBtn.textContent;
+  els.clearScanCacheBtn.disabled = true;
+  els.clearScanCacheBtn.textContent = "Scan cache cleared";
+  window.setTimeout(() => {
+    els.clearScanCacheBtn.disabled = false;
+    els.clearScanCacheBtn.textContent = original;
+  }, 1500);
 });
 window.addEventListener("beforeunload", (e) => {
   if (activeUploads.size > 0) {

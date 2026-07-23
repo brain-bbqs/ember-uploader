@@ -140,6 +140,27 @@ describe("openChecksumCache", () => {
     expect(await cache.get("k", parts)).toBeNull();
   });
 
+  it("clear removes every stored record and buffered parts", async () => {
+    const parts = planParts(64 * MB + 10);
+    const cache = open();
+    cache.putPart("a", parts, 1, digest(1));
+    await cache.flush("a");
+    cache.putPart("b", parts, 1, digest(2));
+    await cache.clear();
+    await cache.flush("b");
+
+    expect(await cache.get("a", parts)).toBeNull();
+    expect(await cache.get("b", parts)).toBeNull();
+    expect(await listStoredKeys()).toEqual([]);
+  });
+
+  it("clear degrades to a no-op when IndexedDB is unavailable", async () => {
+    // @ts-expect-error simulating an environment without IndexedDB
+    delete globalThis.indexedDB;
+    const cache = open();
+    await expect(cache.clear()).resolves.toBeUndefined();
+  });
+
   it("auto-flushes after enough buffered parts without an explicit flush", async () => {
     const parts = planParts(5 * 2 ** 30); // 5GB: 80 parts, past the 64-part flush threshold
     expect(parts.length).toBeGreaterThan(64);
