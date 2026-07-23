@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test, expect } from "@playwright/test";
 import { dropFile } from "./helpers/drop";
+import { seedSignedIn } from "./helpers/auth";
 
 const DB_NAME = "bbqs-uploader.checksum-cache";
 const STORE = "files";
@@ -45,6 +46,7 @@ test("re-dropping an unchanged file after a reload hashes only one verification 
   bytes.fill(7);
   writeFileSync(bigPath, bytes);
 
+  await seedSignedIn(page);
   await page.goto("/");
   await dropFile(page, bigPath);
 

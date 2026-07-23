@@ -503,11 +503,25 @@ function currentConfig(): UploaderConfig {
   });
 }
 
+function isSignedIn(): boolean {
+  return !forceSignedOut && !!oauthTokens;
+}
+
+// The upload card (dropzone, progress bars, file list, ...) is only worth showing while signed
+// in; a signed-out visitor with nothing queued would otherwise see an empty bordered box with
+// nothing in it. The one exception is a file queue that survives a mid-session sign-out (nothing
+// clears `fileList` on sign-out) — that state still needs the card to show the resulting "Blocked
+// / Not signed in" rows, just without the dropzone itself (see renderAuthUI) offering to add more.
+function updateUploadCardVisibility(): void {
+  els.uploadCard.hidden = !isSignedIn() && els.fileList.children.length === 0;
+}
+
 function renderAuthUI(): void {
-  const signedIn = !forceSignedOut && !!oauthTokens;
+  const signedIn = isSignedIn();
   els.oauthSigninBtn.hidden = signedIn;
   els.oauthSignedIn.hidden = !signedIn;
   els.dropzone.hidden = !signedIn;
+  updateUploadCardVisibility();
   // Once the real auth state is known, this element-level hidden state is authoritative; the
   // pre-paint script's stand-in attribute (see index.html) is no longer needed.
   delete document.documentElement.dataset.signedIn;
@@ -683,6 +697,7 @@ async function addFiles(entries: DroppedFile[]): Promise<void> {
   const hasFiles = els.fileList.children.length > 0;
   els.destRoot.hidden = !hasFiles;
   els.progressSummary.hidden = !hasFiles;
+  updateUploadCardVisibility();
   updateProgressSummary();
   updateUploadBar();
 }
@@ -747,6 +762,7 @@ function resetUploader(): void {
   els.progressSummary.hidden = true;
   els.expandDepthInput.value = "0";
   updateExpandDepthRange();
+  updateUploadCardVisibility();
   updateCancelAllVisibility();
   updateUploadBar();
   updateProgressSummary();

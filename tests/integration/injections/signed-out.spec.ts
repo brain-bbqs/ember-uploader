@@ -1,6 +1,5 @@
 import { test, expect } from "@playwright/test";
 import { seedSignedIn } from "../helpers/auth";
-import { dropFile } from "../helpers/drop";
 import { seedTheme } from "../helpers/theme";
 
 // Exercises the "?test&signed_out" live test injection documented in docs/README.md, in both
@@ -22,14 +21,13 @@ for (const theme of ["light", "dark"] as const) {
       await expect(page.locator("#dandiset-message")).toHaveText("Please sign in to see your incoming datasets.");
     });
 
-    test("blocks an uploaded file as not signed in", async ({ page }) => {
+    // The "blocked as not signed in" upload outcome itself is covered in smoke.spec.ts via a real
+    // mid-session sign-out: "?test&signed_out" hides the dropzone along with the rest of the
+    // signed-out UI (see main.ts's isSignedIn()), so there's no way to queue a file through it in
+    // the first place while the override is active.
+    test("hides the dropzone along with the rest of the signed-out UI", async ({ page }) => {
       await page.goto("/?test&signed_out");
-      await dropFile(page, { name: "clip.mp4", mimeType: "video/mp4", buffer: Buffer.alloc(32) });
-
-      await page.locator("#upload-all-btn").click();
-      const row = page.locator("#file-list .file-item").first();
-      await expect(row.locator('[data-role="badge"]')).toHaveText("Blocked");
-      await expect(row.locator('[data-role="status"]')).toContainText("Not signed in");
+      await expect(page.locator("#dropzone")).toBeHidden();
     });
   });
 }

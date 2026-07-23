@@ -5,6 +5,7 @@
 #### 🐛 Bug Fix
 
 - Hid the dropzone (drag-and-drop / browse files / browse folder) until the user is signed in, instead of letting a signed-out visitor drop files that could never actually upload ([#47](https://github.com/brain-bbqs/bbqs-uploader/pull/47))
+- Hid the entire upload card (not just the dropzone) for a signed-out visitor with nothing queued, instead of leaving an empty bordered box on the page; it still reappears if a file was queued before a mid-session sign-out, showing the resulting "Blocked" row ([#47](https://github.com/brain-bbqs/bbqs-uploader/pull/47))
 
 ## 0.1.11
 

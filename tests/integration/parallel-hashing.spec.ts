@@ -40,6 +40,7 @@ test("fans a single multi-part file out across workers and cancels hashing via C
   const workerUrls: string[] = [];
   page.on("worker", (w) => workerUrls.push(w.url()));
 
+  await seedSignedIn(page);
   await page.goto("/");
 
   // Slow the page down so the mid-hash cancel below isn't a race against real-time MD5 speed.

@@ -2,6 +2,7 @@ import { test, expect } from "@playwright/test";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { seedSignedIn } from "./helpers/auth";
 
 test("recursive folder selection derives sourcedata/raw paths and skips .git", async ({ page }) => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "bbqs-upload-"));
@@ -12,6 +13,7 @@ test("recursive folder selection derives sourcedata/raw paths and skips .git", a
   fs.writeFileSync(path.join(dir, ".git", "config"), "ignored");
   fs.writeFileSync(path.join(dir, ".noannex"), "ignored");
 
+  await seedSignedIn(page);
   await page.goto("/");
   await page.locator("#folder-input").setInputFiles(dir);
 
@@ -35,6 +37,7 @@ test("recursive folder selection skips device-specific hidden files like .DS_Sto
   fs.writeFileSync(path.join(dir, "session1", ".DS_Store"), "junk");
   fs.writeFileSync(path.join(dir, "Thumbs.db"), "junk");
 
+  await seedSignedIn(page);
   await page.goto("/");
   await page.locator("#folder-input").setInputFiles(dir);
 
@@ -52,6 +55,7 @@ test("recursive folder selection skips Python cache files and folders", async ({
   fs.mkdirSync(path.join(dir, ".pytest_cache"));
   fs.writeFileSync(path.join(dir, ".pytest_cache", "README.md"), "junk");
 
+  await seedSignedIn(page);
   await page.goto("/");
   await page.locator("#folder-input").setInputFiles(dir);
 
@@ -70,6 +74,7 @@ test("a folder containing an empty file still reveals every other file and the e
   // rest of the batch: every row after it stayed hidden and the expand slider never appeared.
   fs.writeFileSync(path.join(bigDir, "empty.txt"), "");
 
+  await seedSignedIn(page);
   await page.goto("/");
   await page.locator("#folder-input").setInputFiles(dir);
 
@@ -79,6 +84,7 @@ test("a folder containing an empty file still reveals every other file and the e
 });
 
 test("the dropzone browse links open the file and folder pickers respectively", async ({ page }) => {
+  await seedSignedIn(page);
   await page.goto("/");
 
   const fileChooserPromise = page.waitForEvent("filechooser");
@@ -102,6 +108,7 @@ test("a folder with more than 30 files reveals the first 30 and truncates the re
     fs.writeFileSync(path.join(bigDir, `file-${i}.txt`), String(i));
   }
 
+  await seedSignedIn(page);
   await page.goto("/");
   await page.locator("#folder-input").setInputFiles(dir);
 

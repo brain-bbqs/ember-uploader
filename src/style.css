@@ -255,10 +255,11 @@ button.primary {
 :root[data-signed-in="1"] #oauth-signed-in[hidden] {
   display: inline-flex !important;
 }
-/* Same pre-paint reservation as above, but for the dropzone: it's only ever meant to be visible
-   while signed in, so it stays hidden by default (see index.html) and this rule shows it early
-   when stored tokens are present, before renderAuthUI() takes over as the authoritative source. */
-:root[data-signed-in="1"] #dropzone[hidden] {
+/* Same pre-paint reservation as above, but for the upload card: it's only ever meant to be
+   visible while signed in, so it stays hidden by default (see index.html) and this rule shows it
+   early when stored tokens are present, before renderAuthUI() takes over as the authoritative
+   source. */
+:root[data-signed-in="1"] #upload-card[hidden] {
   display: block !important;
 }
 

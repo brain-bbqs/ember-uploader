@@ -31,6 +31,7 @@ export function getElements() {
     progressUploadFiles: required<HTMLSpanElement>("progress-upload-files"),
     progressFooterLeft: required<HTMLSpanElement>("progress-footer-left"),
     progressFooterMid: required<HTMLSpanElement>("progress-footer-mid"),
+    uploadCard: required<HTMLElement>("upload-card"),
     dropzone: required<HTMLDivElement>("dropzone"),
     browseFilesBtn: required<HTMLButtonElement>("browse-files-btn"),
     browseFolderBtn: required<HTMLButtonElement>("browse-folder-btn"),
