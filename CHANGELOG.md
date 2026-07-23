@@ -1,6 +1,10 @@
 # Changelog
 
-## 0.1.12
+## 0.1.13
+
+#### 🏠 Internal
+
+- Documented the expected `409 (Conflict)` DevTools console lines from `POST /uploads/initialize/` when re-uploading already-archived content: the 409 is the server dedup fast-path working as intended, the browser itself logs every non-2xx response and pages cannot suppress it, and the previously tried `/blobs/digest/` pre-check stays reverted because it swapped the noise onto every genuinely new upload and was racy (the official dandi-cli dropped the same pre-check in [dandi/dandi-cli#494](https://github.com/dandi/dandi-cli/issues/494)); a server-side fix is tracked upstream in [dandi/dandi-archive#1813](https://github.com/dandi/dandi-archive/issues/1813). Notes added at the 409 handler in `upload-pipeline.ts` and in a new "Expected console noise" section of `docs/README.md`, including how to hide the lines in DevTools while testing ([#48](https://github.com/brain-bbqs/bbqs-uploader/pull/48))
 
 #### 🐛 Bug Fix
 

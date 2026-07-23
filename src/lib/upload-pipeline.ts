@@ -19,7 +19,15 @@ export async function uploadBlob(
   onProgress: (fraction: number) => void,
   signal?: AbortSignal,
 ): Promise<UploadBlobResult> {
-  // Initialize; a 409 means an identical blob already exists server-side.
+  // Initialize; a 409 means an identical blob already exists server-side, and the catch below
+  // reuses it without re-transferring any bytes. The 409 is expected and fully handled, but it
+  // still shows up in the DevTools console ("POST .../uploads/initialize/ 409 (Conflict)"):
+  // browsers log every >=400 response at the network layer, and pages have no way to suppress
+  // that (whatwg/fetch#1815, closed as not-planned). Don't try to quiet it with a
+  // /blobs/digest/ pre-check; that was tried and reverted, since it just moves the logged 4xx
+  // to a 404 on every genuinely NEW upload (the common case) and is racy besides, which is why
+  // dandi-cli dropped the same pre-check (dandi/dandi-cli#494). A server-side fix is tracked
+  // upstream (dandi/dandi-archive#1813). See docs/README.md, "Expected console noise".
   let init: UploadInitResponse;
   try {
     init = (await apiFetch<UploadInitResponse>(cfg, "/uploads/initialize/", {
@@ -32,6 +40,8 @@ export async function uploadBlob(
     }))!;
   } catch (e) {
     if (e instanceof ApiError && e.status === 409) {
+      // The server names the existing blob in the 409's Location header, but that header is
+      // not CORS-exposed to cross-origin JS, so look the blob up by digest instead.
       const blob = (await apiFetch<{ blob_id: string }>(cfg, "/blobs/digest/", {
         method: "POST",
         json: { algorithm: "dandi:dandi-etag", value: etag },
