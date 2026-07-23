@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.10
+
+#### 🚀 Enhancement
+
+- Added a "Reset" button to the far right of the upload bar that clears the file queue back to the empty state, cancelling any in-progress scanning or uploading first ([#44](https://github.com/brain-bbqs/bbqs-uploader/pull/44))
+
 ## 0.1.9
 
 #### 🚀 Enhancement

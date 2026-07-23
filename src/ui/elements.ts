@@ -45,6 +45,7 @@ export function getElements() {
     uploadBar: required<HTMLDivElement>("upload-bar"),
     uploadAllBtn: required<HTMLButtonElement>("upload-all-btn"),
     cancelAllBtn: required<HTMLButtonElement>("cancel-all-btn"),
+    resetAllBtn: required<HTMLButtonElement>("reset-all-btn"),
     viewDatasetLink: required<HTMLAnchorElement>("view-dataset-link"),
     versionIndicator: required<HTMLAnchorElement>("version-indicator"),
     themeToggle: required<HTMLButtonElement>("theme-toggle"),

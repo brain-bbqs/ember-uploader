@@ -687,6 +687,46 @@ async function startUpload(): Promise<void> {
   updateUploadBar();
 }
 
+// Clears the uploader back to its just-loaded, no-files state: cancels any in-flight scanning or
+// uploading, drops the queued/hashed file bookkeeping, and hides the panels that only make sense
+// once files are present.
+function resetUploader(): void {
+  for (const controller of activeHashes) controller.abort();
+  for (const controller of activeUploads) controller.abort();
+  pending.length = 0;
+  hashJobs.clear();
+  lastHashBytes.clear();
+  lastUploadBytes.clear();
+  els.fileList.replaceChildren();
+
+  totalFiles = 0;
+  totalBytes = 0;
+  hashDoneBytes = 0;
+  uploadDoneBytes = 0;
+  hashedFiles = 0;
+  counts.done = 0;
+  counts.replaced = 0;
+  counts.error = 0;
+  counts.cancelled = 0;
+  counts.blocked = 0;
+
+  for (const tracker of [hashRate, uploadRate]) {
+    tracker.lastSampleTime = null;
+    tracker.lastSampleBytes = 0;
+    tracker.bytesPerSec = 0;
+    tracker.firstProgressTime = null;
+  }
+
+  uploadBatchActive = false;
+  els.destRoot.hidden = true;
+  els.progressSummary.hidden = true;
+  els.expandDepthInput.value = "0";
+  updateExpandDepthRange();
+  updateCancelAllVisibility();
+  updateUploadBar();
+  updateProgressSummary();
+}
+
 function runConnectionCheck(): void {
   saveSettings();
   void (async () => {
@@ -753,6 +793,7 @@ els.cancelAllBtn.addEventListener("click", () => {
   for (const controller of activeHashes) controller.abort();
   for (const controller of activeUploads) controller.abort();
 });
+els.resetAllBtn.addEventListener("click", resetUploader);
 window.addEventListener("beforeunload", (e) => {
   if (activeUploads.size > 0) {
     e.preventDefault();

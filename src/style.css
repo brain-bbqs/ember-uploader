@@ -662,6 +662,10 @@ button.primary {
   font-size: 0.85rem;
 }
 
+.reset-all-btn {
+  margin-left: auto;
+}
+
 .progress-summary {
   display: flex;
   flex-direction: column;
