@@ -232,9 +232,15 @@ button.primary {
 }
 /* Set on <html> by index.html's pre-paint script when stored OAuth tokens exist, so a refresh
    while already signed in doesn't flash this button before main.ts's renderAuthUI() determines
-   the real state and clears the attribute. */
+   the real state and clears the attribute. Pairs with the #oauth-signed-in override below: both
+   toggle together so the signed-in avatar's spot in the (right-aligned) .oauth-row is reserved
+   from the first frame, instead of popping in and shifting the theme toggle sideways once
+   renderAuthUI() reveals it for real. */
 :root[data-signed-in="1"] #oauth-signin-btn {
   display: none;
+}
+:root[data-signed-in="1"] #oauth-signed-in[hidden] {
+  display: inline-flex !important;
 }
 
 .dandiset-single {

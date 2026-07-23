@@ -12,10 +12,12 @@
         var storedTheme = localStorage.getItem("bbqs-uploader.theme");
         if (storedTheme === "light" || storedTheme === "dark") document.documentElement.dataset.theme = storedTheme;
       } catch (e) {}
-      // Hides the "Sign in with EMBER" button before first paint when a previous session's tokens
-      // are still in storage, so refreshing while already signed in doesn't flash it before
-      // main.ts runs and calls renderAuthUI(), which clears this attribute once the real state is
-      // known. Key kept in sync with STORAGE_KEY in src/lib/settings.ts.
+      // Swaps the sign-in button for the (still-empty) signed-in avatar slot before first paint
+      // when a previous session's tokens are still in storage, so refreshing while already signed
+      // in neither flashes the sign-in button nor pops the avatar in afterwards and shifts the
+      // theme toggle sideways (the header's oauth-row is right-aligned). main.ts's renderAuthUI()
+      // clears this attribute once the real state is known. Key kept in sync with STORAGE_KEY in
+      // src/lib/settings.ts.
       try {
         var storedSettings = JSON.parse(localStorage.getItem("bbqs-uploader.settings.v1"));
         if (storedSettings && storedSettings.oauth && storedSettings.oauth.accessToken) {
